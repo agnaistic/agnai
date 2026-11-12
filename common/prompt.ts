@@ -1,6 +1,6 @@
 import type { GenerateRequestV2, HistoryLine } from '../srv/adapter/type'
 import type { AppSchema, TokenCounter } from './types'
-import { AIAdapter, GOOGLE_LIMITS } from './adapters'
+import { AIAdapter, GOOGLE_LIMITS, MODE_SETTINGS } from './adapters'
 import { formatCharacter } from './characters'
 import { defaultTemplate } from './mode-templates'
 import { buildMemoryPrompt } from './memory'
@@ -10,13 +10,25 @@ import { getMessageAuthor, getBotName, trimSentence, neat } from './util'
 import { Memory } from './types'
 import { promptOrderToTemplate, SIMPLE_ORDER } from './prompt-order'
 import { ModelFormat, replaceArrayTags, replaceTags } from './presets/templates'
-import { PromptTemplate } from './types/presets'
 import { OPENAI_CONTEXTS } from './presets/openai'
 import { NOVEL_MODELS } from './presets/novel'
+import { extractReasoning } from './reasoning'
+import { runPresetParsers } from './chat'
+export type JsonOutput = { values: any; response: string; history: string; imageCaption: string }
+export type TickHandler<T = JsonOutput> = (
+  response: string,
+  state: InferenceState,
+  json?: T
+) => void
 
-export type TickHandler<T = any> = (response: string, state: InferenceState, json?: T) => void
-
-export type InferenceState = 'partial' | 'done' | 'error' | 'warning'
+export type InferenceState =
+  | 'partial'
+  | 'done'
+  | 'error'
+  | 'warning'
+  | 'headers'
+  | 'meta'
+  | 'thought'
 
 export const SAMPLE_CHAT_MARKER = `System: New conversation started. Previous conversations are examples only.`
 export const SAMPLE_CHAT_PREAMBLE = `How {{char}} speaks:`
@@ -80,6 +92,7 @@ export type PromptOpts = {
   retry?: AppSchema.ChatMessage
   continue?: string
   book?: AppSchema.MemoryBook
+  books?: AppSchema.MemoryBook[]
   replyAs: AppSchema.Character
   characters: GenerateRequestV2['characters']
   impersonate?: AppSchema.Character
@@ -92,6 +105,7 @@ export type PromptOpts = {
   jsonValues: Record<string, any> | undefined
   contextBuffer?: number
   props?: Record<string, string>
+  schema?: GenerateRequestV2['jsonSchema']
 }
 
 export type BuildPromptOpts = {
@@ -108,6 +122,7 @@ export type BuildPromptOpts = {
   chatEmbed?: Memory.UserEmbed<{ name: string }>[]
   userEmbed?: Memory.UserEmbed[]
   history?: HistoryLine[]
+  schema?: GenerateRequestV2['jsonSchema']
 }
 
 /** {{user}}, <user>, {{char}}, <bot>, case insensitive */
@@ -211,13 +226,34 @@ function titlize(str: string) {
   return `${str[0].toUpperCase()}${str.slice(1).toLowerCase()}`
 }
 
+export async function getPromptHistory(opts: PromptOpts, encoder: TokenCounter) {
+  /**
+   * It's important for us to pass in a max context that is _realistic-ish_ as the embeddings
+   * are retrieved based on the number of history messages we return here.
+   *
+   * If we ambitiously include the entire history then embeddings will never be included.
+   * The queryable embeddings are messages that are _NOT_ included in the context
+   */
+  const contextBuffer = opts.contextBuffer ?? 0
+  const maxContext = opts.settings ? getContextLimit(opts.user, opts.settings) : undefined
+  /**
+   * The lines from `getLinesForPrompt` are returned in time-ascending order
+   */
+  const { lines } = await getLinesForPrompt(opts, encoder, (maxContext || 0) + contextBuffer)
+  return lines
+}
+
 /**
  * This is only ever invoked client-side
  * @param opts
  * @returns
  */
-export async function createPromptParts(opts: PromptOpts, encoder: TokenCounter) {
-  if (opts.trimSentences) {
+export async function createPromptParts(
+  opts: PromptOpts,
+  encoder: TokenCounter,
+  history?: HistoryLine[]
+) {
+  if (opts.trimSentences || opts.user.ui?.trimSentences) {
     const nextMsgs = opts.messages.slice()
     for (let i = 0; i < nextMsgs.length; i++) {
       if (nextMsgs[i].userId) continue
@@ -234,22 +270,9 @@ export async function createPromptParts(opts: PromptOpts, encoder: TokenCounter)
   const sortedMsgs = opts.messages.filter((msg) => msg.adapter !== 'image')
 
   opts.messages = sortedMsgs
+  const template = getTemplate(opts)
 
-  /**
-   * The lines from `getLinesForPrompt` are returned in time-ascending order
-   */
-  let template = getTemplate(opts)
-
-  /**
-   * It's important for us to pass in a max context that is _realistic-ish_ as the embeddings
-   * are retrieved based on the number of history messages we return here.
-   *
-   * If we ambitiously include the entire history then embeddings will never be included.
-   * The queryable embeddings are messages that are _NOT_ included in the context
-   */
-  const contextBuffer = opts.contextBuffer ?? 0
-  const maxContext = opts.settings ? getContextLimit(opts.user, opts.settings) : undefined
-  const { lines } = await getLinesForPrompt(opts, encoder, (maxContext || 0) + contextBuffer)
+  const lines = history || (await getPromptHistory(opts, encoder))
   const parts = await buildPromptPlaceholders(
     opts,
     lines.map((l) => l.msg),
@@ -261,12 +284,19 @@ export async function createPromptParts(opts: PromptOpts, encoder: TokenCounter)
   const prompt = await injectPlaceholders(template, {
     opts,
     parts,
-    history: lines.map((l) => l.msg),
+    history: lines,
+    lines: lines.map((l) => l.msg),
+
     lastMessage: opts.lastMessage,
     characters: opts.characters,
     encoder,
-    jsonValues: opts.jsonValues,
+
+    // We want the template-parser to find the relevant JSON outputs on it's own from the message history
+    // We'll omit explicit JSON values for now
+    jsonValues: undefined, // opts.jsonValues
   })
+
+  // parts.post = prompt.sections.sections.post.slice()
 
   if (opts.modelFormat) {
     prompt.parsed = replaceTags(prompt.parsed, opts.modelFormat)
@@ -285,19 +315,27 @@ export type AssembledPrompt = Awaited<ReturnType<typeof assemblePrompt>>
  * @param lines Always in time-ascending order (oldest to newest)
  * @returns
  */
-export async function assemblePrompt(opts: GenerateRequestV2, encoder: TokenCounter) {
+export async function assemblePrompt(
+  opts: GenerateRequestV2,
+  encoder: TokenCounter,
+  chat?: boolean
+) {
   const post = createPostPrompt(opts)
   const template = getTemplate(opts)
 
+  const parsers = opts.settings?.parsers || []
+  const parsedLines = opts.lines.map((line) => runPresetParsers(parsers, line, { preset: true }))
+
   let { parsed, inserts, length, sections, linesAddedCount, history, addedLines, blocks } =
     await injectPlaceholders(template, {
-      opts,
+      opts: { ...opts, schema: opts.jsonSchema },
       parts: opts.parts,
-      history: opts.lines,
+      lines: parsedLines,
+      history: opts.history,
       characters: opts.characters,
       lastMessage: opts.lastMessage,
       encoder,
-      jsonValues: opts.jsonValues,
+      jsonValues: undefined,
       format: getFormatOverride(opts),
     })
 
@@ -341,12 +379,9 @@ function getFormatOverride(
   }
 }
 
-export function getTemplate(
-  opts: Pick<GenerateRequestV2, 'settings' | 'chat'>,
-  templates?: PromptTemplate[]
-) {
-  if (opts.settings?.promptTemplateId && templates) {
-    const template = templates.find((t) => t._id === opts.settings?.promptTemplateId)
+export function getTemplate(opts: Pick<GenerateRequestV2, 'settings' | 'chat'>) {
+  if (opts.settings?.promptTemplateId) {
+    const template = _templateLocator(opts.settings?.promptTemplateId)
     if (template) return template.template
   }
 
@@ -379,20 +414,22 @@ type InjectOpts = {
   lastMessage?: string
   characters: Record<string, AppSchema.Character>
   jsonValues: Record<string, any> | undefined
-  history?: string[]
+  lines?: string[]
+  history?: HistoryLine[]
   encoder: TokenCounter
   format?: ModelFormat
 }
 
 export async function injectPlaceholders(template: string, inject: InjectOpts) {
-  const { opts, parts, history: hist, encoder, ...rest } = inject
+  const { opts, parts, lines, history, encoder, ...rest } = inject
 
   const templateOpts = {
     ...opts,
     continue: opts.kind === 'continue',
     sender: inject.opts.sender,
     parts,
-    lines: hist || [],
+    lines: inject.lines || [],
+    history: inject.history,
     ...rest,
   }
 
@@ -410,8 +447,9 @@ export async function injectPlaceholders(template: string, inject: InjectOpts) {
 
   const format = inject.format || opts.settings?.modelFormat || 'None'
   result.parsed = replaceTags(result.parsed, format)
-  result.sections.strictSystem = replaceArrayTags(result.sections.strictSystem, format)
-  replaceSectionTags(result.sections.sections, format)
+  result.blockPrompt = replaceTags(result.blockPrompt, 'None')
+  result.sections.strictSystem = replaceArrayTags(result.sections.strictSystem, 'None')
+  replaceSectionTags(result.sections.sections, 'None')
 
   return result
 }
@@ -466,6 +504,7 @@ type PromptPartsOptions = Pick<
   | 'userEmbeds'
   | 'resolvedScenario'
   | 'props'
+  | 'books'
 >
 
 export async function buildPromptPlaceholders(
@@ -488,7 +527,7 @@ export async function buildPromptPlaceholders(
           replyAs._id === char._id ? chat.overrides ?? replyAs.persona : replyAs.persona
         )
       ),
-      prefill: opts.settings?.prefill || '',
+      prefill: replyAs.prefill || opts.settings?.prefill || '',
       post: [],
       allPersonas: [],
       chatEmbeds: [],
@@ -511,6 +550,9 @@ export async function buildPromptPlaceholders(
     for (const bot of Object.values(opts.characters || {})) {
       if (!bot) continue
       if (personalities.has(bot._id)) continue
+
+      // We skip
+      if (bot._id === opts.replyAs._id) continue
       if (bot._id === opts.impersonate?._id) continue
 
       const temp = opts.chat.tempCharacters?.[bot._id]
@@ -553,11 +595,12 @@ export async function buildPromptPlaceholders(
 
     const post = createPostPrompt(opts)
 
-    if (opts.continue) {
-      post.unshift(`${char.name}: ${opts.continue}`)
-    }
+    // if (opts.continue) {
+    //   post.unshift(`${char.name}: ${opts.continue}`)
+    // }
 
     const books: AppSchema.MemoryBook[] = []
+    if (opts.books) books.push(...opts.books)
     if (replyAs.characterBook) books.push(replyAs.characterBook)
     if (opts.book) books.push(opts.book)
 
@@ -648,8 +691,8 @@ function createPostPrompt(
 ) {
   const post = []
 
-  if (opts.kind === 'chat-query') {
-    post.push(`Query Response:`)
+  if (opts.kind === 'chat-query' || opts.kind === 'summary') {
+    // post.push(`Query Response:`)
   } else {
     post.push(`${opts.replyAs.name}:`)
   }
@@ -697,6 +740,7 @@ export async function getLinesForPrompt(
       members: profiles,
       sender: opts.sender,
       impersonate: opts.impersonate,
+      replyAs: opts.replyAs,
     })
     const char = getBotName(
       opts.chat,
@@ -711,24 +755,15 @@ export async function getLinesForPrompt(
     msg.msg = removeReasoning(msg.msg, settings?.reasoning)
     const filled = fillPlaceholders({ msg, author: author.name, char, user: sender }).trim()
 
-    return { _id: msg._id, msg: filled, role: author.role }
+    return { _id: msg._id, msg: filled, role: author.role, json: msg.json?.values || {} }
   }
 
   /**
    * Message Visibility Filtering
    */
   const filtered = messages.filter((msg) => {
-    if (!msg.invisible && !opts.chat.invisible) return true
-
-    // If there are no keys, fallback to the chat defaults
-    if (msg.invisible && Object.keys(msg.invisible).length > 0) {
-      if (msg.invisible[opts.replyAs._id]) return false
-      return true
-    }
-
-    // Chat Defaults - ignored if message flags are present
-    if (opts.chat.invisible?.[opts.replyAs._id]) return false
-
+    const invisible = isMessageInvisible(opts.chat, msg, opts.replyAs._id)
+    if (invisible) return false
     return true
   })
 
@@ -748,8 +783,46 @@ export async function getLinesForPrompt(
   return { lines: history.slice(-lines.length) }
 }
 
+export function isMessageInvisible(
+  chat: AppSchema.Chat,
+  msg: AppSchema.ChatMessage,
+  characterId: string
+): boolean {
+  const specific = msg.invisible?.[characterId]
+  const defaults = chat.invisible?.[characterId]
+  const charDefaults = chat.invisibleChars?.[characterId]?.[msg.characterId || 'none']
+
+  if (specific !== undefined) return specific
+  if (charDefaults !== undefined) return charDefaults
+  if (defaults !== undefined) return defaults
+  return false
+}
+
+export function isMessageVisible(
+  chat: AppSchema.Chat,
+  msg: AppSchema.ChatMessage,
+  characterId: string
+): boolean {
+  return !isMessageInvisible(chat, msg, characterId)
+}
+
+export function getMessageVisibility(
+  chat: AppSchema.Chat,
+  msg: AppSchema.ChatMessage,
+  characterId: string
+) {
+  const specific = msg.invisible?.[characterId]
+  const defaults = chat.invisible?.[characterId]
+  const charDefaults = chat.invisibleChars?.[characterId]?.[msg.characterId || 'none']
+
+  if (specific !== undefined) return specific ? 'invisible' : 'visible'
+  if (charDefaults !== undefined) return charDefaults ? 'invisible' : 'visible'
+  if (defaults !== undefined) return defaults ? 'invisible' : 'visible'
+  return 'default'
+}
+
 function trimAddedLine(added: HistoryLine): HistoryLine {
-  return { msg: trimSentence(added.msg), _id: added._id, role: added.role }
+  return { msg: trimSentence(added.msg), _id: added._id, role: added.role, json: added.json }
 }
 
 /** This function is not used for Claude or Chat */
@@ -922,6 +995,10 @@ export function getContextLimit(
         return configuredMax - genAmount
       }
 
+      if (model === NOVEL_MODELS.glm_46) {
+        return 27500 - genAmount // 28k with the correct tokenizer
+      }
+
       return configuredMax - genAmount
     }
 
@@ -947,7 +1024,7 @@ export function getContextLimit(
     case 'openrouter-completion':
     case 'openrouter':
       if (gen?.openRouterModel?.context_length && gen.useMaxContext) {
-        return gen.openRouterModel.context_length - genAmount
+        return gen.openRouterModel.context_length * 0.98 - genAmount
       }
 
       return configuredMax - genAmount
@@ -1024,6 +1101,7 @@ export interface JsonField {
   name: string
   disabled: boolean
   type: JsonType
+  alias?: string
 }
 
 export const schema = {
@@ -1207,28 +1285,71 @@ function removeReasoning(msg: string, reasoning: AppSchema.GenSettings['reasonin
 
   if (!start || !end) return msg
 
-  while (true) {
-    let startIndex = msg.indexOf(start)
-    const endIndex = msg.indexOf(end)
-    if (startIndex < 0) {
-      if (endIndex >= 0) {
-        startIndex = 0
-      } else {
-        break
+  const { content } = extractReasoning(msg, { tags: reasoning })
+  return content
+
+  // while (true) {
+  //   let startIndex = msg.indexOf(start)
+  //   const endIndex = msg.indexOf(end)
+  //   if (startIndex < 0) {
+  //     if (endIndex >= 0) {
+  //       startIndex = 0
+  //     } else {
+  //       break
+  //     }
+  //   }
+
+  //   if (endIndex > startIndex) {
+  //     const thought = msg.slice(startIndex, endIndex + end.length)
+  //     msg = msg.replace(thought, '')
+  //     continue
+  //   }
+
+  //   const thought = msg.slice(startIndex)
+  //   if (thought) {
+  //     msg = msg.replace(thought, '')
+  //   }
+  // }
+
+  // return msg.trim()
+}
+
+export function simplifyPreset(
+  user: AppSchema.User,
+  gen: Partial<AppSchema.GenSettings>,
+  sub?: Partial<Omit<AppSchema.SubscriptionModel, 'kind'>>
+): Partial<AppSchema.GenSettings> {
+  const next: Partial<AppSchema.GenSettings> = { ...gen }
+
+  if (gen.useMaxContext || gen.presetMode === 'simple') {
+    gen.useMaxContext = true
+    next.maxContextLength = getContextLimit(user, next) + (gen.maxTokens ?? 0)
+  }
+
+  if (!gen.presetMode || gen.presetMode === 'advanced') return next
+
+  const recommends: any = {}
+
+  if (sub) {
+    for (const [prop, usable] of Object.entries(MODE_SETTINGS[gen.presetMode] || {})) {
+      if (!usable) continue
+      const value = (sub as any)[prop]
+      if (value !== undefined) {
+        recommends[prop] = value
       }
-    }
-
-    if (endIndex > startIndex) {
-      const thought = msg.slice(startIndex, endIndex + end.length)
-      msg = msg.replace(thought, '')
-      continue
-    }
-
-    const thought = msg.slice(startIndex)
-    if (thought) {
-      msg = msg.replace(thought, '')
     }
   }
 
-  return msg.trim()
+  Object.assign(next, recommends, { useMaxContext: true })
+
+  return next
+}
+
+let _templateLocator = (id: string): AppSchema.PromptTemplate | undefined => {
+  return
+}
+export function registerTemplateLocator(
+  callback: (id: string) => AppSchema.PromptTemplate | undefined
+) {
+  _templateLocator = callback
 }

@@ -1,4 +1,4 @@
-import { asyncImage, getImageBase64 } from '../pages/Character/util'
+import { imageApi } from '../store/data/image'
 import { FileInputResult } from './FileInput'
 
 export type ResizeOptions =
@@ -10,8 +10,8 @@ export type ResizeOptions =
   | { type: 'fit'; max: number }
 
 export async function resizeImage(image: FileInputResult, opts: ResizeOptions) {
-  const base64 = await getImageBase64(image.content)
-  const element = await asyncImage(base64)
+  const base64 = await imageApi.getImageBase64(image.content)
+  const element = await imageApi.asyncImage(base64)
   const origWidth = element.image.naturalWidth
   const origHeight = element.image.naturalHeight
   const canvas = document.createElement('canvas')
@@ -35,13 +35,9 @@ export async function resizeImage(image: FileInputResult, opts: ResizeOptions) {
 
     case 'fit': {
       if (origHeight <= opts.max && origWidth <= opts.max) {
-        return {
-          mime: image.file.type,
-          content: image.content,
-          w: origWidth,
-          h: origHeight,
-          original: { ...image, w: origWidth, h: origHeight },
-        }
+        width = origWidth
+        height = origHeight
+        break
       }
 
       const factor = origHeight > origWidth ? opts.max / origHeight : opts.max / origWidth
@@ -61,9 +57,9 @@ export async function resizeImage(image: FileInputResult, opts: ResizeOptions) {
 
   ctx?.drawImage(element.image, 0, 0, width, height)
 
-  const data = canvas.toDataURL(image.file.type)
+  const data = canvas.toDataURL('image/png') // previously: image.file.type
   return {
-    mime: image.file.type,
+    mime: 'image/png', // image.file.type,
     content: data,
     w: width,
     h: height,

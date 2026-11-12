@@ -49,6 +49,7 @@ if (!process.env.JWT_SECRET) {
 export const config = {
   clustering: !!env('CLUSTERING', ''),
   clusterWorkers: +env('CLUSTERING', ''),
+  requestTimeout: +env('REQUEST_TIMEOUT', '0'),
   auth: {
     inferenceKey: env('INFERENCE_KEY', ''),
     urls: env(

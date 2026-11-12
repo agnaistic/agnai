@@ -2,7 +2,7 @@ import { Accessor, Component, JSX, Show, createMemo } from 'solid-js'
 import { userStore } from '../store'
 import { useBgStyle } from './hooks'
 import { hooks } from './util'
-import { getAsCssVar, getRgbaFromVar, getRootVariable, getSettingColor } from './colors'
+import { getAsCssVar, getRgbaFromVar, getSafeVariableName, getSettingColor } from './colors'
 
 type Size = 'sm' | 'md' | 'lg'
 
@@ -31,7 +31,7 @@ export const Card: Component<{
 
   return (
     <div
-      class={`rounded-lg ${props.class ?? ''}`}
+      class={`rounded-lg shadow-sm shadow-[var(--bg-500)] ${props.class ?? ''}`}
       classList={{
         hidden: hide(),
         'p-1': props.size === 'sm',
@@ -102,7 +102,7 @@ export const SolidCard: Component<{
 
   return (
     <div
-      class={`rounded-lg ${props.class ?? ''}`}
+      class={`rounded-lg shadow-[var(--bg-500)] ${props.class ?? ''}`}
       classList={{
         'p-1': props.size === 'sm',
         'p-2': props.size === 'md',
@@ -169,9 +169,9 @@ export const TitleCard: Component<{
 
     const glowColor =
       props.glow === true
-        ? `0 0px 16px var(--${type}-${base + mod})`
+        ? `0 0px 16px var(--${type}-${500})`
         : props.glow
-        ? `0 0px 16px ${getRootVariable(props.glow)}`
+        ? `0 0px 16px var(${getSafeVariableName(props.glow)})`
         : undefined
 
     return {
@@ -184,7 +184,7 @@ export const TitleCard: Component<{
 
   return (
     <div
-      class={`flex flex-col gap-2 ${props.class || ''}`}
+      class={`flex flex-col gap-2 shadow-[var(--bg-500)] ${props.class || ''}`}
       style={bg()}
       role={props.ariaRole}
       aria-label={props.ariaLabel}

@@ -17,7 +17,7 @@ export const ImportTemplate = () => {
       toastStore.success('Successfully imported template')
       sagaStore.setState({ showModal: 'none' })
     } catch (ex: any) {
-      toastStore.error(ex.message)
+      toastStore.error(ex)
       return
     }
   }

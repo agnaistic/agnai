@@ -14,7 +14,8 @@ import voice from './voice'
 import { config } from '../config'
 import announcements from './announcements'
 import { apiKeyUsage } from './auth'
-import { generateImageApi, inferenceApi, inferenceModels } from './chat/inference'
+import { inferenceApi, inferenceModels } from './chat/inference'
+import { generateImageApi } from './image-api'
 
 const router = Router()
 

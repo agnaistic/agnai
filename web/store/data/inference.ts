@@ -2,10 +2,23 @@ import { v4 } from 'uuid'
 import { getStore } from '../create'
 import { getInferencePreset, replaceUniversalTags } from './common'
 import { localApi } from './storage'
-import { JsonField, TickHandler } from '/common/prompt'
+import { TickHandler } from '/common/prompt'
 import { AppSchema } from '/common/types'
-import { api } from '../api'
+import { api, getAuthHeaders } from '../api'
 import { toastStore } from '../toasts'
+import { onCleanup } from 'solid-js'
+import { createStore } from 'solid-js/store'
+import { getEncoder } from '/common/tokenize'
+import { msgsApi } from './messages'
+import { parseTemplate } from '/common/template-parser'
+import { extractReasoning } from '/common/reasoning'
+import { applog, debug } from '/common/debug'
+import { replaceTags } from '/common/presets/templates'
+import { getProvider } from '../preset-context'
+import { getProviderConnection } from '/common/providers'
+import { getLocalPayload } from '/common/requests/payloads'
+import { lazyPromise } from '/common/util'
+import { GenerateRequestV2 } from '/srv/adapter/type'
 
 const inferenceCallbacks = new Map<string, TickHandler>()
 
@@ -15,21 +28,190 @@ export const genApi = {
   inferenceStream,
   callbacks: inferenceCallbacks,
   subscribe: inferenceSubscribe,
+  cancellableStream,
+  inferenceSignal,
 }
 
 type InferenceOpts = {
-  prompt: string
+  signal?: AbortController
+  prompt?: string
   messages?: Array<{ role: string; content: any }>
   settings?: Partial<AppSchema.GenSettings>
   overrides?: Partial<AppSchema.GenSettings>
   maxTokens?: number
-  jsonSchema?: JsonField[]
+  chatId?: string
+  jsonSchema?: GenerateRequestV2['jsonSchema']
+  stop?: string[]
+
+  broadcast?: { type: string; id: string; payload: any }
 
   /** Base64 image */
   image?: string
+  payload?: any
 }
 
-export function inferenceSubscribe<T = any>(requestId: string, handler: TickHandler<T>) {
+type InferenceStatus = 'idle' | 'loading' | 'error'
+
+type InferenceState = {
+  status: InferenceStatus
+  response: string
+  error: string
+  preset?: Partial<AppSchema.GenSettings>
+  schema?: GenerateRequestV2['jsonSchema']
+  maxContext: number
+  thoughts: string[]
+  signal: AbortController | null
+}
+
+const initState = (init?: {
+  preset?: Partial<AppSchema.GenSettings>
+  schema?: GenerateRequestV2['jsonSchema']
+  maxContext?: number
+}): InferenceState => ({
+  status: 'idle',
+  response: '',
+  error: '',
+  preset: init?.preset,
+  schema: init?.schema,
+  maxContext: init?.maxContext || 0,
+  thoughts: [],
+  signal: null as AbortController | null,
+})
+
+export function inferenceHelper(init: {
+  chatId?: string
+  preset?: Partial<AppSchema.GenSettings>
+  schema?: GenerateRequestV2['jsonSchema']
+  onTick?: TickHandler
+  onState?: (next: InferenceState) => void
+  maxContext?: number
+}) {
+  const state: InferenceState = initState(init)
+
+  const getState = () => ({ ...state })
+
+  const setState = (partial: Partial<typeof state>) => {
+    Object.assign(state, partial)
+    init.onState?.(getState())
+  }
+
+  const onTick: TickHandler = (response, tick) => {
+    if (state.status !== 'loading') return
+
+    const parsed = extractReasoning(response || '', { tags: state.preset?.reasoning })
+
+    switch (tick) {
+      case 'error': {
+        setState({ status: 'error', error: response, signal: null })
+        init.onTick?.(response, tick)
+        return
+      }
+
+      case 'partial': {
+        setState({
+          response: parsed.content,
+          thoughts: parsed.thoughts,
+        })
+        break
+      }
+
+      case 'done': {
+        const parsed = extractReasoning(response, { tags: state.preset?.reasoning })
+        setState({
+          status: 'idle',
+          response: parsed.content,
+          thoughts: parsed.thoughts,
+          signal: null,
+        })
+        break
+      }
+    }
+
+    init.onTick?.(parsed.content, tick)
+  }
+
+  const generate = async (opts: {
+    signal?: AbortController
+    prompt: string
+    image?: string
+    chatId?: string
+    preset?: Partial<AppSchema.GenSettings>
+    schema?: GenerateRequestV2['jsonSchema']
+    maxContext?: number
+  }) => {
+    if (opts.preset) setState({ preset: opts.preset })
+    if (opts.schema) setState({ schema: opts.schema })
+    if (opts.maxContext) setState({ maxContext: opts.maxContext })
+
+    const preset = opts.preset || state.preset
+    const schema = opts.schema || state.schema
+
+    const active = await msgsApi.getActiveTemplateParts()
+    active.limit = {
+      context: opts.maxContext! || preset?.maxContextLength!,
+      encoder: await getEncoder(),
+    }
+    const parsed = await parseTemplate(opts.prompt, active)
+    parsed.parsed = replaceTags(parsed.parsed, preset?.modelFormat || 'None')
+
+    const stream = genApi.cancellableStream(
+      {
+        prompt: parsed.parsed,
+        messages: parsed.blocks.length ? parsed.blocks : undefined,
+        image: opts.image,
+        settings: preset,
+        jsonSchema: schema,
+        signal: opts.signal,
+        chatId: init.chatId || opts.chatId,
+      },
+      onTick
+    )
+
+    setState({ status: 'loading', signal: stream.signal })
+
+    return stream
+  }
+
+  const cancel = () => {
+    if (state.status !== 'loading') return
+    if (!state.signal) return
+
+    applog('cancelling stream')
+    state.signal.abort()
+    setState({ status: 'idle', signal: null })
+  }
+
+  return { getState, setState, send: generate, cancel }
+}
+
+export function inferenceSignal(init: {
+  preset?: AppSchema.GenSettings
+  schema?: GenerateRequestV2['jsonSchema']
+  onTick?: TickHandler
+  maxContext?: number
+}) {
+  const helper = inferenceHelper({ ...init, onState: (next) => setState(next) })
+  const [state, setState] = createStore(helper.getState())
+
+  onCleanup(() => {
+    helper.cancel()
+  })
+
+  return {
+    state,
+    cancel: helper.cancel,
+    send: helper.send,
+    update: (next: {
+      preset?: AppSchema.GenSettings
+      schema?: GenerateRequestV2['jsonSchema']
+      maxContext?: number
+    }) => {
+      helper.setState(next)
+    },
+  }
+}
+
+export function inferenceSubscribe(requestId: string, handler: TickHandler) {
   inferenceCallbacks.set(requestId, handler)
 
   setTimeout(() => {
@@ -89,7 +271,9 @@ export async function basicInference(opts: InferenceOpts) {
     preset = Object.assign({}, preset, overrides)
   }
 
-  prompt = replaceUniversalTags(prompt, preset.modelFormat)
+  if (prompt) {
+    prompt = replaceUniversalTags(prompt, preset.modelFormat)
+  }
 
   const res = await api.method<{ response: string; meta: any }>('post', `/chat/inference`, {
     requestId,
@@ -101,6 +285,14 @@ export async function basicInference(opts: InferenceOpts) {
   })
 
   return res
+}
+
+export function cancellableStream(opts: InferenceOpts, onTick?: TickHandler) {
+  const signal = opts.signal || new AbortController()
+
+  const promise = inferenceStream({ ...opts, signal }, onTick)
+
+  return { cancel: () => signal.abort(), promise, signal }
 }
 
 export async function inferenceStream(opts: InferenceOpts, onTick?: TickHandler) {
@@ -118,60 +310,100 @@ export async function inferenceStream(opts: InferenceOpts, onTick?: TickHandler)
     preset = Object.assign({}, preset, overrides)
   }
 
-  prompt = replaceUniversalTags(prompt, preset.modelFormat)
+  if (prompt) {
+    prompt = replaceUniversalTags(prompt, preset.modelFormat)
+  }
+
   const lazy = lazyPromise<{ response: string }>()
 
-  const tickWrapper: TickHandler = (res, state) => {
-    if (state === 'done') {
-      if (typeof res !== 'string') lazy.resolve(res)
-      else lazy.resolve({ response: res })
-    }
+  let lastResponse = ''
 
-    onTick?.(res, state)
+  const payload = {
+    requestId,
+    user,
+    prompt,
+    messages: opts.messages,
+    imageData: opts.image,
+    jsonSchema: opts.jsonSchema,
+    settings: { ...preset, stream: true },
+    stop: opts.stop,
+    chatId: opts.chatId,
   }
 
-  inferenceCallbacks.set(requestId, tickWrapper)
+  const provider = getProvider(settings?.providerId)
+  const conn = provider ? getProviderConnection(provider) : undefined
 
-  const res = await api.method<{ requestId: string; generating: boolean }>(
-    'post',
-    `/chat/inference-stream`,
-    {
-      requestId,
+  const tickWrapper: TickHandler = (res, state, json) => {
+    if (localStorage.error_test === 'gen-tick' && lazy.state === 'pending' && state !== 'error') {
+      lazy.reject(new Error(`Error test -- ${state}`))
+      opts.signal?.abort()
+      getStore('responses').setState({ waiting: undefined, partial: undefined })
+    } else {
+      if (state === 'partial') {
+        lastResponse = res
+      }
+
+      if (state === 'done') {
+        if (typeof res !== 'string') lazy.resolve(res)
+        else lazy.resolve({ response: res })
+      }
+
+      if (state === 'error') {
+        lazy.reject(res)
+        getStore('responses').setState({ waiting: undefined, partial: undefined })
+      }
+    }
+
+    onTick?.(res, state, json)
+  }
+
+  if (opts.signal) {
+    opts.signal.signal.onabort = () => {
+      inferenceCallbacks.delete(requestId)
+      tickWrapper(lastResponse, 'done')
+    }
+  }
+  if (conn?.local) {
+    const headers: any = {}
+    const key = provider?.userKey || opts.settings?.thirdPartyKey
+    if (key) {
+      headers.Authorization = `Bearer ${key}`
+      headers['x-api-key'] = `${key}`
+    }
+    if (!opts.payload) {
+      debug('sse')('warning: no local payload provided, using fallback')
+    }
+
+    const fallback = getLocalPayload({
       user,
-      prompt,
       messages: opts.messages,
-      imageData: opts.image,
+      prompt: opts.prompt,
+      settings: preset,
       jsonSchema: opts.jsonSchema,
-      settings: { ...preset, stream: true },
-    }
-  )
-
-  if (res.error) {
-    onTick?.(res.error, 'error')
+    })
+    api.localSSE({
+      host: conn?.url,
+      path: payload.messages ? `/chat/completions` : '/completions',
+      body: opts.payload || fallback,
+      headers,
+      signal: opts.signal,
+      onTick: tickWrapper,
+    })
+  } else {
+    api.fetchSSE({
+      path: '/chat/inference-stream',
+      headers: getAuthHeaders(),
+      body: payload,
+      signal: opts.signal,
+      onTick: tickWrapper,
+    })
   }
 
-  if (!res.result?.generating) {
-    inferenceCallbacks.delete(requestId)
+  if (localStorage.error_test === 'gen-cancel') {
+    setTimeout(() => opts.signal?.abort(), 0)
+    toastStore.error('Gen cancelled test', { stack: new Error('Test').stack })
+    return lazy.promise
   }
 
   return lazy.promise
-}
-
-export function lazyPromise<T = any>() {
-  const parts = {
-    resolve: (result: T) => {},
-    reject: (error: any) => {},
-    promise: {} as any as Promise<{ result?: T; error?: any }>,
-  }
-
-  parts.promise = new Promise<{ result?: T; error?: any }>((resolve, _reject) => {
-    parts.resolve = (result: any) => {
-      resolve({ result, error: undefined })
-    }
-    parts.reject = (error: any) => {
-      resolve({ result: undefined, error })
-    }
-  })
-
-  return parts
 }

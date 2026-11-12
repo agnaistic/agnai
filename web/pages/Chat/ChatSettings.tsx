@@ -15,14 +15,21 @@ import Button from '../../shared/Button'
 import Select from '../../shared/Select'
 import PersonaAttributes, { fromAttrs, toAttrs } from '../../shared/PersonaAttributes'
 import TextInput from '../../shared/TextInput'
-import { chatStore, msgStore, presetStore, scenarioStore, toastStore, userStore } from '../../store'
+import {
+  chatStore,
+  presetStore,
+  responseStore,
+  scenarioStore,
+  toastStore,
+  userStore,
+} from '../../store'
 import { defaultPresets } from '/common/presets'
-import { Card, TitleCard } from '/web/shared/Card'
+import { Card, Pill, TitleCard } from '/web/shared/Card'
 import { Toggle } from '/web/shared/Toggle'
 import TagInput from '/web/shared/TagInput'
 import { usePane } from '/web/shared/hooks'
 import Divider from '/web/shared/Divider'
-import { Sparkles, Wand } from 'lucide-solid'
+import { Check, Minus, Sparkles, Wand, X } from 'lucide-solid'
 import { createStore } from 'solid-js/store'
 import FileInput, { FileInputResult } from '/web/shared/FileInput'
 import { StreamCallback } from '/web/store/data/messages'
@@ -30,8 +37,9 @@ import { generateField, MinCharacter } from '../Character/generate-char'
 import { RelativeSpinner } from '/web/shared/Loading'
 import { isDefaultPreset } from '/common/default-preset'
 import { FormLabel } from '/web/shared/FormLabel'
-import { useParticipantList } from './MemberModal'
-import { VisibilityToggle } from './components/Visibility'
+import { useParticipantList } from './util'
+import { CharacterDefaultVisibility, VisibilityToggle } from './components/Visibility'
+import { neat } from '/common/util'
 
 const formatOptions = [
   { value: 'attributes', label: 'Attributes' },
@@ -70,21 +78,25 @@ const ChatSettings: Component<{
   close: () => void
   footer: (children: any) => void
 }> = (props) => {
-  const state = chatStore((s) => ({ chat: s.active?.chat, char: s.active?.char }))
+  const state = chatStore((s) => ({ active: s.details[s.lastChatId || ''] }))
   const [generating, setGenerating] = createSignal('')
-  const [flags, setFlags] = createSignal<Record<string, boolean>>({})
-  const [edit, setEdit] = createStore(getInitState(state.chat, state.char))
+  const [flags, setFlags] = createSignal<Record<string, boolean | undefined>>({})
+  const [edit, setEdit] = createStore(getInitState(state.active?.chat, state.active?.char))
 
-  const user = userStore()
-  const presets = presetStore((s) => s.presets)
-  const scenarioState = scenarioStore()
+  const user = userStore((s) => ({ user: s.user }))
+  const presets = presetStore((s) => ({ list: s.presets }))
+  const scenarioState = scenarioStore((s) => ({
+    scenarios: s.scenarios,
+    loading: s.loading,
+    partial: s.partial,
+  }))
 
   const pane = usePane()
   const lists = useParticipantList()
 
   const saveBackgroundImage = async (files: FileInputResult[]) => {
     if (!files?.length) return
-    if (!state.chat) return
+    if (!state.active?.chat) return
 
     const [file] = files
 
@@ -103,47 +115,56 @@ const ChatSettings: Component<{
   })
 
   const activePreset = createMemo(() => {
-    const presetId = state.chat?.genPreset
+    const presetId = state.active?.chat?.genPreset
     if (!presetId) return
 
     if (isDefaultPreset(presetId)) return defaultPresets[presetId]
-    return presets.find((pre) => pre._id === presetId)
+    return presets.list.find((pre) => pre._id === presetId)
   })
 
   createEffect(
     on(
-      () => [state.chat, state.char] as const,
+      () => [state.active?.chat, state.active?.char] as const,
       ([chat, char]) => {
         if (!chat || !char) return
-        setFlags(state.chat?.invisible ? { ...state.chat.invisible } : {})
+        setFlags(state.active?.chat?.invisible ? { ...state.active?.chat.invisible } : {})
         setEdit(getInitState(chat, char))
       }
     )
   )
 
   onMount(() => {
+    if (scenarioState.scenarios.length) return
     scenarioStore.getAll()
   })
 
   createEffect(() => {
-    setEdit('scenarioId', state.chat?.scenarioIds?.[0] || '')
+    setEdit('scenarioId', state.active?.chat?.scenarioIds?.[0] || '')
   })
 
-  createEffect(() => {
-    const currentText = edit.scenario
-    const scenario = scenarioState.scenarios.find((s) => s._id === edit.scenarioId)
-    if (scenario?.overwriteCharacterScenario && !state.chat?.scenarioIds?.includes(scenario._id)) {
-      setEdit('scenario', scenario.text)
-    } else {
-      setEdit('scenario', currentText)
-    }
-  })
+  createEffect(
+    on(
+      () => [edit.scenarioId],
+      () => {
+        const currentText = edit.scenario
+        const scenario = scenarioState.scenarios.find((s) => s._id === edit.scenarioId)
+        if (
+          scenario?.overwriteCharacterScenario &&
+          !state.active?.chat?.scenarioIds?.includes(scenario._id)
+        ) {
+          setEdit('scenario', scenario.text)
+        } else {
+          setEdit('scenario', currentText)
+        }
+      }
+    )
+  )
 
   const scenarios = createMemo(() => {
     const noScenario = [{ value: '', label: "None (use character's scenario)" }]
     if (scenarioState.loading || scenarioState.partial) {
       return noScenario.concat(
-        (state.chat?.scenarioIds ?? []).map((id) => ({
+        (state.active?.chat?.scenarioIds ?? []).map((id) => ({
           value: id,
           label: '...',
         }))
@@ -170,7 +191,7 @@ const ChatSettings: Component<{
     genOverrideField({
       char: {
         name: edit.name,
-        appearance: state.char?.appearance || '',
+        appearance: state.active?.char?.appearance || '',
         description: edit.description || '',
 
         greeting: edit.greeting,
@@ -207,10 +228,11 @@ const ChatSettings: Component<{
 
   const toggle = (charId: string) => {
     const next = { ...flags() }
-    const flag = next[charId] === undefined ? true : !next[charId]
+    const curr = next[charId]
+    const flag = curr === undefined ? true : curr === false ? undefined : false
     next[charId] = flag
     setFlags(next)
-    chatStore.editChat(state.chat?._id!, { invisible: next }, { quiet: true })
+    chatStore.editChat(state.active?.chat?._id!, { invisible: next }, { quiet: true })
   }
 
   const onSave = () => {
@@ -229,7 +251,7 @@ const ChatSettings: Component<{
       scenarioIds: edit.scenarioId ? [edit.scenarioId] : [],
       scenarioStates: edit.scenarioStates,
     }
-    chatStore.editChat(state.chat?._id!, payload, {
+    chatStore.editChat(state.active?.chat?._id!, payload, {
       useOverrides: edit.useOverrides,
       onSuccess: () => {
         if (pane() !== 'pane') {
@@ -240,10 +262,10 @@ const ChatSettings: Component<{
   }
 
   const revert = () => {
-    const char = state.char
+    const char = state.active?.char
     if (!char) return
 
-    chatStore.editChat(state.chat?._id!, {})
+    chatStore.editChat(state.active?.chat?._id!, {})
   }
 
   const Footer = (
@@ -269,7 +291,7 @@ const ChatSettings: Component<{
   return (
     <form class="flex flex-col gap-3">
       <Show when={user.user?.admin}>
-        <Card class="text-xs">{state.chat?._id}</Card>
+        <Card class="text-xs">{state.active?.chat?._id}</Card>
       </Show>
 
       <Card>
@@ -296,7 +318,7 @@ const ChatSettings: Component<{
               <div class="flex items-center justify-between gap-1">
                 Background Image{' '}
                 <div class="flex items-center gap-1">
-                  <Show when={state.chat?.background}>
+                  <Show when={state.active?.chat?.background}>
                     <Select
                       parentClass="text-xs"
                       items={[
@@ -327,7 +349,7 @@ const ChatSettings: Component<{
             label="Chat Mode"
             helperText={
               <>
-                <Show when={state.chat?.mode !== 'companion' && edit.mode === 'companion'}>
+                <Show when={state.active?.chat?.mode !== 'companion' && edit.mode === 'companion'}>
                   <TitleCard type="orange">
                     Warning! Switching to COMPANION mode is irreversible! You will no longer be able
                     to: retry messages, delete chats, edit chat settings.
@@ -355,9 +377,17 @@ const ChatSettings: Component<{
               Chat name{' '}
               <div
                 onClick={() =>
-                  msgStore.chatQuery('Generate a name for this conversation', (msg, state) => {
-                    setEdit('name', msg)
-                  })
+                  responseStore.chatQuery(
+                    {
+                      question:
+                        'Generate one name for this conversation. Reply only with the one chat name only and no other formatting or commentary.',
+                      assistant: 'Conversation Name Generator',
+                    },
+                    (msg, state) => {
+                      if (state !== 'partial' && state !== 'done') return
+                      setEdit('name', msg)
+                    }
+                  )
                 }
               >
                 <Wand />
@@ -482,20 +512,38 @@ const ChatSettings: Component<{
 
       <FormLabel
         label="Default Message Visibility"
-        helperText="When the Message has not had visibility edited"
+        helperMarkdown={neat`
+          When the Message has not had visibility edited.
+          The _most specific_ takes precendence:
+          \`Message > Character Default > All Default\`
+          `}
       />
 
       <div>
-        <p>
-          <b>Green - </b> Can see this message when replying
-        </p>
+        <div class="flex flex-wrap gap-2">
+          <Pill small inverse>
+            <Check size={16} color="var(--success-500)" class="flex items-center gap-1" />
+            Visible
+          </Pill>
+          <Pill small inverse>
+            <X size={16} color="var(--error-500)" class="flex items-center gap-1" />
+            Invisible
+          </Pill>
+          <Pill small inverse class="flex items-center gap-1">
+            <Minus size={16} />
+            Not Set
+          </Pill>
+        </div>
 
+        <div>
+          <strong>Defaults for All Messages</strong>
+        </div>
         <div class="flex flex-wrap gap-2">
           <For each={lists().chars}>
             {(char) => (
               <VisibilityToggle
                 char={char}
-                invisible={!!flags()[char._id]}
+                invisible={flags()[char._id]}
                 onClick={() => toggle(char._id)}
               />
             )}
@@ -505,12 +553,16 @@ const ChatSettings: Component<{
             {(char) => (
               <VisibilityToggle
                 char={char}
-                invisible={!!flags()[char._id]}
+                invisible={flags()[char._id]}
                 onClick={() => toggle(char._id)}
               />
             )}
           </For>
         </div>
+
+        <Show when={state.active.chat}>
+          <CharacterDefaultVisibility chat={state.active.chat} participants={lists()} />
+        </Show>
       </div>
     </form>
   )

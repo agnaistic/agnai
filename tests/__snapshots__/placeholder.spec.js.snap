@@ -3,9 +3,11 @@
 exports[`Placeholder tests will not include duplicates in {{all_personalities}} 1`] = `
 Object {
   "addedLines": Array [],
+  "blockPrompt": "",
   "blocks": Array [],
   "flags": Object {
     "is_final": true,
+    "jsonAliases": Object {},
     "messages": Array [],
     "pre_render": false,
   },

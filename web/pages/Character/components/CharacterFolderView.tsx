@@ -1,3 +1,4 @@
+import './characters.css'
 import { Component, For, JSX, Show, createEffect, createMemo, createSignal } from 'solid-js'
 import { CardProps, ListCharacter, SortDirection, ViewProps } from './types'
 import { AppSchema } from '/common/types'
@@ -26,11 +27,11 @@ import { DropMenu } from '/web/shared/DropMenu'
 import { HelpModal, RootModal } from '/web/shared/Modal'
 import TextInput from '/web/shared/TextInput'
 import { on } from 'solid-js'
-import { characterStore, chatStore } from '/web/store'
+import { characterStore, quickCreateChat } from '/web/store'
 import { ManualPaginate, usePagination } from '/web/shared/Paginate'
 import Divider from '/web/shared/Divider'
 import { useResizeObserver } from '/web/shared/hooks'
-import { getStore } from '/web/store/create'
+import { Selectable } from '/web/shared/Selectable'
 
 type FolderTree = { [folder: string]: Folder }
 
@@ -39,7 +40,7 @@ type Folder = { path: string; depth: number; list: AppSchema.Character[] }
 export const CharacterFolderView: Component<
   ViewProps & { characters: AppSchema.Character[]; favorites: AppSchema.Character[] }
 > = (props) => {
-  const chars = chatStore()
+  const chars = characterStore((s) => ({ list: s.characters.list, map: s.characters.map }))
   const [search, setSearch] = useSearchParams()
   const [, { onDragStart, onDragEnd }] = useDragDropContext()!
   const size = useResizeObserver()
@@ -120,7 +121,7 @@ export const CharacterFolderView: Component<
   const folders = createMemo(() => {
     const tree: FolderTree = { '/': { path: '/', depth: 1, list: [] } }
     const map = charsMap()
-    for (const char of chars.allChars.list) {
+    for (const char of chars.list) {
       let folder = toFolderSlug(char.folder || '')
       const depth = folder.match(/\//g)?.length ?? 0
 
@@ -192,14 +193,20 @@ export const CharacterFolderView: Component<
         <div class="flex w-full flex-col gap-1 overflow-y-scroll">
           <For each={faveChars()}>
             {(char) => (
-              <Character
-                edit={() => props.setEdit(char)}
-                char={char}
-                toggleFavorite={(v) => props.toggleFavorite(char._id, v)}
-                delete={() => props.setDelete(char)}
-                download={() => props.setDownload(char)}
-                folder={() => setChangeFolder(char)}
-              />
+              <Selectable
+                selecting={props.selecting}
+                selected={props.selected[char._id] === true}
+                onSelect={() => props.select(char._id)}
+              >
+                <Character
+                  edit={() => props.setEdit(char)}
+                  char={char}
+                  toggleFavorite={(v) => props.toggleFavorite(char._id, v)}
+                  delete={() => props.setDelete(char)}
+                  download={() => props.setDownload(char)}
+                  folder={() => setChangeFolder(char)}
+                />
+              </Selectable>
             )}
           </For>
 
@@ -209,14 +216,20 @@ export const CharacterFolderView: Component<
 
           <For each={pager.items()}>
             {(char) => (
-              <Character
-                edit={() => props.setEdit(char)}
-                char={char}
-                toggleFavorite={(v) => props.toggleFavorite(char._id, v)}
-                delete={() => props.setDelete(char)}
-                download={() => props.setDownload(char)}
-                folder={() => setChangeFolder(char)}
-              />
+              <Selectable
+                selecting={props.selecting}
+                selected={props.selected[char._id] === true}
+                onSelect={() => props.select(char._id)}
+              >
+                <Character
+                  edit={() => props.setEdit(char)}
+                  char={char}
+                  toggleFavorite={(v) => props.toggleFavorite(char._id, v)}
+                  delete={() => props.setDelete(char)}
+                  download={() => props.setDownload(char)}
+                  folder={() => setChangeFolder(char)}
+                />
+              </Selectable>
             )}
           </For>
         </div>
@@ -326,13 +339,17 @@ const FolderContents: Component<{
 const Character: Component<CardProps & { folder: () => void }> = (props) => {
   const drag = createDraggable(props.char._id, props.char)
   return (
-    <div class="flex w-[calc(100%-24px)] select-none items-center gap-2 rounded-md border-[1px] border-[var(--bg-800)] hover:border-[var(--bg-600)]">
-      <div ref={(ref) => drag(ref)} class="cursor-grab" style={{ 'touch-action': 'none' }}>
+    <div class="charlist select-none items-center rounded-md border-[1px] border-[var(--bg-800)] px-2 hover:border-[var(--bg-600)]">
+      <div
+        ref={(ref) => drag(ref)}
+        class="charlist__grab cursor-grab"
+        style={{ 'touch-action': 'none' }}
+      >
         <GripHorizontal color="var(--bg-500)" />
       </div>
 
       <A
-        class="ellipsis flex w-full cursor-pointer items-center gap-2"
+        class="charlist__content ellipsis flex w-full cursor-pointer items-center gap-2"
         href={`/character/${props.char._id}/chats`}
       >
         <CharacterAvatar format={{ size: 'sm', corners: 'circle' }} char={props.char} zoom={1.75} />
@@ -368,32 +385,38 @@ const CharacterListOptions: Component<{
   const [listOpts, setListOpts] = createSignal(false)
   const nav = useNavigate()
 
+  const size = 16
+
   return (
-    <div>
-      <div class="hidden flex-row items-center justify-center gap-2 sm:flex">
+    <div class="charlist__options">
+      <div class="mr-1 hidden flex-row items-center justify-center gap-2 sm:mr-0 sm:flex">
         <Show when={props.char.favorite}>
-          <Star
-            class="icon-button fill-[var(--text-900)] text-[var(--text-900)]"
-            onClick={() => props.toggleFavorite(false)}
-          />
+          <div class="icon-button" onClick={() => props.toggleFavorite(false)}>
+            <Star size={size} class="fill-[var(--text-900)] text-[var(--text-900)]" />
+          </div>
         </Show>
         <Show when={!props.char.favorite}>
-          <Star class="icon-button" onClick={() => props.toggleFavorite(true)} />
+          <div class="icon-button" onClick={() => props.toggleFavorite(true)}>
+            <Star size={size} onClick={() => props.toggleFavorite(true)} />
+          </div>
         </Show>
 
-        <a onClick={props.download}>
-          <Download class="icon-button" />
+        <a onClick={props.download} class="icon-button">
+          <Download size={size} />
         </a>
-        <a onClick={props.edit}>
-          <Edit class="icon-button" />
+        <a onClick={props.edit} class="icon-button">
+          <Edit size={size} />
         </a>
-        <A href={`/character/create/${props.char._id}`}>
-          <Copy class="icon-button" />
-        </A>
-        <Trash class="icon-button" onClick={props.delete} />
+        <a class="icon-button" onClick={() => nav(`/character/create/${props.char._id}`)}>
+          <Copy size={size} class="icon-button" />
+        </a>
+
+        <a class="icon-button" onClick={props.delete}>
+          <Trash size={size} onClick={props.delete} />
+        </a>
       </div>
       <div class="flex items-center sm:hidden" onClick={() => setListOpts(true)} ref={itemMenu}>
-        <MoreHorizontal class="icon-button" />
+        <MoreHorizontal size={size} class="icon-button" />
       </div>
       <DropMenu
         class="bg-[var(--bg-700)]"
@@ -406,32 +429,26 @@ const CharacterListOptions: Component<{
         <div class="flex flex-col gap-2 p-2 font-bold">
           <Button onClick={() => props.toggleFavorite(!props.char.favorite)} alignLeft size="sm">
             <Show when={props.char.favorite}>
-              <Star class="text-900 fill-[var(--text-900)]" /> Unfavorite
+              <Star size={size} class="text-900 fill-[var(--text-900)]" /> Unfavorite
             </Show>
             <Show when={!props.char.favorite}>
-              <Star /> Favorite
+              <Star size={size} /> Favorite
             </Show>
           </Button>
-          <Button
-            onClick={() =>
-              getStore('chat').quickCreateChat(props.char._id, (id) => nav(`/chat/${id}`))
-            }
-            alignLeft
-            size="sm"
-          >
-            <MessageCircle /> Chat
+          <Button onClick={() => quickCreateChat(props.char._id, nav)} alignLeft size="sm">
+            <MessageCircle size={size} /> Chat
           </Button>
           <Button alignLeft onClick={props.download} size="sm">
-            <Download /> Download
+            <Download size={size} /> Download
           </Button>
           <Button alignLeft onClick={props.edit} size="sm">
-            <Edit /> Edit
+            <Edit size={size} /> Edit
           </Button>
           <Button alignLeft onClick={() => nav(`/character/create/${props.char._id}`)} size="sm">
-            <Copy /> Duplicate
+            <Copy size={size} /> Duplicate
           </Button>
           <Button alignLeft schema="red" onClick={props.delete} size="sm">
-            <Trash /> Delete
+            <Trash size={size} /> Delete
           </Button>
         </div>
       </DropMenu>

@@ -1,0 +1,21 @@
+// Project-local debug tasks
+//
+// For more documentation on how to configure debug tasks,
+// see: https://zed.dev/docs/debugger
+[
+  {
+    "label": "Launch API (Zed)",
+    "adapter": "JavaScript",
+    "program": "${ZED_WORKTREE_ROOT}/srv/start.js",
+    "sourceMaps": true,
+    "console": "integratedTerminal",
+    "request": "launch",
+    "trace": true,
+    "type": "node",
+    "outFiles": [
+      "${ZED_WORKTREE_ROOT}/srv/**/*.js",
+      "${ZED_WORKTREE_ROOT}/common/**/*.js",
+      "!**/node_modules/**"
+    ]
+  }
+]

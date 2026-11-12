@@ -5,6 +5,7 @@ import { api, isImpersonating, revertAuth, setAltAuth } from './api'
 import { createStore } from './create'
 import { toastStore } from './toasts'
 import type { SubsAgg } from '/srv/domains/subs/types'
+import { ServerEmbedding } from '/common/types/admin'
 
 type UserInfo = {
   userId: string
@@ -197,6 +198,73 @@ export const adminStore = createStore<AdminState>('admin', {
         toastStore.error(`Failed to create tier: ${res.error}`)
       }
     },
+
+    async updateConfigPartial(_, update: Partial<AppSchema.Configuration>) {
+      const res = await api.post('/admin/configuration-partial', update)
+
+      if (res.error) {
+        toastStore.error(`Failed to Update Configuration: ${res.error}`)
+        return
+      }
+
+      if (res.result) {
+        toastStore.success('Configuration Updated')
+        return { config: res.result }
+      }
+    },
+
+    async assignEmbedding(_, id: string) {
+      const res = await api.post('/admin/configuration-partial', { embedding: id })
+
+      if (res.error) {
+        toastStore.error(`Failed to assign Server Embedding: ${res.error}`)
+        return
+      }
+
+      if (res.result) {
+        toastStore.success('Assigned Server Embedding')
+        return { config: res.result }
+      }
+    },
+
+    async *updateEmbedding(_, embed: ServerEmbedding, onSuccess?: () => void) {
+      const res = await api.post('/admin/update-embedding', embed)
+
+      if (res.error) {
+        toastStore.error(`Failed to update Server Embedding: ${res.error}`)
+        return
+      }
+
+      if (res.result) {
+        if (typeof res.result.test.err) {
+          toastStore.warn(`Embedding Test failed: ${res.result.test.err}`)
+        } else {
+          toastStore.success('Updated Server Embedding: Test passed')
+        }
+        yield { config: res.result.cfg }
+        onSuccess?.()
+      }
+    },
+
+    async *createEmbedding(_, embed: ServerEmbedding, onSuccess?: () => void) {
+      const res = await api.post('/admin/embedding', embed)
+
+      if (res.error) {
+        toastStore.error(`Failed to create Server Embedding: ${res.error}`)
+        return
+      }
+
+      if (res.result) {
+        if (typeof res.result.test.err) {
+          toastStore.warn(`Embedding Test failed: ${res.result.test.err}`)
+        } else {
+          toastStore.success('Created Server Embedding: Test passed')
+        }
+        yield { config: res.result.cfg }
+        onSuccess?.()
+      }
+    },
+
     async updateTier(_, id: string, update: Partial<OmitId<AppSchema.SubscriptionTier, Dates>>) {
       const res = await api.post(`/admin/tiers/${id}`, update)
       if (res.result) {
@@ -223,9 +291,10 @@ export const adminStore = createStore<AdminState>('admin', {
         toastStore.error(`Failed to retrieve products: ${res.error}`)
       }
     },
-    async getConfiguration() {
+    async getConfiguration(_, callback?: (config: AppSchema.Configuration) => void) {
       const res = await api.get('/settings')
       if (res.result) {
+        callback?.(res.result.serverConfig)
         return { config: res.result.serverConfig }
       }
     },

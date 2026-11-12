@@ -2,7 +2,7 @@ import { Component, createMemo, Show } from 'solid-js'
 import RangeInput from '../RangeInput'
 import { Toggle } from '../Toggle'
 import { userStore } from '../../store'
-import { PhraseBias, StoppingStrings } from '../PhraseBias'
+import { MessageParsers, PhraseBias, StoppingStrings } from '../PhraseBias'
 import { BUILTIN_FORMATS } from '/common/presets/templates'
 import { getSubscriptionModelLimits } from '/common/util'
 import { ContextSize, ModelFormat, ResponseLength, Temperature } from './Fields'
@@ -11,7 +11,7 @@ import { PresetTabProps } from '/web/store/preset-context'
 export const MODEL_FORMATS = Object.keys(BUILTIN_FORMATS).map((label) => ({ label, value: label }))
 
 export const GeneralSettings: Component<PresetTabProps> = (props) => {
-  const user = userStore()
+  const user = userStore((s) => ({ user: s.user, userLevel: s.userLevel }))
 
   const subMax = createMemo(() => {
     const level = user.user?.admin ? Infinity : user.userLevel
@@ -35,7 +35,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
         helperMarkdown={`When enabled your browser will make requests instead of Agnaistic.\n**NOTE**: Your chat will not support multiplayer.`}
         service={props.setters.context.service}
         format={props.setters.context.format}
-        hide={props.setters.hides.localRequests || !!props.state.providerId}
+        hide={props.setters.context.hides.localRequests || !!props.state.providerId}
         value={props.state.localRequests}
         onChange={(ev) => props.setters.setState('localRequests', ev)}
       />
@@ -47,7 +47,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
         value={props.state.thirdPartyUrlNoSuffix}
         service={props.setters.context.service}
         hide={
-          props.setters.hides.thirdPartyFormat ||
+          props.setters.context.hides.thirdPartyFormat ||
           props.setters.context.format === 'featherless' ||
           props.setters.context.format === 'arli'
         }
@@ -123,18 +123,25 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           disabled={props.state.disabled}
           onChange={(ev) => props.setters.setState('streamResponse', ev)}
         />
+        <Toggle
+          fieldName="disableNameStops"
+          label="Exclude Name Stops"
+          helperText="Disables automatically adding character names to stopping strings"
+          value={props.state.disableNameStops}
+          onChange={(ev) => props.setters.setState('disableNameStops', ev)}
+        />
         <StoppingStrings
           state={props.state}
           setters={props.setters}
           sub={props.sub}
           page={props.page}
         />
-        <Toggle
-          fieldName="disableNameStops"
-          label="Disable Name Stops"
-          helperText="Disable automatic character names stopping strings"
-          value={props.state.disableNameStops}
-          onChange={(ev) => props.setters.setState('disableNameStops', ev)}
+
+        <MessageParsers
+          state={props.state}
+          setters={props.setters}
+          sub={props.sub}
+          page={props.page}
         />
 
         <PhraseBias state={props.state} setters={props.setters} sub={props.sub} page={props.page} />

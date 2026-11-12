@@ -36,7 +36,7 @@ export async function handleLocalRequest(
     }
 
     if ('error' in gen) {
-      const message = typeof gen.error === 'string' ? gen.error : gen.error.message
+      const message = typeof gen.error === 'string' ? gen.error : gen.error?.message
       emit({
         type: 'message-error',
         requestId: body.requestId,
@@ -75,6 +75,7 @@ function startRequest(request: GenerateRequestV2, signal: AbortController, promp
     case 'ollama':
     case 'koboldcpp':
     case 'kobold':
+    case 'lm-studio':
       return handleOAI(opts, signal, payload)
 
     case 'mistral':

@@ -8,6 +8,7 @@ let connected = false
 let retrying = false
 
 let database: Db | null = null
+let client: MongoClient | null = null
 
 export async function connect(verbose = false) {
   if (!config.db.uri && !config.db.host) {
@@ -23,6 +24,7 @@ export async function connect(verbose = false) {
     clearTimeout(timer)
 
     database = cli.db(config.db.name)
+    client = cli
 
     const onClose = (event: string) => () => {
       if (retrying) return
@@ -46,6 +48,19 @@ export async function connect(verbose = false) {
 export function getDb() {
   if (!database) throw new Error('Database not yet initialised')
   return database!
+}
+
+export async function transact(callback: () => Promise<void>) {
+  const session = client!.startSession()
+  try {
+    await session.withTransaction(async () => callback(), {
+      readPreference: 'primary',
+      readConcern: { level: 'local' },
+      writeConcern: { w: 'majority' },
+    })
+  } finally {
+    await session.endSession()
+  }
 }
 
 export function db<T extends AllDoc['kind']>(kind: T) {

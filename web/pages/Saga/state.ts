@@ -581,7 +581,7 @@ function newTemplate() {
     <user>{{main_char}}: {{input}}</user>
 
     <bot>[response | temp=0.4 | tokens=300 | stop=USER | stop=ASSISTANT | stop=</ | stop=<| | stop=### ]</bot>
-    
+
     <user>`,
   }
 }
@@ -620,9 +620,9 @@ function exampleTemplate(): Saga.Template {
       Write the main character's main objective: "Your goal [goal | temp=0.4 | stop="]"
 
       Write the introduction to the game: "You are [intro | temp=0.4 | stop="]"
-      
+
       Write the opening scene of the game to begin the game: "[scene | temp=0.4 | tokens=300 | stop="]"
-      
+
       Write a brief image caption describing the scene and appearances of the characters: "[image_caption | tokens=200 | stop="]"
       `,
 

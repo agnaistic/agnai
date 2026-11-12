@@ -15,9 +15,10 @@ import {
   Zap,
   Split,
   MoreHorizontal,
-  Braces,
   ImagePlus,
   Eye,
+  EyeOff,
+  BracesIcon,
 } from 'lucide-solid'
 import {
   Accessor,
@@ -35,13 +36,21 @@ import {
   Signal,
   Switch,
 } from 'solid-js'
-import { BOT_REPLACE, SELF_REPLACE } from '../../../../common/prompt'
+import { BOT_REPLACE, isMessageInvisible, SELF_REPLACE } from '../../../../common/prompt'
 import { AppSchema } from '../../../../common/types/schema'
 import AvatarIcon, { CharacterAvatar } from '../../../shared/AvatarIcon'
-import { chatStore, userStore, msgStore, ChatState, VoiceState, settingStore } from '../../../store'
+import {
+  chatStore,
+  userStore,
+  msgStore,
+  ChatState,
+  VoiceState,
+  pageStore,
+  responseStore,
+} from '../../../store'
 import { markdown } from '../../../shared/markdown'
 import Button, { ButtonSchema } from '/web/shared/Button'
-import { ContextState, useAppContext } from '/web/store/context'
+import { ChatContext, useAppContext } from '/web/store/context'
 import { hydrateTemplate, trimSentence } from '/common/util'
 import { EVENTS, events } from '/web/emitter'
 import { Pill } from '/web/shared/Card'
@@ -50,7 +59,6 @@ import { Portal } from 'solid-js/web'
 import { UI } from '/common/types'
 import { LucideProps } from 'lucide-solid/dist/types/types'
 import { createStore } from 'solid-js/store'
-import { RelativeSpinner } from '/web/shared/Loading'
 import { MessageImages } from './MessageImages'
 import Select from '/web/shared/Select'
 import { FileInputResult, getFileAsDataURL } from '/web/shared/FileInput'
@@ -58,9 +66,11 @@ import { resizeImage } from '/web/shared/image-resize'
 import { MsgAttachment } from '/srv/adapter/type'
 import { ALLOWED_TYPES } from '/web/store/data/image'
 import { MessageAttachments } from './Attachments'
-import { ComponentEmitter } from '/web/shared/util'
+import { ComponentEventEmitter, getJsonSchema, isToday, toShortDuration } from '/web/shared/util'
 import { extractReasoning } from '/common/reasoning'
 import { SendFunc } from './InputBar'
+import { ContextPreset, PresetContext } from '/web/store/preset-context'
+import { runPresetParsers } from '/common/chat'
 
 type MessageProps = {
   messageId: string
@@ -74,7 +84,7 @@ type MessageProps = {
   tts?: boolean
   children?: any
   retrying?: AppSchema.ChatMessage
-  partial?: string
+  partial?: { thoughts?: string; tokens?: string }
   sendMessage: SendFunc
   isPaneOpen: boolean
   showHiddenEvents?: boolean
@@ -87,6 +97,9 @@ type MessageProps = {
   characterId?: string
   userId?: string
   handle?: string
+
+  preset: PresetContext | undefined
+  canUseAttachments?: boolean
 }
 
 const anonNames = new Map<string, number>()
@@ -107,8 +120,8 @@ const Message: Component<MessageProps> = (props) => {
   let avatarRef: any
 
   const [ctx] = useAppContext()
-  const user = userStore()
-  const state = chatStore()
+  const user = userStore((s) => ({ ui: s.ui, user: s.user }))
+  const state = chatStore((s) => ({ memberIds: s.memberIds, chatProfiles: s.chatProfiles }))
   const [edit, setEdit] = createSignal(false)
   const [editSender, setEditSender] = createSignal<string>()
 
@@ -158,6 +171,7 @@ const Message: Component<MessageProps> = (props) => {
   const [img, setImg] = createSignal('h-full')
   const opts = createSignal(false)
   const [jsonValues, setJsonValues] = createSignal(msg().json?.values || {})
+  const [jsonMsg, setJsonMsg] = createSignal('')
 
   const showOpt = createSignal(false)
 
@@ -174,9 +188,24 @@ const Message: Component<MessageProps> = (props) => {
   const content = createMemo(() => {
     const message = msg()
 
-    const msgV2 = getMessageContent(ctx, props, state, {
+    let display = message.json?.response || props.content
+
+    if (message.json?.values) {
+      const autoDefs = getJsonSchema({
+        characterId: message.characterId,
+        preset: props.preset?.current!,
+      })
+
+      const json = getJsonUpdate(ctx, autoDefs?.schema, {
+        ...message.json.values,
+        response: props.content,
+      })
+      display = json?.json.response || display
+    }
+
+    const msgV2 = getMessageContent(ctx, props.preset?.current, props, state.chatProfiles, {
       ...message,
-      msg: props.content,
+      msg: display,
     })
     return msgV2
   })
@@ -187,18 +216,20 @@ const Message: Component<MessageProps> = (props) => {
     const sender = senderJson ? JSON.parse(senderJson) : {}
 
     if (message.json) {
-      const json = jsonValues()
-      const update = getJsonUpdate(
-        ctx.preset?.jsonSource === 'character'
-          ? ctx.activeMap[message.characterId!]?.json
-          : ctx.preset?.json,
-        json
-      )
+      const json = { ...jsonValues() }
+
+      const autoDefs = getJsonSchema({
+        characterId: message.characterId,
+        preset: props.preset?.current!,
+      })
+
+      const update = getJsonUpdate(ctx, autoDefs?.schema, json)
 
       if (update) {
         msgStore.editMessageProp(message._id, {
           ...update,
           ...sender,
+          msg: jsonMsg(),
         })
       }
 
@@ -221,13 +252,15 @@ const Message: Component<MessageProps> = (props) => {
     setEdit(true)
     const message = msg()
 
+    setJsonMsg(message.msg)
+
     if (!message.characterId) {
       setEditSender(JSON.stringify({ userId: message.userId }))
     } else {
       setEditSender(JSON.stringify({ characterId: message.characterId }))
     }
     if (editRef) {
-      editRef.innerText = message.msg
+      editRef.innerText = props.content
     }
     editRef?.focus()
   }
@@ -240,11 +273,6 @@ const Message: Component<MessageProps> = (props) => {
       'margin-right': ctx.user?._id === message.userId ? percent : undefined,
       'margin-left': ctx.user?._id !== message.userId ? percent : undefined,
     }
-  })
-
-  const imageSpeed = createMemo(() => {
-    const next = ctx.imgWaiting?.pos ?? 1
-    return next
   })
 
   const senderOptions = createMemo(() => {
@@ -292,17 +320,28 @@ const Message: Component<MessageProps> = (props) => {
 
   const editMessageMeta = () => {
     msgStore.setMetadataMsg(msg())
-    // rootModalStore.info(
-    //   'Message Information',
-    //   <Meta
-    //     msg={props.msg}
-    //     history={ctx.promptHistory[props.msg._id]}
-    //     flags={ctx.flags}
-    //     tree={ctx.chatTree}
-    //     loading={!!ctx.waiting}
-    //   />
-    // )
   }
+
+  const visibleIcon = createMemo(() => {
+    const message = msg()
+    if (!ctx.chat) return null
+    if (!ctx.replyAs) return null
+
+    const state = isMessageInvisible(ctx.chat, message, ctx.replyAs)
+
+    const Icon = state ? EyeOff : Eye
+    const nextState = state ? false : true
+    const invisible = { ...message.invisible, [ctx.replyAs]: nextState }
+
+    return (
+      <span
+        class="icon-button ml-2"
+        onClick={() => msgStore.editMessageProp(message._id, { invisible })}
+      >
+        <Icon size={14} />
+      </span>
+    )
+  })
 
   return (
     <div
@@ -329,6 +368,11 @@ const Message: Component<MessageProps> = (props) => {
               data-bot-avatar={isBot()}
               data-user-avatar={isUser()}
             >
+              <Show when={ctx.flags.debug}>
+                <span class="text-600 flex w-full justify-center text-[0.5rem]">
+                  {msg().parent?.slice(0, 4) || 'root'} #{props.index}
+                </span>
+              </Show>
               <Switch>
                 <Match when={user.ui.avatarSize === 'hide'}>{null}</Match>
                 <Match when={msg().event === 'world' || msg().event === 'ooc'}>
@@ -340,13 +384,13 @@ const Message: Component<MessageProps> = (props) => {
                 </Match>
 
                 <Match when={props.voice === 'generating'}>
-                  <div class="animate-pulse cursor-pointer" onClick={msgStore.stopSpeech}>
+                  <div class="animate-pulse cursor-pointer" onClick={responseStore.stopSpeech}>
                     <AvatarIcon format={format()} Icon={DownloadCloud} />
                   </div>
                 </Match>
 
                 <Match when={props.voice === 'playing'}>
-                  <div class="animate-pulse cursor-pointer" onClick={msgStore.stopSpeech}>
+                  <div class="animate-pulse cursor-pointer" onClick={responseStore.stopSpeech}>
                     <AvatarIcon format={format()} Icon={PauseCircle} bot />
                   </div>
                 </Match>
@@ -379,6 +423,11 @@ const Message: Component<MessageProps> = (props) => {
                   />
                 </Match>
               </Switch>
+              <Show when={ctx.flags.debug}>
+                <span class="text-600 flex w-full justify-center text-[0.5rem]">
+                  {msg()._id.slice(0, 4)}
+                </span>
+              </Show>
             </span>
             <span class="flex flex-row justify-between pb-1">
               <span
@@ -430,17 +479,19 @@ const Message: Component<MessageProps> = (props) => {
                   data-bot-time={isBot()}
                   data-user-time={isUser()}
                 >
-                  {new Date(msg().createdAt).toLocaleString()}
-                  <Show when={ctx.flags.debug}>
-                    <tr>
-                      <td class="pr-2">
-                        <b>id</b>
-                      </td>
-                      <td>
-                        id:{msg()._id.slice(0, 4)} up:{msg().parent?.slice(0, 4)}
-                      </td>
-                    </tr>
-                  </Show>
+                  <Switch>
+                    <Match when={isToday(msg().createdAt)}>
+                      <span>{new Date(msg().createdAt).toLocaleTimeString()}</span>
+                    </Match>
+
+                    <Match when>
+                      <span class="hidden sm:block">
+                        {new Date(msg().createdAt).toLocaleString()}
+                      </span>
+                      <span class="block sm:hidden">{toShortDuration(msg().createdAt)} ago</span>
+                    </Match>
+                  </Switch>
+
                   <Show when={ctx.flags.debug || canShowMeta(msg(), ctx.promptHistory[msg()._id])}>
                     <span
                       class="text-600 hover:text-900 ml-1 cursor-pointer"
@@ -449,6 +500,8 @@ const Message: Component<MessageProps> = (props) => {
                       <Info size={14} />
                     </span>
                   </Show>
+
+                  {visibleIcon()}
                 </span>
               </span>
               <Switch>
@@ -474,6 +527,8 @@ const Message: Component<MessageProps> = (props) => {
                     showMore={showOpt}
                     textBeforeGenMore={props.textBeforeGenMore}
                     ctx={ctx}
+                    preset={props.preset}
+                    canUseAttachments={props.canUseAttachments}
                   />
                 </Match>
 
@@ -518,7 +573,12 @@ const Message: Component<MessageProps> = (props) => {
             <div ref={avatarRef} classList={{ 'overflow-hidden': !user.ui.imageWrap }}>
               <Switch>
                 <Match when={msg().adapter === 'image'}>
-                  <MessageImages msg={msg()} onEditClick={editMessageMeta} />
+                  <MessageImages
+                    messageId={props.messageId}
+                    msg={msg()}
+                    onEditClick={editMessageMeta}
+                    ctx={ctx}
+                  />
                 </Match>
 
                 <Match when={!edit()}>
@@ -563,19 +623,13 @@ const Message: Component<MessageProps> = (props) => {
                       <span class="dot-flashing bg-[var(--hl-700)]"></span>
                     </span>
                   </Show>
-                  <Show when={ctx.imgWaiting?.pos && ctx.imgWaiting.messageId === msg()._id}>
-                    <div class="flex w-full justify-center">
-                      <RelativeSpinner speed={imageSpeed()} />{' '}
-                      <span
-                        class="text-500 text-xs italic"
-                        classList={{ hidden: !ctx.status?.wait_time }}
-                      >
-                        {ctx.status?.wait_time || '0'}s
-                      </span>
-                    </div>
-                  </Show>
 
-                  <MessageImages msg={msg()} onEditClick={editMessageMeta} />
+                  <MessageImages
+                    messageId={props.messageId}
+                    msg={msg()}
+                    onEditClick={editMessageMeta}
+                    ctx={ctx}
+                  />
                   <MessageAttachments msg={msg()} ctx={ctx} />
 
                   <Show when={!props.partial && props.last}>
@@ -596,16 +650,20 @@ const Message: Component<MessageProps> = (props) => {
                 </Match>
 
                 <Match when={edit() && msg().json}>
-                  <JsonEdit msg={msg()} update={(next) => setJsonValues(next)} />
+                  <JsonEdit
+                    msg={msg()}
+                    update={(next) => setJsonValues(next)}
+                    message={(text: string) => setJsonMsg(text)}
+                  />
                 </Match>
                 <Match when={edit()}>
                   <div
-                    class="msg-edit-text-box"
+                    class="msg-edit-text-box p-1 !outline-0"
                     ref={editRef!}
                     contentEditable={true}
                     onKeyUp={(ev) => {
                       if (ev.key === 'Escape') cancelEdit()
-                      if (ev.altKey && ev.key === 's') {
+                      if (ev.altKey && (ev.code === 'KeyS' || ev.key === 's')) {
                         ev.preventDefault()
                         saveEdit()
                       }
@@ -633,6 +691,7 @@ function anonymizeText(text: string, profile: AppSchema.Profile, i: number) {
 const JsonEdit: Component<{
   msg: SplitMessage
   update: (next: any) => void
+  message: (next: string) => void
 }> = (props) => {
   const entries = createMemo(() => Object.keys(props.msg.json?.values || {}))
   const [editing, setEditing] = createStore<Record<string, string>>(props.msg.json?.values || {})
@@ -643,6 +702,20 @@ const JsonEdit: Component<{
 
   return (
     <div class="flex flex-col gap-2">
+      <Show when={!props.msg.json?.values?.response}>
+        <div class="flex flex-col">
+          <Pill type="bg" small opacity={0.5} class="rounded-b-none rounded-t-md">
+            message
+          </Pill>
+          <div
+            ref={(r) => (r.innerText = props.msg.msg)}
+            class="msg-edit-text-box rounded-md rounded-tl-none border border-[var(--bg-500)] p-1 !outline-0"
+            contentEditable={true}
+            onKeyUp={(ev: any) => props.message(ev.target.innerText)}
+          ></div>
+        </div>
+      </Show>
+
       <For each={entries()}>
         {(key) => (
           <div class="flex flex-col">
@@ -651,7 +724,7 @@ const JsonEdit: Component<{
             </Pill>
             <div
               ref={(r) => (r.innerText = editing[key])}
-              class="msg-edit-text-box rounded-md rounded-tl-none border border-[var(--bg-500)] p-1"
+              class="msg-edit-text-box rounded-md rounded-tl-none border border-[var(--bg-500)] p-1 !outline-0"
               contentEditable={true}
               onKeyUp={(ev: any) => {
                 setEditing(key, ev.target.innerText)
@@ -673,12 +746,14 @@ const MessageOptions: Component<{
   edit: Accessor<boolean>
   startEdit: () => void
   last?: boolean
-  partial?: string
+  partial?: { thoughts?: string; tokens?: string }
   show: Signal<boolean>
   textBeforeGenMore?: string
   onRemove: () => void
   showMore: Signal<boolean>
-  ctx: ContextState
+  ctx: ChatContext
+  preset: PresetContext | undefined
+  canUseAttachments: boolean | undefined
 }> = (props) => {
   let menuParent: any
 
@@ -703,6 +778,7 @@ const MessageOptions: Component<{
         show: boolean
         schema?: ButtonSchema
         icon: (props: LucideProps) => JSX.Element
+        disabled?: boolean
       }
     > = {
       prompt: {
@@ -711,7 +787,8 @@ const MessageOptions: Component<{
         class: 'prompt-btn',
         outer: props.ui.msgOptsInline.prompt,
         show: !!props.msg.characterId && props.msg.adapter !== 'image',
-        onClick: () => !props.partial && chatStore.computePrompt(props.msg),
+        onClick: () =>
+          !props.partial && chatStore.computePrompt(props.ctx.messages.path, props.msg),
         icon: Terminal,
       },
 
@@ -720,7 +797,8 @@ const MessageOptions: Component<{
         label: 'Edit',
         class: 'edit-btn',
         outer: props.ui.msgOptsInline.edit,
-        show: props.msg.adapter !== 'image' && !props.partial,
+        show: props.msg.adapter !== 'image',
+        disabled: !!props.ctx.waiting,
         onClick: props.startEdit,
         icon: Pencil,
       },
@@ -731,7 +809,10 @@ const MessageOptions: Component<{
         class: 'fork-btn',
         show: !props.last,
         outer: props.ui.msgOptsInline.fork,
-        onClick: () => !props.partial && msgStore.fork(props.msg._id),
+        onClick: () => {
+          if (props.partial) return
+          chatStore.forkChat(props.msg._id)
+        },
         icon: Split,
       },
 
@@ -747,20 +828,6 @@ const MessageOptions: Component<{
         icon: RefreshCw,
       },
 
-      'schema-regen': {
-        key: 'schema-regen',
-        class: 'refresh-btn',
-        label: 'Schema Regen',
-        outer: props.ui.msgOptsInline['schema-regen'],
-        show:
-          window.flags.reschema &&
-          ((props.msg.json && props.last) ||
-            (props.msg.adapter === 'image' && !!props.msg.imagePrompt)) &&
-          !!props.msg.characterId,
-        onClick: () => !props.partial && retryJsonSchema(props.msg, props.msg),
-        icon: Braces,
-      },
-
       attach: {
         key: 'attach',
         class: '',
@@ -768,11 +835,11 @@ const MessageOptions: Component<{
         outer: { outer: false, pos: 0 },
         icon: ImagePlus,
         show:
-          props.ctx.canUseAttachments &&
+          !!props.canUseAttachments &&
           (props.msg.userId === props.ctx.user?._id ||
             props.ctx.impersonate?._id === props.msg.characterId),
         onClick: () =>
-          settingStore.openAttach(
+          pageStore.openAttach(
             { multiple: true, accept: 'image/jpg,image/png,image/jpeg' },
             (files) => attachImages(props.msg._id, files)
           ),
@@ -781,7 +848,12 @@ const MessageOptions: Component<{
       visible: {
         key: 'visible',
         class: '',
-        icon: Eye,
+        icon:
+          props.ctx.replyAs &&
+          props.ctx.chat &&
+          isMessageInvisible(props.ctx.chat, props.msg, props.ctx.replyAs)
+            ? EyeOff
+            : Eye,
         label: 'Visibility',
         show: true,
         outer: props.ui.msgOptsInline.visible,
@@ -797,6 +869,7 @@ const MessageOptions: Component<{
         class: 'delete-btn',
         schema: 'red',
         icon: Trash,
+        disabled: !!props.ctx.waiting,
       },
 
       'gen-image': {
@@ -808,6 +881,17 @@ const MessageOptions: Component<{
         icon: ImagePlus,
         class: '',
       },
+
+      'gen-json': {
+        key: 'gen-json',
+        label: 'Gen JSON',
+        show: !!props.preset?.current?.json || !!props.preset?.json?.json,
+        class: '',
+        icon: BracesIcon,
+        onClick: () => responseStore.chatQuery({ messageId: props.msg._id, question: '' }),
+        outer: props.ui.msgOptsInline['gen-json'],
+        disabled: !props.preset?.current?.json && !props.preset?.json?.json,
+      },
     }
 
     return items
@@ -816,7 +900,7 @@ const MessageOptions: Component<{
   const showInner = createMemo(() => {
     const logics = logic()
     for (const opt of Object.values(logics)) {
-      if (!opt.outer.outer && opt.show) return true
+      if (!opt.outer?.outer && opt.show) return true
     }
 
     return false
@@ -838,17 +922,19 @@ const MessageOptions: Component<{
       <For each={order()}>
         {(item) => {
           const def = logic()[item.key]
+          if (!def) return null
 
           return (
             <MessageOption
               id={props.msg._id}
-              outer={def.outer.outer}
+              outer={def.outer?.outer ?? false}
               show={def.show}
               label={def.label}
               open={open()}
               onClick={closer(def.onClick)}
               class={def.class}
               schema={def.schema}
+              disabled={def.disabled}
             >
               {def.icon({ size: 18 })}
             </MessageOption>
@@ -889,7 +975,9 @@ const MessageOptions: Component<{
       >
         <div
           class="icon-button"
-          onClick={() => !props.partial && msgStore.continuation(props.msg.chatId, undefined, true)}
+          onClick={() =>
+            !props.partial && responseStore.continuation(props.msg.chatId, undefined, true)
+          }
         >
           <Repeat1 size={18} />
         </div>
@@ -898,7 +986,12 @@ const MessageOptions: Component<{
       <Show when={props.last && !props.msg.characterId}>
         <div
           class="icon-button"
-          onClick={() => !props.partial && msgStore.resend(props.msg.chatId, props.msg._id)}
+          onClick={() => {
+            if (props.partial) return
+            // msgStore.resend(props.msg.chatId, props.msg._id)
+            if (!props.ctx.chat?.characterId) return
+            responseStore.request(props.ctx.chat._id, props.ctx.chat.characterId)
+          }}
         >
           <RefreshCw size={18} />
         </div>
@@ -912,7 +1005,7 @@ export const Typewriter: Component<{
   class?: string
   speed?: number
   generating?: boolean
-  reset?: ComponentEmitter<'reset'>
+  reset?: ComponentEventEmitter<'reset'>
 }> = (props) => {
   const [length, setLength] = createSignal(0)
   const [getTimer, setTimer] = createSignal<{ timer: NodeJS.Timeout; speed: number }>()
@@ -978,6 +1071,20 @@ export const Typewriter: Component<{
     )
   )
 
+  createEffect(
+    on(
+      () => ({ gen: props.generating, text: props.text }),
+      (gen) => {
+        if (!gen) return
+
+        if (!props.text) {
+          setLength(0)
+          startTimer()
+        }
+      }
+    )
+  )
+
   onCleanup(() => {
     const timer = getTimer()
     clearInterval(timer?.timer!)
@@ -991,6 +1098,7 @@ export const Typewriter: Component<{
         data-partial
         innerHTML={markup()}
       />
+      {/* <span class="text-500 text-sm font-bold">{props.generating ? '(true)' : '(false)'}</span> */}
     </>
   )
 }
@@ -1001,6 +1109,7 @@ const MessageOption: Component<{
   id: string
   open: boolean | undefined
   show: boolean | undefined
+  disabled: boolean | undefined
   outer: boolean
   onClick: () => void
   label: string
@@ -1012,9 +1121,16 @@ const MessageOption: Component<{
     <Show when={props.show && show()}>
       <Portal mount={document.querySelector(`#${props.outer ? 'outer' : 'inner'}-${props.id}`)!}>
         <Show when={props.outer}>
-          <div class={`icon-button ${props.class || ''}`} onClick={props.onClick}>
+          <button
+            class={`icon-button ${props.class || ''}`}
+            disabled={props.disabled}
+            onClick={(ev) => {
+              ev.preventDefault()
+              props.onClick()
+            }}
+          >
             {props.children}
-          </div>
+          </button>
         </Show>
 
         <Show when={!props.outer}>
@@ -1022,6 +1138,7 @@ const MessageOption: Component<{
             class={`${props.class || ''} w-full min-w-max`}
             schema={props.schema || 'secondary'}
             onClick={props.onClick}
+            disabled={props.disabled}
             size="sm"
             alignLeft
           >
@@ -1035,17 +1152,19 @@ const MessageOption: Component<{
 
 function retryMessage(original: AppSchema.ChatMessage, split: SplitMessage) {
   if (original.adapter !== 'image') {
-    msgStore.retry({ chatId: split.chatId, msgId: original._id })
+    responseStore.retry({ chatId: split.chatId, msgId: original._id })
   } else {
     msgStore.createImage({ sourceMsgId: split._id })
   }
 }
 
-function retryJsonSchema(original: AppSchema.ChatMessage, split: SplitMessage) {
-  msgStore.retrySchema(split.chatId, original._id)
-}
-
-function renderMessage(ctx: ContextState, text: string, isUser: boolean, adapter?: string) {
+function renderMessage(
+  ctx: ChatContext,
+  preset: ContextPreset | undefined,
+  text: string,
+  isUser: boolean,
+  adapter?: string
+) {
   // Iam getting pissed of by showdown effing up Asteriks, I just do this myself - @Aldimensch
   // Escape single asterisks but not double asterisks
   text = text.replace(/(?<!\*)\*(?!\*)/g, '\\*')
@@ -1058,7 +1177,7 @@ function renderMessage(ctx: ContextState, text: string, isUser: boolean, adapter
   // DomPurify has an implicit list of allowed Tags, when we add our own we have to use ADD_TAGS
   let html = makeTextLookNice(
     markdown
-      .makeHtml(parseMessage(text, ctx, isUser, adapter))
+      .makeHtml(parseMessage(text, ctx, preset, isUser, adapter))
       .replace(/&amp;nbsp;/g, '&nbsp;')
   )
 
@@ -1155,31 +1274,44 @@ function sendAction(_send: MessageProps['sendMessage'], action: AppSchema.ChatAc
   events.emit(EVENTS.setInputText, action.action)
 }
 
-function parseMessage(msg: string, ctx: ContextState, isUser: boolean, adapter?: string) {
+function parseMessage(
+  msg: string,
+  ctx: ChatContext,
+  preset: ContextPreset | undefined,
+  isUser: boolean,
+  adapter?: string
+) {
   if (adapter === 'image') {
     return msg.replace(BOT_REPLACE, ctx.char?.name || '').replace(SELF_REPLACE, ctx.handle)
   }
 
-  const parsed = msg.replace(BOT_REPLACE, ctx.char?.name || '').replace(SELF_REPLACE, ctx.handle)
+  let parsed = msg.replace(BOT_REPLACE, ctx.char?.name || '').replace(SELF_REPLACE, ctx.handle)
+
+  if (preset?.parsers) {
+    parsed = runPresetParsers(preset.parsers, parsed)
+  } else {
+    parsed = runPresetParsers(
+      [
+        { type: 'remove', text: '<|begin_of_box|>' },
+        { type: 'remove', text: '<|end_of_box|>' },
+      ],
+      parsed
+    )
+  }
+
   return parsed
 }
 
 function canShowMeta(msg: AppSchema.ChatMessage, history: any) {
-  if (!msg) return false
   if (msg._id === 'partial-response') return false
-
-  return (
-    !!msg.adapter ||
-    !!history ||
-    (!!msg.meta && Object.keys(msg.meta).length >= 1) ||
-    msg.imagePrompt
-  )
+  return true
 }
 
 function getMessageContent(
-  ctx: ContextState,
+  ctx: ChatContext,
+  preset: ContextPreset | undefined,
   props: MessageProps,
-  state: ChatState,
+  profiles: ChatState['chatProfiles'],
   msg: AppSchema.ChatMessage & { handle?: string }
 ) {
   const isRetry = props.retrying?._id === msg._id
@@ -1187,13 +1319,13 @@ function getMessageContent(
 
   if (isRetry || isPartial) {
     const { thoughts, content } = extractReasoning(props.partial ? props.partial : msg.msg, {
-      tags: ctx.preset?.reasoning,
+      tags: preset?.reasoning,
       display: ctx.ui.displayReasoning,
     })
     if (props.partial) {
       return {
         type: 'partial' as const,
-        message: renderMessage(ctx, content, false, 'partial'),
+        message: renderMessage(ctx, preset, content, false, 'partial'),
         thoughts,
         class: 'streaming-markdown',
         generating: true,
@@ -1203,7 +1335,7 @@ function getMessageContent(
     if (isPartial && msg.msg) {
       return {
         type: 'partial' as const,
-        message: renderMessage(ctx, content, false, 'partial'),
+        message: renderMessage(ctx, preset, content, false, 'partial'),
         thoughts,
         class: 'streaming-markdown',
         generating: true,
@@ -1220,9 +1352,10 @@ function getMessageContent(
   }
 
   const { thoughts, content } = extractReasoning(msg.msg, {
-    tags: ctx.preset?.reasoning,
+    tags: preset?.reasoning,
     display: ctx.ui.displayReasoning,
   })
+
   let message = content
 
   if (props.last && props.swipe) message = props.swipe
@@ -1231,24 +1364,71 @@ function getMessageContent(
   }
 
   if (ctx.anonymize) {
-    message = state.chatProfiles.reduce(anonymizeText, message).replace(SELF_REPLACE, 'User #1')
+    message = profiles.reduce(anonymizeText, message).replace(SELF_REPLACE, 'User #1')
   }
 
   if (ctx.trimSentences && !msg.userId) {
     message = trimSentence(message)
   }
 
+  const baseStops = preset?.stopSequences || []
+  const sender = msg.characterId
+    ? ctx.allBots[msg.characterId]?.name
+    : msg.userId
+    ? ctx.profileMap[msg.userId]?.handle
+    : ''
+
+  const allStops = (preset?.disableNameStops ? baseStops : baseStops.concat(ctx.nameStops)).filter(
+    (name) => name !== sender + ':'
+  )
+
+  const trimmed = stopResponse({ text: message, author: sender, stops: allStops })
+
   return {
     type: 'message' as const,
-    message: renderMessage(ctx, message, !!msg.userId, msg.adapter),
+    message: renderMessage(ctx, preset, trimmed, !!msg.userId, msg.adapter),
     thoughts,
     class: 'not-streaming',
   }
 }
 
-function getJsonUpdate(def: AppSchema.Character['json'], json: any) {
+function stopResponse(opts: { text: string; author: string; stops: string[] }) {
+  let generated = opts.text
+
+  let index = -1
+  let trimmed = opts.stops.reduce((prev, endToken) => {
+    const idx = generated.indexOf(endToken)
+
+    if (idx === -1) return prev
+
+    const text = generated.slice(0, idx)
+    if (index === -1 || idx < index) {
+      index = idx
+      return text
+    }
+
+    return prev
+  }, '')
+
+  if (index === -1) {
+    if (generated.startsWith(`${opts.author}:`)) {
+      generated = generated.slice(opts.author.length + 1)
+    }
+
+    return generated.trim()
+  }
+
+  return trimmed || generated
+}
+
+function getJsonUpdate(ctx: ChatContext, def: AppSchema.Character['json'], json: any) {
   if (!def) return
-  const hydration = hydrateTemplate(def, json)
+  const hydration = hydrateTemplate(def, json, {
+    char: ctx.char!,
+    replyAs: ctx.char,
+    sender: ctx.profile,
+    impersonate: ctx.impersonate,
+  })
 
   return {
     json: hydration,

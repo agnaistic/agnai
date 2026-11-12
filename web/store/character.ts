@@ -1,17 +1,23 @@
 import { createAppearancePrompt } from '../../common/image-prompt'
 import { AppSchema } from '../../common/types/schema'
 import { EVENTS, events } from '../emitter'
-import { createStore } from './create'
+import { createStore, getStore } from './create'
 import { subscribe } from './socket'
 import { toastStore } from './toasts'
 import { charsApi } from './data/chars'
 import { ImageResult, imageApi } from './data/image'
 import { getAssetUrl, storage, toMap } from '../shared/util'
-import { toCharacterMap } from '../pages/Character/util'
+import { charToJson, createCharacterImageBlob, toCharacterMap } from '../pages/Character/util'
 import { getUserId } from './api'
 import { getStoredValue, setStoredValue } from '../shared/hooks'
 import { HordeCheck } from '/common/horde-gen'
 import { v4 } from 'uuid'
+import { combine, findOne, updateList } from '/common/util'
+import { debug } from '/common/debug'
+import JSZip from 'jszip'
+import { chatsApi } from './data/chats'
+
+const log = debug('bot-store')
 
 const IMPERSONATE_KEY = 'agnai-impersonate'
 
@@ -87,6 +93,34 @@ export const characterStore = createStore<CharacterState>(
   'character',
   initState
 )((get, set) => {
+  // events.on(EVENTS.init, async (data) => {
+  //   const allChars = Array.isArray(data.allChars)
+  //     ? data.allChars
+  //     : Array.isArray(data.allChars?.list)
+  //     ? data.allChars.list
+  //     : null
+
+  //   log('receiving #%s', allChars?.length)
+  //   if (!allChars) return
+
+  //   replaceCharacters(allChars)
+
+  //   await Promise.resolve()
+
+  //   /**
+  //    * The chat list relies on the characters being available
+  //    * We handle the chat-init here to prevent any race conditions
+  //    */
+  //   getStore('chat').setState({
+  //     allChats: (data.allChats || []).sort(sortDesc),
+  //     lastFetched: 0,
+  //     lastChatId: '',
+  //   })
+
+  //   // If we loaded cached chats/characters, forcibly get the latest after we've hydrated the cached data
+  //   // characterStore.getAllChats(true) // We currently do this in the handlePostInit
+  // })
+
   return {
     clearCharacter() {
       return { editing: undefined }
@@ -128,6 +162,33 @@ export const characterStore = createStore<CharacterState>(
         return toastStore.error(res.error)
       }
     },
+
+    async *getAllChats({ loading, characters }, force?: boolean) {
+      if (loading) return
+
+      const age = Date.now() - characters.loaded
+      if (!force && age < 30000) return
+
+      const res = await chatsApi.getAllChats()
+      if (res.error || !res.result) {
+        toastStore.error(`Could not retrieve chats: ${res.error}`)
+        return
+      }
+
+      const chars = res.result.characters.map((c) => ({ __type: 'list_character', ...c }))
+      replaceCharacters(chars)
+
+      await Promise.resolve()
+      getStore('chat').setState({
+        allChats: res.result.chats?.sort(sortDesc),
+        lastFetched: Date.now(),
+      })
+    },
+
+    receiveCharacterList(_, incoming: AppSchema.Character[]) {
+      replaceCharacters(incoming)
+    },
+
     async *getCharacters(state, force?: boolean) {
       if (!force && state.loading) return
 
@@ -135,25 +196,15 @@ export const characterStore = createStore<CharacterState>(
       if (!force && age < 30000) return
 
       yield { loading: true }
-      const res = await charsApi.getCharacters()
 
-      if (res.error) {
-        yield { loading: false }
-        return toastStore.error('Failed to retrieve characters')
-      }
+      const res = await chatsApi.getAllChats(true)
 
       if (res.result) {
-        const chars = res.result.characters.map((c: any) => ({ __type: 'list_character', ...c }))
-
-        return {
-          characters: {
-            list: chars,
-            map: toMap(chars),
-            loaded: Date.now(),
-          },
-          loading: false,
-        }
+        const chars = res.result.characters.map((c) => ({ __type: 'list_character', ...c }))
+        replaceCharacters(chars)
       }
+
+      yield { loading: false }
     },
 
     defaultImpersonate: (_, charId: string) => {
@@ -161,15 +212,34 @@ export const characterStore = createStore<CharacterState>(
       return { defaultImpersonateId: charId || '' }
     },
 
-    async impersonate({ activeChatId }, char?: AppSchema.Character) {
+    async *impersonate({ activeChatId, chatChars }, char?: AppSchema.Character) {
       if (activeChatId) {
         setStoredValue(`${activeChatId}-impersonate`, char?._id || '')
+      }
+
+      if (!char) {
+        return { impersonating: undefined }
+      }
+
+      const detail = char.persona ? char : chatChars.map[char._id]
+      if (detail) {
+        log('impersonate success')
+        return { impersonating: detail }
+      }
+
+      // Quickly load the shallow result and silently load the character detail
+      yield { impersonating: char }
+
+      const remote = await getCharacterDetail(char._id)
+      if (remote) {
+        log('impersonate loaded')
+        return { impersonating: remote }
       }
 
       return { impersonating: char || undefined }
     },
 
-    async loadImpersonate(
+    async *loadImpersonate(
       { activeChatId, chatChars: { list }, characters: { list: allList }, impersonating: current },
       chatId?: string
     ) {
@@ -182,10 +252,29 @@ export const characterStore = createStore<CharacterState>(
           ? fallback
           : getStoredValue(`${chatId || activeChatId}-impersonate`, fallback)
 
-      if (!id) return { impersonating: undefined }
+      if (!id) {
+        yield { impersonating: undefined }
+        return
+      }
 
-      const impersonating = id ? allList.concat(list).find((ch) => ch._id === id) : current
-      return { impersonating }
+      const detail = findOne(id, list)
+      if (detail) {
+        yield { impersonating: detail }
+        log('impersonate pre-loaded')
+        return
+      }
+
+      const shallow = findOne(id, allList)
+      if (shallow) {
+        yield { impersonating: shallow }
+        const detail = await getCharacterDetail(id)
+        log('impersaonte loaded, detail: %s', !!detail)
+        yield { impersonating: detail || shallow }
+        return
+      }
+
+      yield { impersonating: undefined }
+      return
     },
 
     async *createCharacter(
@@ -237,13 +326,38 @@ export const characterStore = createStore<CharacterState>(
         yield {
           characters: {
             list: list.map((ch) => (ch._id === characterId ? { ...ch, ...res.result } : ch)),
-            map: replace(map, characterId, res.result),
+            map: replaceChar(map, characterId, res.result),
             loaded,
           },
           chatChars: nextChars,
         }
         onSuccess?.()
       }
+    },
+    async *editMany(
+      { characters, loading },
+      ids: string[],
+      action: { type: 'delete' | 'archive' | 'add-tag' | 'remove-tag' | 'folder'; value?: string }
+    ) {
+      if (loading) return
+      yield { loading: true }
+
+      const res = await charsApi.editMany(ids, action)
+      yield { loading: false }
+
+      if (res.error || !res.result) {
+        const msg = res.error || `Unexpected error occurred`
+        toastStore.error(`Failed bulk character update: ${msg}`)
+        return
+      }
+
+      if (action.type === 'delete') {
+        const next = removeCharacters(characters, ids)
+        yield { characters: { loaded: Date.now(), list: next.list, map: next.map } }
+        return
+      }
+
+      replaceCharacters(res.result.characters)
     },
     async *editFullCharacter(
       { characters: { list, map, loaded }, chatChars },
@@ -270,7 +384,7 @@ export const characterStore = createStore<CharacterState>(
         yield {
           characters: {
             list: list.map((ch) => (ch._id === characterId ? { ...ch, ...res.result } : ch)),
-            map: replace(map, characterId, res.result),
+            map: replaceChar(map, characterId, res.result),
             loaded,
           },
           chatChars: nextChars,
@@ -295,7 +409,7 @@ export const characterStore = createStore<CharacterState>(
         return {
           characters: {
             list: list.map((ch) => (ch._id === characterId ? nextChar : ch)),
-            map: replace(map, characterId, { favorite }),
+            map: replaceChar(map, characterId, { favorite }),
             loaded,
           },
         }
@@ -311,7 +425,7 @@ export const characterStore = createStore<CharacterState>(
         yield {
           characters: {
             list: list.map((ch) => (ch._id === characterId ? res.result : ch)),
-            map: replace(map, characterId, res.result),
+            map: replaceChar(map, characterId, res.result),
             loaded,
           },
         }
@@ -327,7 +441,7 @@ export const characterStore = createStore<CharacterState>(
         return {
           characters: {
             list: list.map((ch) => (ch._id === characterId ? { ...ch, avatar: '' } : ch)),
-            map: replace(map, characterId, { avatar: '' }),
+            map: replaceChar(map, characterId, { avatar: '' }),
             loaded,
           },
         }
@@ -412,6 +526,12 @@ export const characterStore = createStore<CharacterState>(
 
 let imageCallback: ((err: any, image?: File) => void) | undefined = undefined
 
+characterStore.subscribe(async (state, prev) => {
+  if (state.characters.list.length && state.characters.list !== prev.characters.list) {
+    await storage.userCacheSet('all-chars', state.characters.list)
+  }
+})
+
 subscribe(
   'image-generated',
   { image: 'string', source: 'string', requestId: 'string?' },
@@ -478,10 +598,12 @@ events.on(EVENTS.loggedIn, () => {
 
 events.on(EVENTS.charAdded, (char: AppSchema.Character) => {
   const { chatChars: prev } = characterStore.getState()
+  const next = combine(prev.list, [char])
+
   characterStore.setState({
     chatChars: {
       chatId: prev.chatId,
-      list: prev.list.concat(char),
+      list: next,
       map: Object.assign({}, prev.map, { [char._id]: char }),
     },
   })
@@ -490,16 +612,12 @@ events.on(EVENTS.charAdded, (char: AppSchema.Character) => {
 events.on(
   EVENTS.charsReceived,
   async (chatId: string, chars: AppSchema.Character[], temps: AppSchema.Character[]) => {
-    const allChars = chars.concat(temps)
+    const prev = characterStore.getState().chatChars.list
+    const allChars = combine(prev, chars.concat(temps))
     characterStore.setState({ chatChars: { chatId, list: allChars, map: toMap(allChars) } })
     characterStore.loadImpersonate(chatId)
   }
 )
-
-events.on(EVENTS.init, (data) => {
-  if (!data.characters) return
-  events.emit(EVENTS.allChars, data.characters)
-})
 
 events.on(EVENTS.chatOpened, (chatId: string) => {
   characterStore.setState({ activeChatId: chatId })
@@ -527,7 +645,7 @@ events.on(EVENTS.allChars, async (chars: AppSchema.Character[]) => {
   characterStore.loadImpersonate()
 })
 
-function replace(
+function replaceChar(
   map: Record<string, AppSchema.Character>,
   id: string,
   char: Partial<AppSchema.Character>
@@ -536,6 +654,131 @@ function replace(
   return { ...map, [id]: { ...next, ...char } }
 }
 
+function replaceCharacters(incoming: AppSchema.Character[]) {
+  log('received list')
+  const { characters: prevList, chatChars: prevChat } = characterStore.getState()
+  const nextList = reconcileCharacters(prevList, incoming, { concat: true, owned: true })
+  const nextChat = reconcileCharacters(prevChat, incoming, { concat: false, owned: false })
+
+  characterStore.setState({
+    characters: { loaded: Date.now(), ...nextList },
+    chatChars: { chatId: prevChat.chatId, ...nextChat },
+  })
+}
+
+function reconcileCharacters(
+  previous: { list: AppSchema.Character[]; map: Record<string, AppSchema.Character> },
+  incoming: AppSchema.Character[],
+  opts: {
+    /** If character is absent from the list/map, add it  */
+    concat: boolean
+
+    /** Omit characters not owned by this user */
+    owned: boolean
+  }
+) {
+  const userId = getUserId()
+  const nextMap: Record<string, AppSchema.Character> = { ...previous.map }
+  const nextList = opts.concat
+    ? combine(previous.list, incoming)
+    : updateList(previous.list, incoming)
+
+  for (const char of incoming) {
+    // Exclude unowned characters if specified
+    // Typically used for the 'all character' list
+    if (opts.owned && char.userId !== userId) continue
+
+    const prev = previous.map[char._id]
+    if (!opts.concat && !prev) continue
+
+    nextMap[char._id] = { ...prev, ...char }
+  }
+
+  return { list: nextList, map: nextMap }
+}
+
+function removeCharacters(
+  previous: { list: AppSchema.Character[]; map: Record<string, AppSchema.Character> },
+  characterIds: string[]
+) {
+  const ids = new Set(characterIds)
+  const nextList = previous.list.filter((ch) => !ids.has(ch._id))
+  const nextMap: Record<string, AppSchema.Character> = {}
+
+  for (const [id, char] of Object.entries(previous.map)) {
+    if (ids.has(id)) continue
+    nextMap[id] = { ...char }
+  }
+
+  return { list: nextList, map: nextMap }
+}
+
 subscribe('horde-status', { status: 'any' }, (body) => {
   characterStore.setState({ hordeStatus: body.status })
 })
+
+async function getCharacterDetail(characterId: string) {
+  const char = await charsApi.getCharacterDetail(characterId)
+
+  if (!char.result) return
+
+  const detail = characterStore.getState().characters
+  const nextList = combine(detail.list, [char.result])
+
+  const nextMap = replaceChar(detail.map, characterId, char.result)
+
+  characterStore.setState({ characters: { list: nextList, map: nextMap, loaded: detail.loaded } })
+  return char.result
+}
+
+export async function downloadCharacters(characterIds: string[]) {
+  const characters = await getMultipleCharacters(characterIds)
+
+  const zip = new JSZip()
+
+  for (const char of characters) {
+    const ext = char.avatar ? 'png' : 'json'
+    const name = `${char.name}.${char._id.slice(0, 4)}.${ext}`
+    const data = char.avatar
+      ? await createCharacterImageBlob(char, 'native')
+      : charToJson(char, 'native')
+    zip.file(name, data)
+  }
+
+  const blob = await zip.generateAsync({ type: 'blob' })
+  const anchor = document.createElement('a')
+  anchor.href = URL.createObjectURL(blob)
+  anchor.download = `characters.zip`
+  anchor.click()
+  URL.revokeObjectURL(anchor.href)
+}
+
+async function getMultipleCharacters(characterIds: string[]) {
+  const { characters, chatChars } = characterStore.getState()
+  const chars: AppSchema.Character[] = []
+  const missing: string[] = []
+
+  for (const charId of characterIds) {
+    const char = chatChars.map[charId] || characters.map[charId]
+    if (!char?.persona) {
+      missing.push(charId)
+      continue
+    }
+
+    chars.push(char)
+  }
+
+  const details = await charsApi.getMultipleDetails(missing)
+  if (details.error) {
+    throw new Error(`Could not retrieve character details: ${details.error}`)
+  }
+
+  const loaded = chars.concat(details.result)
+  replaceCharacters(loaded)
+
+  return loaded
+}
+
+function sortDesc(left: { updatedAt: string }, right: { updatedAt: string }): number {
+  return left.updatedAt > right.updatedAt ? -1 : left.updatedAt === right.updatedAt ? 0 : 1
+}

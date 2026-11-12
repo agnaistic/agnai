@@ -1,17 +1,17 @@
-import { AIAdapter, getAdapter, isThirdPartyPreset, MODE_SETTINGS } from '../../common/adapters'
+import { AIAdapter, getAdapter, isThirdPartyPreset } from '../../common/adapters'
 import { mapPresetsToAdapter, defaultPresets, getFallbackPreset } from '/common/presets'
 import { store } from '../db'
 import { AppSchema } from '../../common/types/schema'
 import { AppLog, logger } from '../middleware'
 import { StatusError } from '../api/wrap'
 import { GenerateRequestV2 } from './type'
-import { buildPromptPlaceholders, JsonField, getContextLimit } from '../../common/prompt'
+import { buildPromptPlaceholders, JsonField, simplifyPreset } from '../../common/prompt'
 import { configure } from '../../common/horde-gen'
 import needle from 'needle'
 import { HORDE_GUEST_KEY } from '../api/horde'
 import { getTokenCounter } from '../tokenize'
 import { getAppConfig } from '../api/settings'
-import { SubscriptionPreset, getHandlers, getSubscriptionPreset } from './agnaistic'
+import { getHandlers, getSubscriptionPreset } from './agnaistic'
 import { deepClone, getSubscriptionModelLimits, parseStops, tryParse } from '/common/util'
 import {
   GuidanceParams,
@@ -21,9 +21,9 @@ import {
 import { getCachedSubscriptionModels } from '../db/subscriptions'
 import { sendOne } from '../api/ws'
 import { ResponseSchema } from '/common/types/library'
-import { toChatMessages, validateChatMessages } from './template-chat-payload'
 import { isDefaultPreset } from '/common/default-preset'
 import { getPresetConnection } from '/common/providers'
+import { toChatMessages, validateChatMessages } from '/common/template-messages'
 
 let version = ''
 
@@ -46,13 +46,13 @@ configure(async (opts) => {
 }, logger)
 
 export type InferenceRequest = {
+  chatId?: string
   requestId?: string
   prompt: string
   messages?: Array<any>
   guest?: string
   user: AppSchema.User
   settings?: Partial<AppSchema.UserGenPreset>
-  maxKnownLines?: number
 
   guidance?: boolean
   placeholders?: any
@@ -139,7 +139,7 @@ export async function inferenceAsync(opts: InferenceRequest) {
 }
 
 export async function guidanceAsync(opts: InferenceRequest) {
-  const settings = await getRequestPreset(opts)
+  const { preset: settings } = await getRequestPreset(opts)
   const sub = await getSubscriptionPreset(opts.user, !!opts.guest, opts.settings || settings)
 
   const previous = { ...opts.previous }
@@ -196,13 +196,22 @@ export async function guidanceAsync(opts: InferenceRequest) {
 }
 
 export async function createInferenceStream(opts: InferenceRequest) {
-  const settings = await getRequestPreset(opts)
+  const { simple: settings, conn } = await getRequestPreset(opts)
 
   if (opts.stop) {
-    settings.stopSequences = opts.stop
+    conn.preset.stopSequences = opts.stop
+  } else if (opts.settings?.stopSequences) {
+    conn.preset.stopSequences = parseStops(opts.settings.stopSequences)
   }
 
-  const conn = getPresetConnection(settings, opts.user.providers)
+  if (opts.settings?.thirdPartyUrl) {
+    opts.user.koboldUrl = opts.settings.thirdPartyUrl
+  }
+
+  if (opts.settings?.thirdPartyFormat) {
+    opts.user.thirdPartyFormat = opts.settings.thirdPartyFormat
+  }
+
   const isThirdParty = isThirdPartyPreset(conn)
 
   const handler = getHandlers({ user: opts.user, settings })
@@ -243,23 +252,29 @@ export async function createInferenceStream(opts: InferenceRequest) {
 
 async function getRequestPreset(opts: InferenceRequest) {
   let preset: Partial<AppSchema.GenSettings> | undefined
+  let notUserPreset = false
 
-  if (opts.settings?._id && opts.user && !isDefaultPreset(opts.settings._id)) {
-    const userPreset = await store.presets.getUserPresetInternal(opts.settings._id)
-    if (userPreset && userPreset.userId === opts.user._id) {
-      opts.settings = userPreset
-    }
-  }
+  // if (opts.settings?._id && opts.user && !opts.guest && !isDefaultPreset(opts.settings._id)) {
+  //   const userPreset = await store.presets.getUserPresetInternal(opts.settings._id)
+  //   if (userPreset && userPreset.userId === opts.user._id) {
+  //     opts.settings = userPreset
+  //   }
+  // }
 
   if (opts.settings) {
     const model = getCachedSubscriptionModels().find((m) => m._id === opts.settings?._id)
     if (model) {
+      notUserPreset = true
       preset = model
+    } else if (isDefaultPreset(opts.settings._id) || !opts.settings._id) {
+      notUserPreset = true
+      preset = opts.settings
     } else {
       preset = opts.settings
     }
   } else if (opts.user.defaultPreset) {
     if (isDefaultPreset(opts.user.defaultPreset)) {
+      notUserPreset = true
       preset = deepClone(defaultPresets[opts.user.defaultPreset])
     }
 
@@ -271,6 +286,7 @@ async function getRequestPreset(opts: InferenceRequest) {
     const models = getCachedSubscriptionModels()
     const model = models.find((m) => m.isDefaultSub)
     if (model) {
+      notUserPreset = true
       preset = model
     }
   }
@@ -287,7 +303,20 @@ async function getRequestPreset(opts: InferenceRequest) {
     opts.user.thirdPartyFormat = preset.thirdPartyFormat
   }
 
-  return preset
+  if (!opts.guest && !notUserPreset && preset.userId !== opts.user._id) {
+    if (!opts.chatId)
+      throw new StatusError(`[2] Could not locate preset for inference request`, 402)
+    const members = await store.chats.getActiveMembers(opts.chatId)
+
+    const isMember = members.some((id) => id === opts.user._id)
+    if (!isMember) throw new StatusError(`[3] Could not locate preset for inference request`, 402)
+  }
+
+  const conn = getPresetConnection(preset, opts.user.providers)
+  const sub = await getSubscriptionPreset(opts.user, !!opts.guest, preset)
+  const simple = simplifyPreset(opts.user, conn.preset, sub?.preset)
+
+  return { preset, simple, conn, sub }
 }
 
 export async function createChatStream(
@@ -308,7 +337,7 @@ export async function createChatStream(
    * - There is both a history and response template
    */
   let jsonSchema: JsonField[] | undefined
-  if (opts.settings?.jsonEnabled && opts.chatSchema && opts.chatSchema.schema?.length) {
+  if (opts.chatSchema && opts.chatSchema.schema?.length) {
     if (subscription?.preset?.jsonSchemaCapable || !subscription) {
       jsonSchema = opts.chatSchema.schema
     }
@@ -341,7 +370,7 @@ export async function createChatStream(
   if (!guestSocketId) {
     const { adapter, model } = getAdapter(opts.chat, opts.user, opts.settings)
     const encoder = getTokenCounter(adapter, model)
-    const nextSettings = simplifyPreset(opts.user, opts.settings, subscription)
+    const nextSettings = simplifyPreset(opts.user, opts.settings, subscription?.preset)
     opts.settings = nextSettings
     opts.parts = await buildPromptPlaceholders(
       {
@@ -548,35 +577,4 @@ export async function getGenerationSettings(
     ...getFallbackPreset(adapter),
     src: guest ? 'guest-fallback-last' : 'user-fallback-last',
   }
-}
-
-function simplifyPreset(
-  user: AppSchema.User,
-  gen: Partial<AppSchema.GenSettings>,
-  sub?: SubscriptionPreset
-): Partial<AppSchema.GenSettings> {
-  const next: Partial<AppSchema.GenSettings> = { ...gen }
-
-  if (gen.useMaxContext || gen.presetMode === 'simple') {
-    gen.useMaxContext = true
-    next.maxContextLength = getContextLimit(user, next) + (gen.maxTokens ?? 0)
-  }
-
-  if (!gen.presetMode || gen.presetMode === 'advanced') return next
-
-  const recommends: any = {}
-
-  if (sub?.preset) {
-    for (const [prop, usable] of Object.entries(MODE_SETTINGS[gen.presetMode] || {})) {
-      if (!usable) continue
-      const value = (sub.preset as any)[prop]
-      if (value !== undefined) {
-        recommends[prop] = value
-      }
-    }
-  }
-
-  Object.assign(next, recommends, { useMaxContext: true })
-
-  return next
 }

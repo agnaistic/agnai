@@ -11,9 +11,11 @@ export type RequestChatEmbed = {
   type: 'embedChat'
   chatId: string
   messages: AppSchema.ChatMessage[]
+  auth: any
 }
 export type RequestDocEmbed = {
   type: 'embedDocument'
+  auth: any
 } & EmbeddedDocument
 
 export type WorkerRequest =

@@ -1,5 +1,6 @@
 import { createStore, getStore } from './create'
 import { subscribe } from './socket'
+import { debug } from '/common/debug'
 import { setNotifier } from '/common/requests/util'
 
 export type Toast = {
@@ -7,6 +8,7 @@ export type Toast = {
   message: string
   type: 'default' | 'warn' | 'success' | 'error' | 'admin'
   ttl: number
+  stack?: any
 }
 
 let toastId = 0
@@ -25,34 +27,8 @@ export const toastStore = createStore<ToastState>('toasts', {
   modal: false,
 })((get, set) => {
   const addToast = (kind: Toast['type']) => {
-    return (_: ToastState, msg: string, ttl = 5) => {
-      if (kind === 'admin') {
-        ttl = 300
-      }
-
-      const id = ++toastId
-      const toast: Toast = {
-        id,
-        type: kind,
-        message: msg,
-        ttl,
-      }
-
-      setTimeout(() => {
-        const { toasts } = get()
-        set({ toasts: toasts.filter((t) => t.id !== id) })
-      }, ttl * 1000)
-
-      const { toasts, history } = get()
-
-      const nextHistory =
-        getLevel(toast.type) > 2
-          ? [{ time: new Date(), toast, seen: false }].concat(history)
-          : history
-
-      const unseen = nextHistory.filter((nh) => !nh.seen).length
-      return { toasts: toasts.concat(toast), history: nextHistory, unseen }
-    }
+    return (_: ToastState, msg: string, ex?: { ttl?: number; stack?: string }) =>
+      handleToast(kind, msg, ex)
   }
 
   const adminToast = addToast('admin')
@@ -83,7 +59,15 @@ export const toastStore = createStore<ToastState>('toasts', {
     normal: addToast('default'),
     warn: addToast('warn'),
     success: addToast('success'),
-    error: addToast('error'),
+    error: (_, error: string | any, ex?: { prefix?: string; ttt?: number; stack?: string }) => {
+      if (!error || typeof error === 'string') {
+        handleToast('error', joinMessage(error || 'Unexpected error', ex?.prefix), ex)
+        return
+      }
+      const msg = joinMessage(error.message || 'Unexpected error', ex?.prefix)
+      const stack = error.stack
+      handleToast('error', msg, { ttl: ex?.ttt, stack })
+    },
     admin: (_, message: string, level?: number) => {
       if (level === undefined) {
         adminToast(_, message)
@@ -99,20 +83,59 @@ export const toastStore = createStore<ToastState>('toasts', {
   }
 })
 
+function joinMessage(msg: string, prefix?: string) {
+  if (!prefix) return msg
+  return `${prefix}: ${msg}`
+}
+
+function handleToast(kind: Toast['type'], msg: string, ex?: { ttl?: number; stack?: string }) {
+  let ttl = ex?.ttl ?? 5
+  if (kind === 'admin') {
+    ttl = 300
+  }
+
+  if (kind === 'error') {
+    const err = new Error()
+    debug('toast')(`${msg}\n${err.stack}`)
+  }
+
+  const id = ++toastId
+  const toast: Toast = {
+    id,
+    type: kind,
+    message: msg,
+    ttl,
+    stack: ex?.stack,
+  }
+
+  setTimeout(() => {
+    const { toasts } = toastStore.getState()
+    toastStore.setState({ toasts: toasts.filter((t) => t.id !== id) })
+  }, ttl * 1000)
+
+  const { toasts, history } = toastStore.getState()
+
+  const nextHistory =
+    getLevel(toast.type) > 2 ? [{ time: new Date(), toast, seen: false }].concat(history) : history
+
+  const unseen = nextHistory.filter((nh) => !nh.seen).length
+  toastStore.setState({ toasts: toasts.concat(toast), history: nextHistory, unseen })
+}
+
 setNotifier(toastStore)
 
 subscribe('notification', { level: 'string?', message: 'string', ttl: 'number?' }, (body) => {
   switch (body.level) {
     case 'error':
-      return toastStore.error(body.message, body.ttl)
+      return toastStore.error(body.message)
 
     case 'warn':
     case 'warning':
-      return toastStore.warn(body.message, body.ttl)
+      return toastStore.warn(body.message, { ttl: body.ttl })
 
     case 'normal':
     default:
-      return toastStore.normal(body.message, body.ttl)
+      return toastStore.normal(body.message, { ttl: body.ttl })
   }
 })
 

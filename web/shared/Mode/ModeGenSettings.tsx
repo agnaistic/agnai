@@ -13,11 +13,11 @@ import TextInput from '/web/shared/TextInput'
 import PresetSettings from '/web/shared/PresetSettings'
 import { ADAPTER_SETTINGS } from '../PresetSettings/settings'
 import Divider from '../Divider'
-import { getPresetForm, PresetFuncs, PresetState, PresetTab } from '/web/store/preset-context'
+import { getPresetForm, PresetFuncs, PresetTab, ContextPreset } from '/web/store/preset-context'
 import { deepClone } from '/common/util'
 
 export const ModeGenSettings: Component<{
-  preset: PresetState
+  preset: ContextPreset
   setters: PresetFuncs
   onPresetChanged: (presetId: string) => void
   presetId: string | undefined
@@ -193,7 +193,10 @@ export const ModeGenSettings: Component<{
                 classList={{ '!text-green-500': clicked() }}
                 onClick={() => copy(props.preset._id)}
               >
-                Copy ID {clicked() ? '✓' : ''}
+                <Show when={window.flags.debug} fallback={'Copy ID'}>
+                  {props.preset._id}
+                </Show>
+                {clicked() ? '✓' : ''}
               </div>
             </div>
           }

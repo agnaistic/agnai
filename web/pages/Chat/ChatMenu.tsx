@@ -1,12 +1,11 @@
 import './chat-detail.css'
-import { Component, createMemo, Show } from 'solid-js'
-import { ADAPTER_LABELS } from '../../../common/adapters'
-import { ChatRightPane, chatStore, settingStore } from '../../store'
+import { Component, createMemo, JSX, Show } from 'solid-js'
+import { ChatRightPane, chatStore, imageStore, pageStore } from '../../store'
 import { ChatModal } from './ChatOptions'
 import { usePaneManager } from '/web/shared/hooks'
-import { ContextState } from '/web/store/context'
+import { ChatContext } from '/web/store/context'
 import { useSubNav } from '/web/subnav'
-import { Nav, UserProfile } from '/web/Navigation'
+import { Nav, NotificationBell, UserProfile } from '/web/Navigation'
 import {
   Book,
   Palette,
@@ -19,7 +18,6 @@ import {
   RotateCcw,
   ChevronLeft,
   Pencil,
-  Image,
   ImagePlus,
 } from 'lucide-solid'
 import { ThirdPartyModel } from '/web/shared/PresetSettings/ThirdPartyModel'
@@ -29,17 +27,18 @@ import { usePresetContext } from '/web/store/preset-context'
 import { getStore } from '/web/store/create'
 
 type NavProps = {
-  ctx: ContextState
+  ctx: ChatContext
   togglePane: (paneType: ChatRightPane) => void
   setModal: (model: ChatModal) => void
-  adapterLabel: string
+  adapterLabel: string | JSX.Element
 }
 
 export const ChatMenu: Component<{
-  ctx: ContextState
+  ctx: ChatContext
   isOwner: boolean
 }> = (props) => {
   const pane = usePaneManager()
+  const [preset, _setters] = usePresetContext()
 
   const togglePane = (paneType: ChatRightPane) => {
     chatStore.option({ options: false })
@@ -51,11 +50,11 @@ export const ChatMenu: Component<{
   }
 
   const adapterLabel = createMemo(() => {
-    if (!props.ctx.preset) return ''
-    const label = `${
-      props.ctx.provider?.name || props.ctx.detail?.name || ADAPTER_LABELS[props.ctx.service!]
-    } - ${props.ctx.preset.name}`
-    return label
+    if (!preset.current._id) return `None`
+
+    const suffix = preset.current.name
+
+    return suffix || 'Unnamed Preset'
   })
 
   useSubNav({
@@ -90,11 +89,11 @@ const ChatNav: Component<NavProps> = (props) => {
     const last = getStore('messages').getState().msgs.slice(-1)[0]
 
     if (!last) {
-      settingStore.openImageGen()
+      imageStore.openImageGen()
       return
     }
 
-    settingStore.showMessageImages({ id: last._id, position: 0 })
+    imageStore.showMessageImages({ id: last._id, position: -1 })
   }
 
   return (
@@ -106,7 +105,11 @@ const ChatNav: Component<NavProps> = (props) => {
           <ChevronLeft size={16} /> Characters
         </Nav.Item>
 
-        <Nav.Item class="min-h-8" href={`/character/${props.ctx.char?._id}/chats`}>
+        <Nav.Item
+          class="min-h-8"
+          href={`/character/${props.ctx.char?._id}/chats`}
+          disabled={!props.ctx.char?._id}
+        >
           <ChevronLeft size={16} /> Chats
         </Nav.Item>
       </Nav.DoubleItem>
@@ -143,17 +146,17 @@ const ChatNav: Component<NavProps> = (props) => {
 
       <div class="flex flex-col gap-1">
         <PresetProvider
-          state={preset}
+          state={preset.current}
           setters={setters}
           page="menu"
           openSub={openProviders.on}
         ></PresetProvider>
-        <ThirdPartyModel state={preset} setters={setters} page="mode" />
+        <ThirdPartyModel state={preset.current} setters={setters} page="mode" />
       </div>
 
       <div class="flex flex-wrap justify-center gap-1 text-sm">
         <Nav.Item
-          onClick={() => settingStore.modal(true)}
+          onClick={() => pageStore.settings(true)}
           ariaLabel="Open settings page"
           tooltip="Site Settings"
         >
@@ -166,13 +169,13 @@ const ChatNav: Component<NavProps> = (props) => {
         >
           <ImagePlus size={size} aria-hidden="true" />
         </Nav.Item>
-        <Nav.Item
-          onClick={() => settingStore.imageSettings(true)}
+        {/*<Nav.Item
+          onClick={() => imageStore.imageSettings(true)}
           ariaLabel="Image Settings"
           tooltip="Image Settings"
         >
           <Image size={size} aria-hidden="true" />
-        </Nav.Item>
+        </Nav.Item>*/}
         <Nav.Item onClick={() => props.setModal('export')} tooltip="Download Chat">
           <Download size={size} />
         </Nav.Item>
@@ -182,6 +185,8 @@ const ChatNav: Component<NavProps> = (props) => {
         <Nav.Item onClick={() => props.setModal('delete')} tooltip="Delete Chat">
           <Trash size={size} />
         </Nav.Item>
+
+        <NotificationBell size={size} />
       </div>
     </>
   )

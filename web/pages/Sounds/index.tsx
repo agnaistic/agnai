@@ -9,7 +9,7 @@ import { SoundpackPicker } from './SoundpackPicker'
 import { Page } from '/web/Layout'
 
 const SoundsPage: Component<{}> = (props) => {
-  const audio = audioStore()
+  const audio = audioStore((s) => ({ selectedSoundpacks: s.selectedSoundpacks }))
 
   return (
     <Page>

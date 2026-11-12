@@ -2,8 +2,24 @@ import { ChubItem as ChubEntity } from '../pages/Chub/ChubItem'
 import { getStoredValue, setStoredValue } from '../shared/hooks'
 import { createStore } from './create'
 
+export const CHUB_SORTS = {
+  default: 'Default',
+  trending: 'Trending',
+  n_favorites: '# Favorites',
+  random: 'Random',
+  rating: 'Rating',
+  last_activity_at: 'Updated',
+  star_count: 'Popularity',
+  created_at: 'Created',
+  name: 'Name',
+  n_tokens: '# Tokens',
+  rating_count: '# Ratings',
+}
+
 export type ChubEntity = {
   id: number
+  avatar_url?: string
+
   name: string
   description: string
   fullPath: string
@@ -47,7 +63,7 @@ const initState: ChubState = {
   nsfw: getStoredValue('chub-nsfw', false),
   tags: '',
   excludeTags: '',
-  sort: getStoredValue('chub-sort', 'Creation Date'),
+  sort: getStoredValue('chub-sort', 'Download Count'),
   search: '',
   chars: [],
   books: [],
@@ -160,23 +176,8 @@ export function createOnEnter(callback: Function) {
   }
 }
 
-function getSort(sort: string) {
-  switch (sort) {
-    case 'Download Count':
-      return 'download_count'
-    case 'ID':
-      return 'id'
-    case 'Rating':
-      return 'rating'
-    case 'Rating Count':
-      return 'rating_count'
-    case 'Last Activity':
-      return 'last_activity_at'
-    case 'Creation Date':
-      return 'created_at'
-    case 'Name':
-      return 'name'
-    case 'Token Count':
-      return 'n_tokens'
-  }
+function getSort(sort: string): keyof typeof CHUB_SORTS {
+  const key = sort as keyof typeof CHUB_SORTS
+  if (!key || !CHUB_SORTS[key]) return 'default'
+  return key
 }

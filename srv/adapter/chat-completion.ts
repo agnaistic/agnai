@@ -12,7 +12,7 @@ import {
 } from '/common/prompt'
 import { AppSchema, TokenCounter } from '/common/types'
 import { escapeRegex } from '/common/util'
-import { toChatMessages } from './template-chat-payload'
+import { toChatMessages } from '/common/template-messages'
 
 type SplitSampleChatProps = {
   sampleChat: string
@@ -231,6 +231,7 @@ async function getPostInstruction(
   counter: TokenCounter
 ): Promise<CompletionItem[] | undefined> {
   let prefix = opts.parts.ujb ?? ''
+  const role = opts.gen.postUserRole ? 'user' : 'assistant'
 
   prefix = (
     await injectPlaceholders(prefix, {
@@ -288,7 +289,7 @@ async function getPostInstruction(
           content: prefix,
         },
         {
-          role: 'assistant',
+          role,
           content: `${opts.parts.prefill ?? ''}\n\n${appendName ? opts.replyAs.name : ''}:`.trim(),
         },
       ]
@@ -341,4 +342,18 @@ export const requestFullCompletion: CompletionGenerator = async function* ({
   }
 
   return resp.body
+}
+
+export function modelNeedsUserRoleLast(opts: AdapterProps, model: string): boolean {
+  if (!model) return false
+
+  if (opts.gen.postUserRole) return true
+  if (opts.subscription?.preset?.postUserRole) return true
+
+  const lowered = model.toLowerCase()
+  if (lowered.includes('deepseek') && lowered.includes('3.1')) return true
+  if (lowered.includes('deepseek') && lowered.includes('3.2')) return true
+  if (model.includes('grok-4')) return true
+
+  return false
 }

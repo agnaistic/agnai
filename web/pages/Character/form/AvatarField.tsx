@@ -9,11 +9,10 @@ import FileInput, { FileInputResult } from '/web/shared/FileInput'
 import TextInput from '/web/shared/TextInput'
 import { Regenerate } from './Regenerate'
 import Button from '/web/shared/Button'
-import { characterStore, UserState } from '/web/store'
+import { characterStore } from '/web/store'
 import Divider from '/web/shared/Divider'
 
 export const AvatarField: Component<{
-  user: UserState
   editor: CharEditor
   image: () => string | undefined
   setImageUrl: (url: string | undefined) => void
@@ -74,7 +73,7 @@ export const AvatarField: Component<{
             </div>
           </Match>
         </Switch>
-        <ReelControl user={props.user} editor={props.editor} loading={state.avatar.loading} />
+        <ReelControl editor={props.editor} loading={state.avatar.loading} />
       </div>
       <div class="flex w-full flex-col gap-2">
         <Switch>
@@ -84,11 +83,21 @@ export const AvatarField: Component<{
               fieldName="avatar"
               accept="image/png,image/jpeg,image/apng,image/gif,image/webp"
               onUpdate={props.updateFile}
-            />
+            >
+              Select Avatar Image
+            </FileInput>
             <div class="relative flex w-full gap-2">
-              <div class="absolute right-2 top-1">
+              <div class="absolute right-2 top-1.5">
                 <Regenerate field={'appearance'} editor={props.editor} />
               </div>
+
+              <div class="absolute right-2 top-1.5 flex gap-2">
+                {/* <Button size="sm">
+                  <Dices size={16} />
+                </Button> */}
+                <Regenerate field={'appearance'} editor={props.editor} />
+              </div>
+
               <TextInput
                 isMultiline
                 parentClass="w-full"

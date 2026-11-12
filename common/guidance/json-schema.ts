@@ -2,6 +2,7 @@ import { AppSchema } from '../types'
 import { ResponseSchema } from '../types/library'
 import { JsonField } from '../prompt'
 import { GenerationConfig, Schema, Type } from '@google/genai'
+import { jsonHydrator } from '../util'
 
 export const SCHEMA_VARS = {
   user: `Your name: unformatted`,
@@ -13,31 +14,53 @@ export const SCHEMA_VARS = {
   kebab_char: `Character name: kebab-case`,
 }
 
-type Entities = {
-  replyAs: M<AppSchema.Character>
-  char: AppSchema.Character
-  impersonate?: M<AppSchema.Character>
-  sender: M<AppSchema.Profile>
+export type StructureEntities = {
+  replyAs?: Pick<AppSchema.Character, 'name'> | string
+  char: Pick<AppSchema.Character, 'name'> | string
+  impersonate?: Pick<AppSchema.Character, 'name'> | string
+  sender?: Pick<AppSchema.Profile, 'handle'> | string
 }
-
-type M<T> = T | undefined
 
 /**
  * @destructive Mutates `schema` field names and templates if required
  */
-export function formatJsonSchemaVars(schema: ResponseSchema, ents: Entities) {
-  if (!schema?.schema?.length) return
-  schema.history = parseVariableName(schema.history, ents)
-  schema.response = parseVariableName(schema.response, ents)
-  for (const field of schema.schema) {
-    field.name = parseVariableName(field.name, ents)
+export function formatJsonSchemaVars(
+  schema: ResponseSchema,
+  ents: StructureEntities
+): ResponseSchema {
+  if (!schema?.schema?.length) return schema
+  const aliases = getSchemaAliases(schema.schema)
+  const history = parseVariableName(schema.history, ents, aliases)
+  const response = parseVariableName(schema.response, ents, aliases)
+  const imageCaption = parseVariableName(schema.imageCaption, ents, aliases)
+  const fields = schema.schema.map((s) => ({ ...s }))
+
+  for (const field of fields) {
+    field.name = parseVariableName(field.name, ents, aliases)
   }
-  return
+
+  return {
+    history,
+    response,
+    imageCaption,
+    schema: fields,
+    systemPrompt: schema.systemPrompt,
+    jailbreak: schema.jailbreak,
+  }
 }
 
 type GeminiResponseSchema = NonNullable<GenerationConfig['responseSchema']>
+type LlamaCppResponseSchema = {
+  type: 'json_schema'
+  schema: {
+    strict: boolean
+    properties: Record<string, any>
+    required: string[]
+    additionalProperties: boolean
+  }
+}
 
-type JsonSchemaFormat = 'openai' | 'guided_json' | 'gemini'
+type JsonSchemaFormat = 'openai' | 'guided_json' | 'gemini' | 'llamacpp'
 
 type OutboundJsonSchema<T extends JsonSchemaFormat> = T extends 'openai'
   ? {
@@ -56,6 +79,8 @@ type OutboundJsonSchema<T extends JsonSchemaFormat> = T extends 'openai'
     }
   : T extends 'gemini'
   ? GeminiResponseSchema
+  : T extends 'llamacpp'
+  ? LlamaCppResponseSchema
   : {
       type: 'object'
       properties: Record<string, any>
@@ -65,16 +90,22 @@ type OutboundJsonSchema<T extends JsonSchemaFormat> = T extends 'openai'
 export function getJsonSchemaPayload<T extends JsonSchemaFormat>(
   json: JsonField[],
   format: T,
-  entities: Entities
+  entities: StructureEntities
 ): OutboundJsonSchema<T> {
-  const response = getResponseVariable(entities)
-
-  const base = { [response]: { type: 'string' } }
+  const base = {}
   // const base: any = {}
   const fields = json.reduce((prev: any, field: JsonField) => {
-    const {
+    let {
       type: { type, ...subtype },
     } = field
+
+    if ('maxLength' in subtype) {
+      subtype.maxLength = +(subtype.maxLength as any)
+    }
+
+    if (type === 'enum') {
+      type = 'string'
+    }
 
     const spec: any = { type, ...subtype }
     if (spec.maxLength !== undefined && spec.maxLength <= 0) {
@@ -87,6 +118,19 @@ export function getJsonSchemaPayload<T extends JsonSchemaFormat>(
   const required = Object.keys(fields)
 
   switch (format) {
+    case 'llamacpp': {
+      const payload: OutboundJsonSchema<'llamacpp'> = {
+        type: 'json_schema',
+        schema: {
+          strict: true,
+          properties: fields,
+          required,
+          additionalProperties: false,
+        },
+      }
+      return payload as OutboundJsonSchema<T>
+    }
+
     case 'openai': {
       const payload: OutboundJsonSchema<'openai'> = {
         type: 'json_schema',
@@ -121,7 +165,7 @@ export function getJsonSchemaPayload<T extends JsonSchemaFormat>(
   }
 }
 
-function toResponseSchema(fields: JsonField[], entities: Entities) {
+function toResponseSchema(fields: JsonField[], entities: StructureEntities) {
   const response = getResponseVariable(entities)
 
   const schema: GeminiResponseSchema = {
@@ -178,22 +222,66 @@ function toResponseSchema(fields: JsonField[], entities: Entities) {
   return schema
 }
 
-export function getResponseVariable(entities: Entities) {
+export function getResponseVariable(entities: StructureEntities) {
   const { char } = getNames(entities)
   return `${char}'s response`
 }
 
-function getNames(entities: Entities) {
-  const char = entities.replyAs?.name || entities.char?.name || 'Bot'
-  const user = entities.impersonate?.name || entities.sender?.handle || 'You'
+export function prepareJsonSchema(
+  def: Ensure<AppSchema.Character['json']>,
+  entities: StructureEntities,
+  includeResponse?: boolean
+) {
+  const names = getNames(entities)
+  const aliases: Record<string, string> = {}
+  const parsed = formatJsonSchemaVars(def, entities)
+
+  if (!parsed.schema) return
+
+  const fields = parsed.schema.slice().filter((f) => !f.disabled)
+
+  if (includeResponse) {
+    const responseVar = getResponseVariable(entities)
+    fields.unshift({ type: { type: 'string', maxLength: 0 }, name: responseVar, disabled: false })
+    aliases[responseVar] = 'response'
+  }
+
+  const nextSchema: ResponseSchema = {
+    response: parsed.response,
+    history: parsed.history,
+    imageCaption: parsed.imageCaption,
+    schema: fields,
+    systemPrompt: '',
+    jailbreak: '',
+  }
+
+  const hydrator = jsonHydrator(nextSchema, entities, aliases)
+
+  return {
+    names,
+    hydrator,
+    aliases,
+    entities,
+    ...nextSchema,
+  }
+}
+
+function getNames(entities: StructureEntities) {
+  const char = readName(entities.replyAs, entities.char, 'Bot')
+  const user = readName(entities.impersonate, entities.sender, 'You')
   return { char, user }
 }
 
-function parseVariableName(varname: string, opts: Entities) {
-  const user = opts.impersonate?.name || opts.sender?.handle || 'You'
-  const char = opts.replyAs?.name || opts.char?.name || 'Bot'
+export function parseVariableName(
+  varname: string,
+  opts: StructureEntities,
+  aliases: Record<string, string>
+) {
+  const fieldName = aliases[varname] || varname
+  const user = readName(opts.impersonate, opts.sender, 'You')
+  const char = readName(opts.replyAs, opts.char, 'Bot')
 
-  const parsed = formatPlaceholder(formatPlaceholder(varname, 'user', user), 'char', char)
+  const parsed = formatPlaceholder(formatPlaceholder(fieldName, 'user', user), 'char', char)
   return parsed
 }
 
@@ -203,7 +291,7 @@ function formatPlaceholder(varname: string, entity: 'user' | 'char', entityName:
 
   switch (entity) {
     case 'char': {
-      const formatted = varname
+      const formatted = (varname || '')
         .replace(/%snake_char%/gi, snake)
         .replace(/%kebak_char%/gi, kebab)
         .replace(/%char%/gi, entityName)
@@ -211,11 +299,36 @@ function formatPlaceholder(varname: string, entity: 'user' | 'char', entityName:
     }
 
     case 'user': {
-      const formatted = varname
+      const formatted = (varname || '')
         .replace(/%snake_user%/gi, snake)
         .replace(/%kebak_user%/gi, snake)
         .replace(/%user%/gi, entityName)
       return formatted
     }
   }
+}
+
+export function getSchemaAliases(fields: JsonField[]) {
+  const aliases: Record<string, string> = {}
+
+  if (!fields || !Array.isArray(fields)) return aliases
+
+  for (const field of fields) {
+    if (field.alias) {
+      aliases[field.alias] = field.name
+    }
+  }
+
+  return aliases
+}
+
+function readName(...ents: Array<{ name: string } | { handle: string } | string | undefined>) {
+  for (const ent of ents) {
+    if (!ent) continue
+    if (typeof ent === 'string') return ent
+    if ('name' in ent === true) return ent.name
+    return ent.handle
+  }
+
+  return ''
 }

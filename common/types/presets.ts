@@ -11,6 +11,10 @@ export interface Provider {
 
   /** For providers that have multiple formats (Claude, OpenAI, ...) */
   format?: ProviderFormat
+
+  /** For annoying providers like OpenAI and Mistral that don't version their APIs correctly */
+  subFormat?: string
+
   /** User-provided name */
   name: string
   url: string
@@ -99,12 +103,30 @@ export interface UserGenPreset extends GenSettings {
   userId: string
 }
 
-export type PresetParser =
-  | { type: 'replace'; from: string; to: string }
-  | { type: 'remove'; text: string }
+export type PresetParser = {
+  type: 'replace' | 'remove' | 'remove-prompt' | 'replace-prompt'
+  text: string
+  to?: string
+}
+
+export type Sampler =
+  | 'topK'
+  | 'typicalP'
+  | 'topP'
+  | 'topA'
+  | 'repetitionPenalty'
+  | 'frequencyPenalty'
+  | 'minP'
+  | 'tailFreeSampling'
+  | 'temperature'
+
+export type SamplerState = 'on' | 'off' | 'auto' | string
+
+export type ReasoningEffort = 'custom' | 'high' | 'medium' | 'low' | 'none'
 
 export interface GenSettings {
   name: string
+  userId?: string
   description?: string
   presetMode?: 'simple' | 'advanced' | undefined
 
@@ -157,6 +179,7 @@ export interface GenSettings {
   tokenHealing?: boolean
 
   skipRoleMerging?: boolean
+  postUserRole?: boolean
   disableNameStops?: boolean
   earlyStopping?: boolean
   stopSequences?: string[]
@@ -194,7 +217,7 @@ export interface GenSettings {
   reasoning?: {
     start: string
     end: string
-    effort: string
+    effort: ReasoningEffort
     enabled: boolean
     exclude: boolean
     maxTokens: number
@@ -241,10 +264,8 @@ export interface GenSettings {
   imageSettings?: BaseImageSettings
 
   json?: ResponseSchema
-  jsonEnabled?: boolean
-  jsonSource?: 'preset' | 'character'
-
-  useCharacterSchema?: boolean
+  jsonEnabled?: boolean | 'off' | 'standard' | 'separate'
+  jsonSource?: 'preset' | 'character' | 'json-preset'
 
   temporary?: Record<string, any>
   registered?: { [key in AIAdapter]?: Record<string, any> }
@@ -252,6 +273,8 @@ export interface GenSettings {
   updatedAt?: string
 
   parsers?: PresetParser[]
+
+  samplers?: { [key in Sampler]?: SamplerState }
 }
 
 export interface PromptTemplate {

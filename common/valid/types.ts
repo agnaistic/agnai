@@ -113,3 +113,7 @@ export function optional<T extends Validator>(ref: T): OptionalValidator<T> {
   ;(ref as any).__optional__ = true
   return ref as OptionalValidator<T>
 }
+
+export function optionalArray<T extends Validator>(ref: [T]): [T, '?'] {
+  return [...ref.slice(), '?'] as [T, '?']
+}

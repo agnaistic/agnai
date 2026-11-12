@@ -1,4 +1,4 @@
-import { Component, createEffect, createMemo, createSignal, on, Show } from 'solid-js'
+import { Component, createEffect, createSignal, on, Show } from 'solid-js'
 import { RootModal } from '/web/shared/Modal'
 import { getStore } from '/web/store/create'
 import { imageApi } from '/web/store/data/image'
@@ -6,10 +6,17 @@ import { ImageHost, ImageSamplers } from '/common/types/presets'
 import { SD_SAMPLER } from '/common/image'
 import { createStore } from 'solid-js/store'
 import TextInput from '/web/shared/TextInput'
-import { isChatPage, useImageCache } from '/web/shared/hooks'
+import { useChatPageId, useImageCache } from '/web/shared/hooks'
 import { RelativeSpinner } from '/web/shared/Loading'
 import Button from '/web/shared/Button'
-import { ArrowLeft, ArrowRight, BrushCleaning, SettingsIcon, WandSparkles } from 'lucide-solid'
+import {
+  ArrowLeft,
+  ArrowRight,
+  BrushCleaning,
+  CircleStop,
+  SettingsIcon,
+  WandSparkles,
+} from 'lucide-solid'
 import { createEmitter } from '/web/shared/util'
 import { cleanPrompt } from '/common/util'
 
@@ -19,12 +26,12 @@ import { cleanPrompt } from '/common/util'
 // }
 
 export const GenerateImageModal: Component = () => {
-  const isChat = isChatPage()
+  const chat = useChatPageId()
   const user = getStore('user')((s) => ({ id: s.user?._id || 'guest', image: s.user?.images }))
-  const reel = useImageCache(`img-gen-${user.id}`, { clean: true })
+  const reel = useImageCache({ id: `img-gen-${user.id}`, clean: true })
   const emitter = createEmitter('width')
   const [state, setters] = useImageContext({ prompt: '' })
-  const settings = getStore('settings')((s) => ({ ...s.imggen }))
+  const settings = getStore('image')((s) => ({ ...s.imggen }))
 
   const [loading, setLoading] = createSignal(false)
 
@@ -45,20 +52,16 @@ export const GenerateImageModal: Component = () => {
     }
   }
 
-  const canGeneratePrompt = createMemo(() => {
-    if (!isChat()) return false
-    return true
-  })
-
   const generatePrompt = async () => {
-    if (!canGeneratePrompt()) return
-    getStore('messages').generateImagePrompt({
+    if (!chat.chatId) return
+    getStore('responses').generateImagePrompt({
+      chatId: chat.chatId!,
       onSummary: (summary) => setters.update('prompt', summary),
       onTick: (res, state) => (state === 'partial' ? setters.update('prompt', res) : null),
     })
   }
 
-  const close = () => getStore('settings').closeImageGen()
+  const close = () => getStore('image').closeImageGen()
 
   const onCleanPrompt = () => {
     const next = cleanPrompt(state.prompt)
@@ -86,7 +89,7 @@ export const GenerateImageModal: Component = () => {
       maxHeight
       title={
         <>
-          <div class="icon-button" onClick={() => getStore('settings').imageSettings(true)}>
+          <div class="icon-button" onClick={() => getStore('image').imageSettings(true)}>
             <SettingsIcon size={20} />
           </div>
         </>
@@ -131,7 +134,7 @@ export const GenerateImageModal: Component = () => {
                 <BrushCleaning size={20} />
                 Clean
               </Button>
-              <Show when={canGeneratePrompt()}>
+              <Show when={chat.chatId}>
                 <Button size="sm" disabled={loading()} onClick={generatePrompt}>
                   <WandSparkles size={20} />
                 </Button>
@@ -144,6 +147,8 @@ export const GenerateImageModal: Component = () => {
           <Show when={loading()}>
             <div class="bg-900 absolute right-1/2 top-1/2 rounded-lg p-2">
               <RelativeSpinner />
+              Stop
+              <CircleStop />
             </div>
           </Show>
           <Show when={!!reel.state.image}>

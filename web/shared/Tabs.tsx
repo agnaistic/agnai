@@ -35,8 +35,11 @@ const Tabs: Component<{
         <Match when>
           <For each={props.tabs}>
             {(tab, i) => (
-              <div
-                onClick={() => props.select(i())}
+              <button
+                onClick={(ev) => {
+                  ev.preventDefault()
+                  props.select(i())
+                }}
                 class={`flex min-w-max cursor-pointer items-center justify-center rounded-t-md border-b-2 px-4 py-2`}
                 classList={{
                   'bg-[var(--hl-800)] border-[var(--hl-500)] hover:border-[var(--hl-400)]':
@@ -49,7 +52,7 @@ const Tabs: Component<{
                 }}
               >
                 {props.titles ? props.titles[i()] : tab}
-              </div>
+              </button>
             )}
           </For>
         </Match>

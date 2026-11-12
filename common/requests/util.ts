@@ -15,6 +15,15 @@ let notifier: Notifier = {
 }
 let emitter = (_payload: { type: string }) => {}
 
+export function joinThoughtTokens(accum: string, thoughts: string) {
+  if (!thoughts.trim()) return accum
+  if (!accum.trim() && thoughts) {
+    return thoughts
+  }
+
+  return `<think>${thoughts}</think>${accum}`
+}
+
 export function setEmitter(emit: (payload: { type: string }) => void) {
   emitter = emit
 }
@@ -31,79 +40,83 @@ export function notify() {
   return notifier
 }
 
-type SanitiseOpts = {
-  text: string
-  char: AppSchema.Character
-  members: AppSchema.Profile[]
-  gen: Partial<AppSchema.GenSettings>
-}
-
-export function sanitiseAndTrim({ text, char, members, gen }: SanitiseOpts) {
-  let parsed = sanitise(text)
-
-  const trimmed = trimResponseV2(parsed, char, members, gen, ['END_OF_DIALOG'])
-    .split(`${char.name}:`)
-    .join('')
-  return trimmed || parsed
-}
-
 export function sanitise(generated: string) {
   // If want to support code blocks we need to remove the excess whitespace removal as it breaks indents
   return (generated || '').trim()
 }
 
-export function trimResponseV2(
-  generated: string,
-  char: AppSchema.Character,
-  members: AppSchema.Profile[],
-  gen: Partial<AppSchema.GenSettings> | undefined,
-  endTokens: string[] = []
-) {
-  const allEndTokens = getEndTokens(null, members)
+export function getChoiceProp<T = any>(json: any, prop: string, assign?: any) {
+  const choice = json?.choices?.[0]
+  let value = choice?.delta?.[prop] || choice?.[prop] || json?.[prop]
 
-  generated = generated.split(`${char.name} :`).join(`${char.name}:`)
-  if (gen?.reasoning?.start) {
-    generated = generated.replaceAll('<think>', gen.reasoning.start)
+  const isThought = prop === 'reasoning' || prop === 'thought'
+  const isToken = prop === 'content' || prop === 'text'
+
+  // Mistral returns arrays as in their deltas for some bizarre reason
+  if (Array.isArray(value)) {
+    if (!isThought) return
+    const first = value[0]
+    if (!first) return
+
+    if (first.type !== 'thinking') return
+    if (!first.thinking?.[0]) return
+    return first.thinking?.[0]?.text
   }
 
-  if (gen?.reasoning?.end) {
-    generated = generated.replaceAll('</think>', gen.reasoning.end)
+  if (typeof value !== 'string' && (isToken || isThought)) return
+
+  if (assign && value) {
+    assign[prop] = value
   }
 
-  for (const member of members) {
-    if (!member.handle) continue
-    generated = generated.split(`${member.handle} :`).join(`${member.handle}:`)
+  return value as T
+}
+
+export function getNextTokens(json: any) {
+  const props = ['content', 'text']
+
+  const choice = json?.choices?.[0]
+  let value: any = undefined
+
+  for (const prop of props) {
+    const match = choice?.delta?.[prop] || choice?.[prop] || json?.[prop]
+    if (!match) continue
+
+    value = match
+    break
   }
 
-  /** Do not always add character names as stop tokens here */
-  // if (bots) {
-  //   for (const bot of Object.values(bots)) {
-  //     if (!bot) continue
-  //     if (bot?._id === char._id) continue
-  //     endTokens.push(`${bot.name}:`)
-  //   }
-  // }
+  return value
+}
 
-  let index = -1
-  let trimmed = allEndTokens.concat(...endTokens).reduce((prev, endToken) => {
-    const idx = generated.indexOf(endToken)
+export function getNextThoughts(json: any) {
+  const props = ['reasoning', 'thought', 'reasoning_content']
+  const choice = json?.choices?.[0]
 
-    if (idx === -1) return prev
+  let value: any = undefined
+  for (const prop of props) {
+    const match = choice?.delta?.[prop] || choice?.[prop] || json?.[prop]
+    if (!match) continue
 
-    const text = generated.slice(0, idx)
-    if (index === -1 || idx < index) {
-      index = idx
-      return text
-    }
-
-    return prev
-  }, '')
-
-  if (index === -1) {
-    return sanitise(generated.split(`${char.name}:`).join(''))
+    value = match
+    break
   }
 
-  return sanitise(trimmed.split(`${char.name}:`).join(''))
+  if (!value) return
+
+  if (typeof value === 'string') return value
+
+  // Mistral returns thoughts in an array for some reason string
+  if (Array.isArray(value)) {
+    const first = value[0]
+    if (!first) return
+
+    if (first.type !== 'thinking') return
+    if (!first.thinking?.[0]) return
+    return first.thinking?.[0]?.text
+  }
+
+  return
 }
 
 export function getEndTokens(
@@ -138,7 +151,12 @@ export function joinUrl(base: string, path: string) {
 }
 
 export async function getThirdPartyModels(url: string, key: string) {
-  const headers: any = { Accept: 'application/json', 'anthropic-version': '2023-06-01' }
+  const headers: any = {
+    Accept: 'application/json',
+    'anthropic-version': '2023-06-01',
+    'Content-Type': 'application/json',
+    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:58.0) Gecko/20100101 Firefox/58.0',
+  }
 
   if (key) {
     headers.Authorization = `Bearer ${key}`

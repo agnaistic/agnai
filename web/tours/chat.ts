@@ -97,7 +97,7 @@ chatTour.addSteps([
     buttons: [
       prev,
       btn.next(chatTour, () => {
-        getStore('settings').menu(false)
+        getStore('page').menu(false)
 
         const ele = document.querySelector('.chat-messages')
         if (ele) {
@@ -116,7 +116,7 @@ chatTour.addSteps([
     The order and position of the message options can be customized in the <code>UI Settings</code>.`,
     attachTo: { element: '.tour-message-opts', on: 'bottom-end' },
 
-    buttons: [btn.prev(chatTour, () => getStore('settings').menu(true)), next],
+    buttons: [btn.prev(chatTour, () => getStore('page').menu(true)), next],
   },
   {
     id: 'tour-message-actions',

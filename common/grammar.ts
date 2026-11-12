@@ -51,7 +51,7 @@ BotIterator "bot-iterator" = OP "#each" WS loop:Bots CL children:(BotChild / Loo
 BotChild = i:(BotRef / BotCondition / ManyPlaceholder) { return i }
 
 HistoryIterator "history-iterator" = OP "#each" WS loop:History CL children:(HistoryChild / LoopText)* CloseLoop { return { kind: 'each', value: loop, children } }
-HistoryChild = i:(HistoryRef / HistoryCondition / ManyPlaceholder) { return i }
+HistoryChild = i:(HistoryRef / HistoryCondition / JsonSchemaValue / ManyPlaceholder) { return i }
 HistoryInsert "history-insert" = OP "#insert"i WS "="? WS line:[0-9]|1..2| CL children:(Condition / Placeholder / InsertText)* CloseInsert { return { kind: 'history-insert', values: +line.join(''), children } }
 
 ChatEmbedIterator "chat-embed-iterator" = OP "#each" WS loop:ChatEmbed CL children:(ChatEmbedChild / LoopText)* CloseLoop { return { kind: 'each', value: loop, children } }
@@ -74,7 +74,7 @@ BotCondition "bot-condition" = OP "#if" WS prop:BotProperty CL sub:(BotRef / Loo
   return { kind: 'bot-if', prop, children: sub.flat() }
 }
 
-HistoryCondition "history-condition" = OP "#if" WS prop:HistoryProperty CL sub:(HistoryRef / LoopText)* CloseCondition {
+HistoryCondition "history-condition" = OP "#if" WS prop:HistoryProperty CL sub:(HistoryRef / JsonSchemaValue / LoopText)* CloseCondition {
   return { kind: 'history-if', prop, children: sub.flat() }
 }
 
@@ -131,6 +131,7 @@ ChatEmbedProperty "chat-embed-prop" = "." prop:("name"i / "text"i / "i"i) { retu
 BotProperty "bot-prop" = "." prop:("name"i / Persona / "i"i) { return prop.toLowerCase() }
 HistoryProperty "history-prop" = "."? prop:(Message / "dialogue"i / "name"i / "isuser"i / "isbot"i / "i"i) { return prop.toLowerCase() }
 
+MainCharacter "main-character" = ("mainchar"i / "mainbot"i) { return "main-char" }
 Character "character" = ("char"i / "character"i / "bot"i) { return "char" }
 User "user" = "user"i { return "user" }
 Scenario "scenario" = "scenario"i { return "scenario" }
@@ -168,6 +169,7 @@ History "history" = ( "history"i / "messages"i / "msgs"i / "msg"i) { return "his
 
 Interp "interp"
 	= Character
+  / MainCharacter
   / UserEmbed
   / User
   / Scenario

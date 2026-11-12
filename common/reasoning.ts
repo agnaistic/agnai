@@ -1,12 +1,25 @@
 import { AppSchema } from './types'
 
 export function extractReasoning(
-  content: string,
+  message: string | { thoughts?: string; tokens?: string },
   opts?: { tags?: AppSchema.UserGenPreset['reasoning']; display?: 'all' | 'post' | 'pre' }
 ) {
+  let content = ''
+
   const display = opts?.display || 'all'
-  const open = opts?.tags?.start || '<think>'
-  const close = opts?.tags?.end || '</think>'
+  const defaults = {
+    open: '<think>',
+    close: '</think>',
+  }
+  const open = opts?.tags?.start || defaults.open
+  const close = opts?.tags?.end || defaults.close
+
+  if (message && typeof message !== 'string') {
+    if (message.thoughts) content = `${open}${message.thoughts}${close}${message.tokens || ''}`
+    else content = message.tokens || ''
+  } else {
+    content = message || ''
+  }
 
   if (!open || !close) return { thoughts: [], content }
 
@@ -26,12 +39,19 @@ export function extractReasoning(
 
   // No thoughts, skip everything
   if (init.start === -1 && init.end === -1) {
-    return { thoughts: [], content }
+    return { content, thoughts: [] }
+  }
+
+  if (init.start === 0 && init.end === -1) {
+    return { content, thoughts }
   }
 
   while (true) {
-    const start = content.indexOf(open)
-    const end = content.indexOf(close)
+    let start = content.indexOf(open)
+    let end = content.indexOf(close)
+
+    if (open !== defaults.open) start = content.indexOf(defaults.open)
+    if (close !== defaults.close) end = content.indexOf(defaults.close)
 
     // Both present, but end comes before start
     if (start > -1 && end > -1 && start > end) {
@@ -83,6 +103,7 @@ export function extractReasoning(
     if (start > -1) {
       const pre = content.slice(0, start)
       const thought = content.slice(start + len.open)
+
       content = pre
       thoughts.push(thought)
       break
@@ -101,5 +122,5 @@ export function extractReasoning(
     break
   }
 
-  return { thoughts: thoughts.filter((t) => !!t.trim()), content }
+  return { thoughts: thoughts.filter((t) => !!t.trim()), content: content.trim() }
 }

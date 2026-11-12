@@ -93,7 +93,7 @@ export async function getUserPresets(userId: string) {
       pre.userThirdPartyKey = decryptText(pre.thirdPartyKey, true)
     }
     pre.thirdPartyKey = ''
-    return mergeModelFormats(pre)
+    return mergeModelFormats(pre)!
   })
 }
 
@@ -169,6 +169,8 @@ export async function updateUserPreset(
 export async function getUserPresetInternal(presetId: string) {
   const preset = await db('gen-setting').findOne({ _id: presetId })
 
+  if (!preset) return
+
   return mergeModelFormats(preset)
 }
 
@@ -189,7 +191,7 @@ export async function getSafeUserPreset(presetId: string, userId: string) {
   return preset
 }
 
-function mergeModelFormats(gen: AppSchema.UserGenPreset | null) {
+function mergeModelFormats(gen: AppSchema.UserGenPreset) {
   if (!gen) return gen
 
   if (gen.useAdvancedPrompt) {

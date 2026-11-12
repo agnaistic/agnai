@@ -1,4 +1,4 @@
-import { Component, createEffect, createSignal } from 'solid-js'
+import { Component, createEffect, createSignal, on } from 'solid-js'
 import { FullSprite } from '/common/types/sprite'
 import { getRandomBody } from '/web/asset/sprite'
 import { RootModal } from '/web/shared/Modal'
@@ -17,11 +17,16 @@ export const SpriteModal: Component<{
   const [original, setOriginal] = createSignal(props.body)
   const [body, setBody] = createSignal(props.body || getRandomBody())
 
-  createEffect(() => {
-    if (props.body && !original()) {
-      setOriginal(props.body)
-    }
-  })
+  createEffect(
+    on(
+      () => props.body,
+      () => {
+        if (props.body && !original()) {
+          setOriginal(props.body)
+        }
+      }
+    )
+  )
 
   const handleChange = () => {
     props.onChange(body())

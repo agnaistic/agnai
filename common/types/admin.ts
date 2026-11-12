@@ -9,6 +9,25 @@ import { SubscriptionModelOption, SubscriptionTier } from './presets'
 import { ThemeColor } from './ui'
 
 export type UserType = 'guests' | 'all' | 'users' | 'subscribers' | 'moderators' | 'admins'
+export type FeatureAccess = 'off' | 'all' | 'users' | 'subscribers' | 'admins'
+
+export type ServerEmbedding = {
+  _id: string
+
+  /** Fully qualified URL, will not be modified */
+  url: string
+
+  /** API key, encrypted */
+  key: string
+
+  /** Is batching supported */
+  batch: boolean
+
+  model: string
+
+  /** Optional: Some APIs use slight variations of the `input` prop when batching supported */
+  inputProp: string
+}
 export interface AppConfig {
   adapters: AIAdapter[]
   version: string
@@ -21,6 +40,8 @@ export interface AppConfig {
   patreon?: boolean
   policies?: boolean
   apiAccess?: boolean
+  serverEmbeddings?: boolean
+  embeddingsAccess?: boolean
   guidanceAccess?: boolean
   flags?: string
   patreonAuth?: {
@@ -94,7 +115,7 @@ export interface Configuration {
   slots: string
 
   /** Determines who can use API access for inferencing */
-  apiAccess: 'off' | 'users' | 'subscribers' | 'admins'
+  apiAccess: FeatureAccess
 
   maintenance: boolean
 
@@ -127,18 +148,23 @@ export interface Configuration {
   imagesHost: string
   imagesModels: ImageModel[]
   imagesLoraUrl: string
+  defaultImageModel: string
 
   googleClientId: string
   googleEnabled: boolean
 
   ttsHost: string
   ttsApiKey: string
-  ttsAccess: 'off' | 'users' | 'subscribers' | 'admins'
+  ttsAccess: FeatureAccess
 
   maxGuidanceTokens: number
   maxGuidanceVariables: number
 
   actionCalls: ActionCall[]
+
+  embeddings: ServerEmbedding[]
+  embedding: string
+  embeddingsAccess?: FeatureAccess
 }
 
 export interface ActionCall {

@@ -21,6 +21,7 @@ export function getServicePayload(opts: AdapterProps, stops: string[] = []) {
 
   if (gen.reasoning?.enabled) {
     body.reasoning = {
+      enabled: true,
       exclude: gen.reasoning.exclude ?? false,
     }
 
@@ -37,6 +38,10 @@ export function getServicePayload(opts: AdapterProps, stops: string[] = []) {
 
   if (gen.jinjaEnabled) {
     body.chat_template = toImageJinjaTemplate({ format: gen.modelFormat, jinja: gen.jinjaTemplate })
+  }
+
+  if (gen.addBosToken) {
+    body.add_bos_token = gen.addBosToken
   }
 
   return body
@@ -127,10 +132,9 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
     lists: opts.lists,
     previous: opts.previous,
     json_schema_v2: ensureSafeSchema(json_schema),
-    json_schema_v3:
-      opts.jsonSchema && gen.jsonEnabled
-        ? getJsonSchemaPayload(opts.jsonSchema, 'guided_json', opts)
-        : undefined,
+    json_schema_v3: opts.jsonSchema
+      ? getJsonSchemaPayload(opts.jsonSchema, 'guided_json', opts)
+      : undefined,
     reschema_prompt: opts.reschemaPrompt,
     context_size: opts.contextSize,
     xtc_threshold: gen.xtcThreshold,

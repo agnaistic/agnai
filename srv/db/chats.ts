@@ -6,17 +6,34 @@ import { now } from './util'
 import { StatusError, errors } from '../api/wrap'
 import { parseTemplate } from '/common/template-parser'
 import { config } from '../config'
+import { sortAsc } from '/common/chat'
 
 export async function getChatOnly(id: string) {
   const chat = await db('chat').findOne({ _id: id })
   return chat
 }
 
-export async function getChat(id: string) {
+export async function getChatGraph(id: string) {
+  const chat = await getChatOnly(id)
+  const messages = (await db('chat-message')
+    .find({ chatId: id })
+    .project({ _id: 1, parent: 1, createdAt: 1 })
+    .toArray()) as Array<Pick<AppSchema.ChatMessage, '_id' | 'createdAt' | 'parent'>>
+
+  messages.sort(sortAsc)
+
+  return { chat, messages }
+}
+
+export async function getChat(id: string, impersonateId?: string) {
   const chat = await db('chat').findOne({ _id: id })
   if (!chat) return
 
   const charIds = Object.keys(chat.characters || {})
+
+  if (impersonateId) {
+    charIds.concat(impersonateId)
+  }
 
   const characters = await db('character')
     .find({ _id: { $in: charIds.concat(chat.characterId) } })
@@ -100,8 +117,8 @@ export async function create(
     const { parsed } = await parseTemplate(props.greeting, {
       chat: doc,
       char,
-      impersonate: impersonating,
-      sender: profile,
+      // impersonate: impersonating,
+      // sender: profile,
       jsonValues: {},
     })
     const msg: AppSchema.ChatMessage = {
@@ -148,7 +165,7 @@ export async function canViewChat(senderId: string, chat: AppSchema.Chat) {
   return !!membership
 }
 
-export async function getAllChats(userId: string) {
+export async function getAllChats(userId: string, shallow?: boolean) {
   const memberships = await db('chat-member').find({ userId }).toArray()
 
   if (config.ui.chatCounts) {
@@ -201,6 +218,20 @@ export async function getAllChats(userId: string) {
     return list
   }
 
+  const project = shallow
+    ? { _id: 1, characters: 1 }
+    : {
+        _id: 1,
+        userId: 1,
+        name: 1,
+        characterId: 1,
+        characters: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        genPreset: 1,
+        'character.name': 1,
+      }
+
   const list = await db('chat')
     .aggregate([
       {
@@ -218,16 +249,7 @@ export async function getAllChats(userId: string) {
       },
       { $unwind: { path: '$character' } },
       {
-        $project: {
-          _id: 1,
-          userId: 1,
-          name: 1,
-          characterId: 1,
-          characters: 1,
-          createdAt: 1,
-          updatedAt: 1,
-          'character.name': 1,
-        },
+        $project: project,
       },
     ])
     .toArray()

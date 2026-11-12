@@ -1,18 +1,20 @@
-import { Component, createEffect, createMemo, createSignal, onMount, Show } from 'solid-js'
+import {
+  batch,
+  Component,
+  createEffect,
+  createMemo,
+  createSignal,
+  on,
+  onMount,
+  Show,
+} from 'solid-js'
 import { Plus, Save, X, Import, Download, SlidersVertical, Dices, Image } from 'lucide-solid'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
 import TextInput, { ButtonInput } from '../../shared/TextInput'
 import { FormLabel } from '../../shared/FormLabel'
 import { FileInputResult } from '../../shared/FileInput'
-import {
-  characterStore,
-  tagStore,
-  toastStore,
-  chatStore,
-  userStore,
-  settingStore,
-} from '../../store'
+import { characterStore, tagStore, toastStore, chatStore, userStore, pageStore } from '../../store'
 import { useNavigate, useSearchParams } from '@solidjs/router'
 import PersonaAttributes from '../../shared/PersonaAttributes'
 import Select from '../../shared/Select'
@@ -43,6 +45,7 @@ import { AdvancedOptions } from './form/AdvancedOptions'
 import { AvatarField } from './form/AvatarField'
 import { usePresetContext } from '/web/store/preset-context'
 import { PageSpinner } from '/web/shared/Loading'
+// import { randomElement } from '/common/util'
 
 const formatOptions = [
   { value: 'attributes', label: 'Attributes (Key: value)' },
@@ -72,7 +75,7 @@ export const CreateCharacterForm: Component<{
   const [charLoading, setCharLoading] = createSignal(false)
   const [search, setSearch] = useSearchParams()
   const nav = useNavigate()
-  const user = userStore()
+  const user = userStore((s) => ({ user: s.user }))
   const [preset, presetSetters] = usePresetContext({ anonymous: true })
 
   const isPage = props.close === undefined
@@ -96,7 +99,7 @@ export const CreateCharacterForm: Component<{
 
   const editor = useCharEditor()
 
-  const tagState = tagStore()
+  const tagState = tagStore((s) => ({ tags: s.tags }))
   const state = characterStore((s) => {
     const edit = s.editing
 
@@ -150,7 +153,7 @@ export const CreateCharacterForm: Component<{
     characterStore.clearCharacter()
 
     if (canStartTour('char')) {
-      settingStore.closeMenu()
+      pageStore.closeMenu()
     }
 
     startTour('char')
@@ -187,46 +190,56 @@ export const CreateCharacterForm: Component<{
     }
   })
 
-  createEffect(async () => {
-    // We know we're waiting for a character to edit, so let's just wait
-    if (!state.edit && srcId()) return
+  createEffect(
+    on(
+      () => [state.edit, srcId()],
+      async () => {
+        // We know we're waiting for a character to edit, so let's just wait
+        if (!state.edit && srcId()) return
 
-    // If this is our first pass: load something no matter what
-    if (!editor.original()) {
-      if (!srcId()) {
-        await editor.loadCached()
-        return
+        if (srcId() === 'undefined') {
+          toastStore.error(`Character load failed (ID missing?) - Try again or contact support`)
+          return
+        }
+
+        // If this is our first pass: load something no matter what
+        if (!editor.original()) {
+          if (!srcId()) {
+            await editor.loadCached()
+            return
+          }
+
+          // We have a `srcId`, we need to wait to receive the character we're editing
+          if (!state.edit) return
+
+          editor.update('editId', srcId())
+          await editor.load(state.edit)
+          setImage(state.edit?.avatar)
+          return
+        }
+
+        // This is a subsequent pass - we already have state
+        // We want to avoid unnecessarily clearing/reseting state due to a websocket reconnect
+
+        if (!state.edit) return
+        const diffCharLoaded = editor.state.editId !== state.edit._id && state.edit._id === srcId()
+        if (diffCharLoaded) {
+          editor.update('editId', srcId())
+          await editor.load(state.edit)
+          setImage(state.edit?.avatar)
+          return
+        }
+
+        if ('__type' in state.edit) return
+        const orig = editor.original()
+        if (orig?.__type === 'list_character' && state.edit._id === editor.state.editId) {
+          await editor.load(state.edit)
+          setImage(state.edit?.avatar)
+          return
+        }
       }
-
-      // We have a `srcId`, we need to wait to receive the character we're editing
-      if (!state.edit) return
-
-      editor.update('editId', srcId())
-      await editor.load(state.edit)
-      setImage(state.edit?.avatar)
-      return
-    }
-
-    // This is a subsequent pass - we already have state
-    // We want to avoid unnecessarily clearing/reseting state due to a websocket reconnect
-
-    if (!state.edit) return
-    const diffCharLoaded = editor.state.editId !== state.edit._id && state.edit._id === srcId()
-    if (diffCharLoaded) {
-      editor.update('editId', srcId())
-      await editor.load(state.edit)
-      setImage(state.edit?.avatar)
-      return
-    }
-
-    if ('__type' in state.edit) return
-    const orig = editor.original()
-    if (orig?.__type === 'list_character' && state.edit._id === editor.state.editId) {
-      await editor.load(state.edit)
-      setImage(state.edit?.avatar)
-      return
-    }
-  })
+    )
+  )
 
   createEffect(() => {
     tagStore.updateTags(state.list)
@@ -274,6 +287,22 @@ export const CreateCharacterForm: Component<{
     }
   }
 
+  const randomName = async () => {
+    const gender = Math.random() > 0.65 ? 'male' : 'female'
+    const name = await random('first', { gender })
+
+    batch(() => {
+      editor.update('name', name)
+      if (editor.state.appearance && !isRandomAppearance(editor.state.appearance)) {
+        return
+      }
+
+      // editor.update({
+      //   appearance: randomAppearance(gender),
+      // })
+    })
+  }
+
   const footer = (
     <>
       <Button onClick={cancel} schema="secondary">
@@ -291,7 +320,10 @@ export const CreateCharacterForm: Component<{
     () => !!props.chat?.overrides && props.chat.characterId === props.editId
   )
 
-  const tabs = useTabs(['Persona', 'Voice', 'Images', 'Advanced'], +(search.char_tab || '0'))
+  const tabs = useTabs(
+    ['Persona', 'Voice', 'Images', 'Advanced'],
+    isNaN(+(search.char_tab || '0')) ? 0 : +(search.char_tab || '0')
+  )
 
   return (
     <Page classList={{ 'p-0': !isPage }}>
@@ -385,7 +417,7 @@ export const CreateCharacterForm: Component<{
                   size="sm"
                   schema="warning"
                   onClick={() => {
-                    settingStore.openConfirm({
+                    pageStore.openConfirm({
                       message: 'Are you sure you wish to clear the editor?',
                       onConfirm: clearEditor,
                     })
@@ -416,11 +448,7 @@ export const CreateCharacterForm: Component<{
                   parentClass="pb-2"
                   onChange={(ev) => editor.update('name', ev.currentTarget.value)}
                 >
-                  <Button
-                    size="sm"
-                    schema="input"
-                    onClick={() => random('first', {}).then((name) => editor.update('name', name))}
-                  >
+                  <Button size="sm" schema="input" onClick={randomName}>
                     <Dices size={12} />
                   </Button>
                 </ButtonInput>
@@ -443,7 +471,11 @@ export const CreateCharacterForm: Component<{
                     fieldName="description"
                     parentClass="w-full"
                     value={editor.state.description}
-                    onChange={(ev) => editor.update('description', ev.currentTarget.value)}
+                    onChange={(ev) => {
+                      editor.update({
+                        description: ev.currentTarget.value,
+                      })
+                    }}
                   />
                 </div>
               </Card>
@@ -460,7 +492,6 @@ export const CreateCharacterForm: Component<{
               </Card>
 
               <AvatarField
-                user={user}
                 editor={editor}
                 updateFile={updateFile}
                 showBuilder={setShowBuilder}
@@ -674,7 +705,7 @@ export const CreateCharacterForm: Component<{
           <sub>This preset used for character generation</sub>
           <ModeGenSettings
             presetId={user.user?.chargenPreset || user.user?.defaultPreset}
-            preset={preset}
+            preset={preset.current}
             setters={presetSetters}
             onPresetChanged={(id) => userStore.updatePartialConfig({ chargenPreset: id })}
             close={() => setOpenPreset(false)}
@@ -686,4 +717,43 @@ export const CreateCharacterForm: Component<{
       </Show>
     </Page>
   )
+}
+
+const LOOKS = {
+  gender: ['male', 'female'],
+  hairColor: ['brown', 'blonde', 'red', 'black', 'orange'],
+  hairLength: ['short', 'medium', 'long'],
+  hairStyle: ['neat', 'curly', 'straight', 'parted'],
+  eyeColor: ['green', 'blue', 'brown', 'hazel'],
+  chest: ['flat', 'small', 'medium', 'large'],
+}
+
+// function randomAppearance(gender: string) {
+//   const hairColor = randomElement(LOOKS.hairColor)
+//   const hairLength = randomElement(LOOKS.hairLength)
+//   const hairStyle = randomElement(['neat', 'curly', 'straight', 'parted'])
+//   const eyeColor = randomElement(['green', 'blue', 'brown', 'hazel'])
+//   const chest = randomElement(['flat', 'small', 'medium', 'large'])
+
+//   const elements = [
+//     gender,
+//     `${eyeColor} eyes`,
+//     `${hairStyle} ${hairColor} ${hairLength}-length hair`,
+//   ]
+
+//   if (gender === 'female') {
+//     elements.push(`${chest} chest`)
+//   }
+
+//   return elements.join(', ')
+// }
+
+function isRandomAppearance(appearance: string) {
+  const [gender, eyes, hair, chest] = appearance.split(',').map((value) => value.trim())
+
+  if (!LOOKS.gender.includes(gender)) return false
+  if (!eyes.endsWith(' eyes')) return false
+  if (!hair.endsWith('-length hair')) return false
+  if (chest && !chest.endsWith(' chest')) return false
+  return true
 }

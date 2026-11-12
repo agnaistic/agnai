@@ -4,8 +4,9 @@ import { store } from '../../db'
 import { NewMessage } from '../../db/messages'
 import { handle, StatusError } from '../wrap'
 import { optional } from '/common/valid/types'
+import { isDefaultPreset } from '/common/default-preset'
 
-export const createChat = handle(async ({ body, user, userId }) => {
+export const createChat = handle(async ({ body, user, authed, userId }) => {
   assertValid(
     {
       genPreset: 'string?',
@@ -30,16 +31,55 @@ export const createChat = handle(async ({ body, user, userId }) => {
       throw new StatusError('You do not have access to this scenario', 403)
   }
 
+  const presets = await store.presets.getUserPresets(userId).then((p) => p.sort(sortPresets))
   const character = await store.characters.getCharacter(userId, body.characterId)
   const profile = await store.users.getProfile(userId)
   const impersonating = body.impersonating
     ? await store.characters.getCharacter(userId, body.impersonating)
     : undefined
 
+  let genPreset = body.genPreset || authed?.defaultPreset || ''
+
+  const method = genPreset
+    ? isDefaultPreset(genPreset)
+      ? 'default-preset'
+      : 'user-preset'
+    : 'no-preset'
+
+  switch (method) {
+    case 'default-preset': {
+      break
+    }
+
+    case 'user-preset': {
+      const match = presets.find((p) => p._id === genPreset)
+      if (match) break
+
+      const userDefault = authed?.defaultPreset
+        ? presets.find((p) => p._id === authed.defaultPreset)
+        : undefined
+      const recent = presets[0]
+
+      genPreset = userDefault?._id || recent?._id || 'agnaistic'
+      break
+    }
+
+    case 'no-preset': {
+      const userDefault = authed?.defaultPreset
+        ? presets.find((p) => p._id === authed.defaultPreset)
+        : undefined
+
+      const recent = presets[0]
+      genPreset = userDefault?._id || recent?._id || 'agnaistic'
+      break
+    }
+  }
+
   const chat = await store.chats.create(
     body.characterId,
     {
       ...body,
+      genPreset,
       imageSource: body.imageSource as any,
       greeting: body.greeting ?? character?.greeting,
       userId: user?.userId!,
@@ -131,3 +171,7 @@ export const importChat = handle(async ({ body, userId }) => {
 
   return chat
 })
+
+function sortPresets(l: { updatedAt?: string }, r: { updatedAt?: string }) {
+  return (r.updatedAt || '')?.localeCompare(l.updatedAt || '')
+}

@@ -61,3 +61,9 @@
 .avatar-max3xl.avatar-circle {
   @apply h-14 min-h-[3.5rem] sm:h-24 sm:min-h-[6rem];
 }
+
+.avatar-custom {
+  width: var(--avatar-user-width);
+  height: var(--avatar-user-height);
+  @apply overflow-hidden !border-0;
+}

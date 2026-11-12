@@ -4,18 +4,12 @@ import { normalizeUrl } from '../api/chat/common'
 import { AdapterProps, CompletionGenerator, ModelAdapter } from './type'
 import { decryptText } from '../db/util'
 import { toSamplerOrder } from '/common/sampler-order'
-import {
-  getOaiCompatibleUrl,
-  joinUrl,
-  sanitise,
-  sanitiseAndTrim,
-  trimResponseV2,
-} from '/common/requests/util'
-import { stripImageContent } from './template-chat-payload'
+import { getOaiCompatibleUrl, joinUrl, sanitise } from '/common/requests/util'
 import { streamGenerator } from '/common/requests/stream'
 import { presetDefaults } from '/common/default-preset'
 import { round } from '/common/util'
 import { getStoppingStrings, getThirdPartyPayload } from '/common/requests/payloads'
+import { stripImageContent } from '/common/template-messages'
 
 /**
  * Sampler order
@@ -39,8 +33,6 @@ const REQUIRED_SAMPLERS = presetDefaults.order!
 // }
 
 export const handleThirdParty: ModelAdapter = async function* (opts) {
-  const { members } = opts
-
   const body = getThirdPartyPayload(opts)
 
   // Kobold has a stop sequence parameter which automatically
@@ -99,14 +91,11 @@ export const handleThirdParty: ModelAdapter = async function* (opts) {
         wait = round((Date.now() - start) / 1000)
       }
       accum += generated.token
-      yield {
-        partial: sanitiseAndTrim({
-          text: accum,
-          char: opts.replyAs,
-          members,
-          gen: opts.gen,
-        }),
-      }
+      yield { partial: accum }
+    }
+
+    if ('thoughts' in generated) {
+      yield { thoughts: generated.thoughts! }
     }
 
     if ('tokens' in generated) {
@@ -120,20 +109,16 @@ export const handleThirdParty: ModelAdapter = async function* (opts) {
     }
   }
 
-  if (opts.gen.service === 'kobold') {
-    let meta: any = {
-      fmt: opts.gen.thirdPartyFormat,
-      wait,
-      time: round((Date.now() - start) / 1000, 2),
-    }
-    if (body.model) meta.model = body.model
-    yield { meta }
+  let meta: any = {
+    fmt: opts.conn.format,
+    wait,
+    time: round((Date.now() - start) / 1000, 2),
   }
+  if (body.model) meta.model = body.model
+  yield { meta }
 
   const parsed = sanitise(accum)
-  const trimmed = trimResponseV2(parsed, opts.replyAs, members, opts.gen, stop_sequence)
-
-  yield trimmed || parsed
+  yield parsed
 }
 
 async function dispatch(opts: AdapterProps, body: any) {
@@ -155,7 +140,7 @@ async function dispatch(opts: AdapterProps, body: any) {
   switch (opts.gen.thirdPartyFormat) {
     case 'llamacpp':
     case 'vllm': {
-      body.messages = opts.hasAttachments ? opts.messages : undefined
+      body.messages = opts.messages
       const url =
         !opts.gen.providerId && opts.gen.thirdPartyUrlNoSuffix
           ? baseURL
@@ -170,7 +155,7 @@ async function dispatch(opts: AdapterProps, body: any) {
     case 'ooba':
     case 'aphrodite':
     case 'tabby': {
-      body.messages = opts.hasAttachments ? opts.messages : undefined
+      body.messages = opts.messages
       let url = opts.gen.thirdPartyUrlNoSuffix ? baseURL : `${baseURL}/v1/`
       if (useChat) {
         url += 'chat/completions'
@@ -184,14 +169,14 @@ async function dispatch(opts: AdapterProps, body: any) {
     }
 
     case 'exllamav2': {
-      body.messages = opts.hasAttachments ? opts.messages : undefined
+      body.messages = opts.messages
       return opts.gen.streamResponse
         ? streamGenerator({ ...base, url: baseURL, format: opts.gen.thirdPartyFormat })
         : fullCompletion({ ...base, url: baseURL, service: opts.gen.thirdPartyFormat })
     }
 
     case 'mistral': {
-      body.messages = opts.hasAttachments ? opts.messages : body.messages
+      body.messages = opts.messages
       const url = 'https://api.mistral.ai/v1/chat/completions'
       const stream = opts.gen.streamResponse
         ? streamGenerator({ ...base, url, format: 'mistral' })
@@ -200,7 +185,8 @@ async function dispatch(opts: AdapterProps, body: any) {
     }
 
     case 'ollama': {
-      body.messages = opts.hasAttachments ? opts.messages : opts.messages
+      body.messages = opts.messages
+      body.prompt = undefined
       const url = body.messages ? `${baseURL}/chat/completions` : `${baseURL}/completions`
       return opts.gen.streamResponse
         ? streamGenerator({ ...base, url, format: opts.gen.thirdPartyFormat })
@@ -231,6 +217,7 @@ async function dispatch(opts: AdapterProps, body: any) {
 
     case 'openai':
     case 'openai-chat':
+    case 'lm-studio':
     case 'openai-chatv2': {
       if (opts.gen.thirdPartyFormat === 'openai') {
         body.prompt = opts.prompt
@@ -251,12 +238,17 @@ async function dispatch(opts: AdapterProps, body: any) {
         : fullCompletion({ ...base, url: fullUrl, service: opts.gen.thirdPartyFormat })
     }
 
+    case 'koboldcpp':
+    case 'kobold':
     default: {
       const isStreamSupported = await checkStreamSupported(`${baseURL}/api/extra/version`)
       const url =
         opts.gen.streamResponse && isStreamSupported
           ? `${baseURL}/api/extra/generate/stream`
           : `${baseURL}/api/v1/generate`
+
+      body.prompt = opts.prompt
+      body.messages = undefined
 
       return opts.gen.streamResponse && isStreamSupported
         ? streamGenerator({ ...base, url, format: 'koboldcpp' })
@@ -277,6 +269,7 @@ async function getHeaders(opts: AdapterProps) {
   }
 
   switch (opts.gen.thirdPartyFormat) {
+    case 'koboldcpp':
     case 'aphrodite': {
       if (!password) return headers
       const apiKey = opts.guest ? password : decryptText(password, true)

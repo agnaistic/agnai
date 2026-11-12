@@ -16,8 +16,8 @@ export const ChubItem: Component<{
   loading?: () => void
   book?: boolean
   description: string
-  setBook?: (book: AppSchema.MemoryBook, fullPath: string) => void
-  setChar?: (char: NewCharacter, fullPath: string) => void
+  setBook?: (book: AppSchema.MemoryBook, fullPath: string, entity: ChubEntity) => void
+  setChar?: (char: NewCharacter, fullPath: string, entity: ChubEntity) => void
 }> = (props) => {
   const [memorybook, setMemoryBook] = createSignal<any>({})
 
@@ -36,17 +36,22 @@ export const ChubItem: Component<{
           userId: '',
           entries: convertEntries(book),
         },
-        props.fullPath
+        props.fullPath,
+        props.entity
       )
       return
     }
 
-    const file = await processChar(props.fullPath)
+    const file = await processChar(props.fullPath, props.entity)
     const json = await extractCardData(file)
     if (!json) {
       throw new Error('Invalid tavern image')
     }
-    props.setChar?.(Object.assign(jsonToCharacter(json), { avatar: file }), props.fullPath)
+    props.setChar?.(
+      Object.assign(jsonToCharacter(json), { avatar: file }),
+      props.fullPath,
+      props.entity
+    )
   }
 
   return (

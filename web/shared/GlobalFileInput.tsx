@@ -5,7 +5,7 @@ import { getStore } from '../store/create'
 export const GlobalFileInput: Component = () => {
   let ref: HTMLInputElement
 
-  const state = getStore('settings')((s) => ({ attach: s.attach }))
+  const state = getStore('page')((s) => ({ attach: s.attach }))
 
   createEffect(() => {
     if (!state.attach) return

@@ -26,8 +26,8 @@ export { PresetSettings as default }
 
 type TempSetting = AdapterSetting & { value: any }
 
-const PresetSettings: Component<PresetProps & { noSave: boolean }> = (props) => {
-  const settings = settingStore()
+const PresetSettings: Component<PresetProps & { noSave: boolean; noModel?: boolean }> = (props) => {
+  const settings = settingStore((s) => ({ config: s.config }))
   const pane = usePaneManager()
   const [search, setSearch] = useSearchParams()
   const [tab, setTab] = createSignal(+(search.preset_tab ?? '0'))
@@ -77,16 +77,18 @@ const PresetSettings: Component<PresetProps & { noSave: boolean }> = (props) => 
   return (
     <div class="flex flex-col gap-4">
       <div class="flex flex-col gap-2">
-        <PresetProvider state={props.state} setters={props.setters} page={props.page} />
+        <Show when={!props.noModel}>
+          <PresetProvider state={props.state} setters={props.setters} page={props.page} />
 
-        <ThirdPartyModel
-          state={props.state}
-          setters={props.setters}
-          page={props.page}
-          sub={sub()}
-        />
+          <ThirdPartyModel
+            state={props.state}
+            setters={props.setters}
+            page={props.page}
+            sub={sub()}
+          />
 
-        <Divider class="!my-2" />
+          <Divider class="!my-2" />
+        </Show>
 
         <PresetMode state={props.state} setters={props.setters} sub={sub()} page={props.page} />
 
@@ -157,12 +159,17 @@ const TempSettings: Component<{ service?: AIAdapter }> = (props) => {
     values: getServiceTempConfig(props.service),
   })
 
-  createEffect(() => {
-    if (settings.service === props.service) return
+  createEffect(
+    on(
+      () => [props.service],
+      () => {
+        if (settings.service === props.service) return
 
-    const values = getServiceTempConfig(props.service)
-    setSettings({ service: props.service, values })
-  })
+        const values = getServiceTempConfig(props.service)
+        setSettings({ service: props.service, values })
+      }
+    )
+  )
 
   return (
     <Show when={settings.values.length}>

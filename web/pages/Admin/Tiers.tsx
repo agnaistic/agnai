@@ -16,9 +16,13 @@ export { TiersPage as default }
 const TiersPage: Component = (props) => {
   let form: any
   const params = useParams()
-  const cfg = userStore()
-  const admin = adminStore()
-  const settings = settingStore()
+  const cfg = userStore((s) => ({ tiers: s.tiers }))
+  const admin = adminStore((s) => ({
+    products: s.products,
+    prices: s.prices,
+    patreonTiers: s.patreonTiers,
+  }))
+  const settings = settingStore((s) => ({ config: s.config, slots: s.slots }))
 
   const products = createMemo(() => {
     const list = admin.products.map((product) => {

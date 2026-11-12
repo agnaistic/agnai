@@ -149,6 +149,7 @@ export const THIRDPARTY_HANDLERS: { [svc in ThirdPartyFormat]: AIAdapter } = {
   featherless: 'kobold',
   gemini: 'kobold',
   arli: 'kobold',
+  'lm-studio': 'openai',
 }
 
 export const BASIC_PROMPT_ONLY: { [svc in ThirdPartyFormat]?: boolean } = {
@@ -174,6 +175,7 @@ export const THIRDPARTY_FORMATS = [
   'featherless',
   'arli',
   'gemini',
+  'lm-studio',
 ] as const
 
 export const AI_ADAPTERS = [
@@ -364,8 +366,8 @@ export const ADAPTER_LABELS: { [key in AIAdapter]: string } = {
 export const FORMAT_LABEL: { [key in ThirdPartyFormat]: string } = {
   kobold: 'Kobold',
   openai: 'OpenAI (Completion)',
-  'openai-chat': 'OpenAI Compatible (Chat - Legacy)',
-  'openai-chatv2': 'OpenAI Compatible (Chat)',
+  'openai-chat': 'OpenAI Compat (Chat - Legacy)',
+  'openai-chatv2': 'OpenAI Compat (Chat)',
   aphrodite: 'Aphrodite',
   arli: 'ArliAI',
   claude: 'Claude (Legacy)',
@@ -379,6 +381,7 @@ export const FORMAT_LABEL: { [key in ThirdPartyFormat]: string } = {
   ooba: 'TextGen WebUI (Ooba)',
   tabby: 'TabbyAPI',
   vllm: 'vLLM',
+  'lm-studio': 'LM Studio',
 }
 
 export const INSTRUCT_SERVICES: { [key in AIAdapter]?: boolean } = {

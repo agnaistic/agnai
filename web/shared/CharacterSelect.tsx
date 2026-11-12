@@ -1,6 +1,6 @@
 import { Component, JSX, createSignal, Show, createMemo } from 'solid-js'
 import { AppSchema } from '../../common/types/schema'
-import { DropMenu } from './DropMenu'
+import { DropMenu, Horz, Vert } from './DropMenu'
 import { CharacterAvatar } from './AvatarIcon'
 import Button from './Button'
 import { ChevronDown, Dices, Users } from 'lucide-solid'
@@ -22,6 +22,9 @@ const CharacterSelect: Component<{
   disabled?: boolean
   class?: string
   random?: boolean
+
+  horz?: Horz
+  vert?: Vert
 
   /** Ignore the active chat - Do not promote current characters to the top of the list */
   ignoreActive?: boolean
@@ -83,7 +86,12 @@ const CharacterSelect: Component<{
           </Button>
         </Show>
 
-        <DropMenu show={opts()} close={() => setOpts(false)} customPosition="top-[8px] left-[0px]">
+        <DropMenu
+          show={opts()}
+          close={() => setOpts(false)}
+          horz={props.horz || 'left'}
+          vert={props.vert || 'down'}
+        >
           <div class="flex max-h-[400px] max-w-[50vw] flex-col sm:max-w-[280px]">
             <CharacterSelectList
               items={props.items}

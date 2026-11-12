@@ -6,7 +6,7 @@ import { exportCharacter } from '/common/characters'
 import text from 'png-chunk-text'
 import extract from 'png-chunks-extract'
 import encode from 'png-chunks-encode'
-import { imageApi } from '/web/store/data/image'
+import { asyncImage, imageApi } from '/web/store/data/image'
 import { IMAGE_FORMATS } from './port'
 
 const CACHE_KEY = 'agnai-chatlist-cache'
@@ -21,6 +21,7 @@ export type ChatLine = {
   updatedAt: string
   characterId: string
   messageCount?: number
+  genPreset: string | undefined
 }
 
 export type SortType =
@@ -176,35 +177,49 @@ export async function downloadCharCard(input: string | AppSchema.Character, form
     char = input
   }
 
-  const json = charToJson(char, format)
+  const blob = await createCharacterImageBlob(char, format)
+  const anchor = document.createElement('a')
+  anchor.href = URL.createObjectURL(blob)
+  anchor.download = `${char.name}.card.png`
+  anchor.click()
+  URL.revokeObjectURL(anchor.href)
+}
+
+export async function createCharacterImageBlob(char: AppSchema.Character, format?: string) {
+  const json = charToJson(char, format || '')
   const image = getAssetUrl(char.avatar!)
+
   /**
    * Only PNG and APNG files can contain embedded character information
    * If the avatar image is not either of these formats, we must convert it
    */
+  const embedded = await embedImageJson(image, json)
+  return embedded
+}
 
-  const dataurl = await imageToDataURL(image)
+export async function embedImageJson(imageUrl: string, json: any) {
+  const dataurl = await imageToDataURL(imageUrl)
   const base64 = dataurl.split(',')[1]
   const imgBuffer = Buffer.from(window.atob(base64), 'binary')
   const chunks = extract(imgBuffer).filter((chunk) => chunk.name !== 'tEXt')
-  const output = Buffer.from(json, 'utf8').toString('base64')
+  const output = Buffer.from(
+    typeof json === 'string' ? json : JSON.stringify(json),
+    'utf8'
+  ).toString('base64')
   const lastChunkIndex = chunks.length - 1
   const chunksToExport = [
     ...chunks.slice(0, lastChunkIndex),
     text.encode('chara', output),
     chunks[lastChunkIndex],
   ]
-  const anchor = document.createElement('a')
-  anchor.href = URL.createObjectURL(new Blob([Buffer.from(encode(chunksToExport))]))
-  anchor.download = `${char.name}.card.png`
-  anchor.click()
-  URL.revokeObjectURL(anchor.href)
+  const blob = new Blob([Buffer.from(encode(chunksToExport))])
+  return blob
 }
 
 async function imageToDataURL(image: string) {
   const { ext } = getExt(image)
 
-  const base64 = await getImageBase64(image)
+  const base64 = await imageApi.getImageBase64(image)
   const apng = await isAPNG(base64)
   if (apng || ext === 'apng') {
     return base64
@@ -221,12 +236,12 @@ async function imageToDataURL(image: string) {
   return dataUrl
 }
 
-function charToJson(char: AppSchema.Character, format: string) {
+export function charToJson(char: AppSchema.Character, format: string) {
   const { _id, ...json } = char
 
   const copy = { ...char }
 
-  if (format === 'native') {
+  if (format === 'native' || !format) {
     return JSON.stringify(json, null, 2)
   }
 
@@ -246,29 +261,6 @@ function getExt(url: string): { type: 'base64' | 'url'; ext: string } {
   const ext = url.split('.').slice(-1)[0]
   if (imageApi.ALLOWED_TYPES.has(ext)) return { type: 'url', ext }
   return { type: 'url', ext: 'unknown' }
-}
-
-export async function getImageBase64(image: string) {
-  if (image.startsWith('data:')) return image
-
-  if (!image.startsWith('http')) {
-    image = getAssetUrl(image)
-  }
-
-  const base64 = await imageApi.getImageData(image)
-  return base64!
-}
-
-export function asyncImage(src: string) {
-  return new Promise<{ name: string; image: HTMLImageElement }>(async (resolve, reject) => {
-    const data = await getImageBase64(src)
-    const image = new Image()
-    image.setAttribute('crossorigin', 'anonymous')
-    image.src = data
-
-    image.onload = () => resolve({ name: src, image })
-    image.onerror = (ev) => reject(ev)
-  })
 }
 
 async function isAPNG(base64: string) {

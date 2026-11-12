@@ -7,7 +7,7 @@ export const deleteUserAccount = handle(async ({ userId }) => {
   if (user?.billing?.status === 'active') {
     const sub = await findValidSubscription(user)
 
-    if (sub && !sub.cancel_at) {
+    if (sub && sub instanceof Error === false && !sub.cancel_at) {
       throw new StatusError(
         `You currently have an active subscription: Cancel your subscription first`,
         400

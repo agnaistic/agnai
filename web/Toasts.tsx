@@ -10,6 +10,7 @@ import { announceStore, userStore } from './store'
 import { AppSchema } from '/common/types'
 import { markdown } from './shared/markdown'
 import { elapsedSince } from './shared/util'
+import { Copy } from './shared/Copy'
 
 const bgColor = {
   default: 'bg-500',
@@ -20,9 +21,9 @@ const bgColor = {
 } satisfies { [key in Toast['type']]: string }
 
 const Notifications: Component = () => {
-  const announce = announceStore()
-  const user = userStore()
-  const state = toastStore()
+  const announce = announceStore((s) => ({ list: s.list }))
+  const user = userStore((s) => ({ user: s.user }))
+  const state = toastStore((s) => ({ modal: s.modal, toasts: s.toasts, history: s.history }))
 
   const bookmark = createMemo(() => new Date(user.user?.announcement || Date.now()))
   const [read, setRead] = createSignal('')
@@ -70,7 +71,10 @@ const Notifications: Component = () => {
 
   return (
     <>
-      <div class="absolute  right-8 top-2 flex max-w-[20rem] flex-col gap-2">
+      <div
+        class="absolute right-8 top-2 flex max-w-[20rem] flex-col gap-2"
+        style={{ 'z-index': 100000 }}
+      >
         <For each={state.toasts}>{(toast) => <Single toast={toast} />}</For>
       </div>
 
@@ -118,6 +122,18 @@ const Notifications: Component = () => {
                         <b>Message from Administrator</b>
                       </Show>
                       <p>{toast.message}</p>
+                      <Show when={toast.stack}>
+                        <TitleCard
+                          title=<>
+                            <div class="flex items-center">
+                              <Copy text={toast.stack} />
+                              &nbsp;Stacktrace
+                            </div>
+                          </>
+                        >
+                          <pre>{toast.stack}</pre>
+                        </TitleCard>
+                      </Show>
                     </TitleCard>
                   )}
                 </For>
@@ -184,7 +200,7 @@ const Single: Component<{ toast: Toast }> = (props) => {
             </div>
           </Show>
 
-          <div>{props.toast.message}</div>
+          <div class="break-words">{props.toast.message}</div>
         </div>
       </div>
     </div>

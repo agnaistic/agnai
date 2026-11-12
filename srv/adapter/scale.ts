@@ -1,6 +1,6 @@
 import needle from 'needle'
 import { decryptText } from '../db/util'
-import { sanitise, trimResponseV2 } from '/common/requests/util'
+import { sanitise } from '/common/requests/util'
 import { ModelAdapter } from './type'
 
 export const handleScale: ModelAdapter = async function* ({
@@ -58,6 +58,5 @@ export const handleScale: ModelAdapter = async function* ({
   }
 
   const parsed = sanitise(response.body.output)
-  const trimmed = trimResponseV2(parsed, opts.replyAs, members, opts.gen, [])
-  yield trimmed || parsed
+  yield parsed
 }

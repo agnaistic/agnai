@@ -216,16 +216,25 @@ async function ensureOnlyActiveSubscription(user: AppSchema.User, subscriptionId
   if (!user.billing?.customerId) return
 
   const subs = await stripe.subscriptions
-    .list({ customer: user.billing.customerId, status: 'active' })
+    .list({ customer: user.billing.customerId, status: 'all' })
     .then((res) => res.data)
     .catch(() => [])
 
   for (const sub of subs) {
-    if (sub.id !== subscriptionId) {
-      await subsCmd.cancelDuplicate(user._id, { subscriptionId, replacementId: subscriptionId })
-      await stripe.subscriptions.cancel(sub.id, {
-        cancellation_details: { comment: 'duplicate detected during checkout' },
-      })
+    if (sub.id === subscriptionId) continue
+
+    switch (sub.status) {
+      case 'active':
+      case 'unpaid':
+      case 'past_due':
+      case 'incomplete':
+      case 'trialing':
+      case 'paused': {
+        await subsCmd.cancelDuplicate(user._id, { subscriptionId, replacementId: subscriptionId })
+        await stripe.subscriptions.cancel(sub.id, {
+          cancellation_details: { comment: 'duplicate detected during checkout' },
+        })
+      }
     }
   }
 }

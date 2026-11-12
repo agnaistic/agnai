@@ -2,8 +2,7 @@ import { Component, Match, Show, Switch, createMemo, createSignal, onMount } fro
 import { FLAI_CONTEXTS, GOOGLE_MODELS, OpenRouterModel } from '/common/adapters'
 import TextInput from '../TextInput'
 import Button from '../Button'
-import { getStore } from '/web/store/create'
-import { presetStore, settingStore, toastStore } from '/web/store'
+import { pageStore, presetStore, settingStore, toastStore } from '/web/store'
 import Select, { Option } from '../Select'
 import { CustomOption, CustomSelect } from '../CustomSelect'
 import { ArliModel } from '/srv/adapter/arli'
@@ -19,19 +18,18 @@ import { RootModal } from '../Modal'
 import MultiDropdown from '../MultiDropdown'
 import { round } from '/common/util'
 import { createEmitter } from '../util'
-import { useAppContext } from '/web/store/context'
 import { SubscriptionModelOption } from '/common/types/presets'
-import { PresetFuncs, PresetState } from '/web/store/preset-context'
+import { PresetFuncs, ContextPreset } from '/web/store/preset-context'
 
 type SelectorProps = {
-  state: PresetState
+  state: ContextPreset
   setters: PresetFuncs
   page: string | undefined
 }
 type Selector = Component<SelectorProps>
 
 export const ThirdPartyModel: Component<{
-  state: PresetState
+  state: ContextPreset
   setters: PresetFuncs
   page?: string
   sub?: SubscriptionModelOption
@@ -90,6 +88,7 @@ export const ThirdPartyModel: Component<{
       case 'openai':
       case 'openai-chat':
       case 'openai-chatv2':
+      case 'lm-studio':
       case 'vllm':
       case 'tabby':
         return 'compat'
@@ -139,12 +138,13 @@ export const ThirdPartyModel: Component<{
 }
 
 const CompatModel: Selector = (props) => {
+  const page = pageStore((s) => ({ flags: s.flags }))
   const emitter = createEmitter('close')
 
   const [customId, setCustomId] = createSignal('')
 
   const modelList = createMemo(() => {
-    const list = props.setters.models.list.map((value) => ({ label: value, value }))
+    const list = props.setters.context.list.map((value) => ({ label: value, value }))
 
     return [{ label: 'None', value: '' }].concat(list)
   })
@@ -157,7 +157,7 @@ const CompatModel: Selector = (props) => {
 
   const warning = createMemo(() => {
     if (!props.state.providerId) return
-    if (props.setters.models.loading) return
+    if (props.setters.context.loading) return
     if (modelList().length <= 1) return
 
     const modelId =
@@ -169,7 +169,7 @@ const CompatModel: Selector = (props) => {
 
   return (
     <div class="flex w-full flex-col gap-1">
-      <div class="flex gap-2">
+      <div class="flex items-center gap-2">
         <CustomSelect
           size="sm"
           closeSub={emitter.on}
@@ -215,13 +215,23 @@ const CompatModel: Selector = (props) => {
             props.state.thirdPartyModel ||
             'Model - None selected'
           }
-          disabled={props.setters.models.loading}
-          footer={<SelectorFooter setters={props.setters} />}
+          // disabled={props.setters.context.loading}
+          footer={<SelectorFooter state={props.state} setters={props.setters} />}
         />
 
-        <Button size="sm" onClick={() => props.setters.refreshModels()}>
+        <Button size="sm" onClick={() => props.setters.refreshModels(true)}>
           <RefreshCcw size={20} />
         </Button>
+
+        <div class="flex" classList={{ hidden: !page.flags.debug }}>
+          <Copy
+            text={
+              props.state.providerModels?.[props.state.providerId || 'na'] ||
+              props.state.thirdPartyModel ||
+              ''
+            }
+          />
+        </div>
       </div>
 
       <div class="flex w-full flex-col gap-1">
@@ -236,7 +246,7 @@ const CompatModel: Selector = (props) => {
 }
 
 const NovelAIModel: Selector = (props) => {
-  const cfg = getStore('settings')()
+  const page = pageStore((s) => ({ flags: s.flags }))
 
   const novelModels = createMemo(() => {
     const base = modelsToItems(NOVEL_MODELS)
@@ -274,7 +284,7 @@ const NovelAIModel: Selector = (props) => {
         onSelect={(ev) => setProviderModel(props, ev.value, { novelModel: ev.value })}
         buttonLabel={label()}
       />
-      <Show when={cfg.flags.naiModel}>
+      <Show when={page.flags.naiModel}>
         <TextInput
           fieldName="novelModelOverride"
           helperText="Advanced: Use a custom NovelAI model"
@@ -286,10 +296,12 @@ const NovelAIModel: Selector = (props) => {
 }
 
 const OpenRouterModels: Selector = (props) => {
-  const cfg = getStore('settings')()
+  const emitter = createEmitter('close')
+
+  const [customId, setCustomId] = createSignal('')
 
   const openRouterModels = createMemo(() => {
-    const list: OpenRouterModel[] = props.setters.models.data || []
+    const list: OpenRouterModel[] = props.setters.context.data || []
 
     const options = list
       .map((model) => ({
@@ -322,7 +334,7 @@ const OpenRouterModels: Selector = (props) => {
 
     const match = openRouterModels().find((s) => s.value === id)
     if (!match) {
-      if (cfg.flags.debug) return `Model - None selected (${id})`
+      if (!!id?.trim()) return `Model - ${id}`
       return 'Model - None selected'
     }
 
@@ -334,12 +346,52 @@ const OpenRouterModels: Selector = (props) => {
     )
   })
 
+  const sub = createEmitter('open')
+
+  onMount(() => {
+    sub.on('open', () => {
+      const list = openRouterModels()
+      if (list.length > 1) return
+
+      props.setters.refreshModels()
+    })
+  })
+
+  const ManualModel = (
+    <div class="flex gap-2">
+      <TextInput
+        prelabel="Manual Model ID"
+        parentClass="w-full !font-normal !text-sm !h-8"
+        class=""
+        value={customId()}
+        onChange={(ev) => {
+          setCustomId(ev.currentTarget.value)
+        }}
+      />
+      <Button
+        size="sm"
+        schema="primary"
+        onClick={() => {
+          setProviderModel(props, customId())
+          emitter.emit.close()
+        }}
+      >
+        Confirm
+      </Button>
+    </div>
+  )
+
   return (
     <div class="flex w-full items-center gap-1">
       <CustomSelect
         maxHeight
         size="sm"
-        modalTitle="Select a Model"
+        modalTitle={
+          <div class="flex flex-col gap-2">
+            <div>Select a Model</div>
+          </div>
+        }
+        listener={sub.emit}
         options={openRouterModels()}
         search={tokenizedSearch}
         selected={
@@ -354,7 +406,8 @@ const OpenRouterModels: Selector = (props) => {
           }
         }}
         buttonLabel={label()}
-        footer={<SelectorFooter setters={props.setters} />}
+        preoptions={ManualModel}
+        footer={<SelectorFooter state={props.state} setters={props.setters} />}
       />
 
       <div class="flex">
@@ -384,13 +437,7 @@ const ArliModels: Selector = (props) => {
     }
 
     return (
-      <span title={`${match.status}, ${(match.health || '...').toLowerCase()}`}>
-        {match.id}
-        <span class="text-500 text-xs">
-          {' '}
-          {arliContext(match, state.classes)} {match.status}
-        </span>
-      </span>
+      <span title={`${match.status}, ${(match.health || '...').toLowerCase()}`}>{match.id}</span>
     )
   })
 
@@ -406,7 +453,7 @@ const ArliModels: Selector = (props) => {
         label: (
           <div class="flex w-full justify-between" title={`${s.status}`}>
             <div class="ellipsis">{s.id}</div>
-            <div class="text-500 text-xs">
+            <div class="text-500 min-w-fit text-xs">
               {arliContext(s, state.classes)} {s.status}
             </div>
           </div>
@@ -468,7 +515,7 @@ const ArliModels: Selector = (props) => {
         selected={
           props.state.providerModels?.[props.state.providerId || 'na'] || props.state.arliModel
         }
-        footer={<SelectorFooter setters={props.setters} />}
+        footer={<SelectorFooter state={props.state} setters={props.setters} />}
       />
 
       <div class="flex">
@@ -485,6 +532,12 @@ const ArliModels: Selector = (props) => {
 }
 
 let FILTERED_CACHE: Record<string, boolean> = {}
+let FL_LAST_SEARCH = {
+  search: '',
+  ctx: '0',
+  min_b: '0',
+  max_b: '0',
+}
 
 type FLModel = {
   id: string
@@ -493,6 +546,7 @@ type FLModel = {
   updated_at: string
   model_class: string
   context_length: number
+  parameters?: number
   max_completion_tokens: number
   available_on_current_plan: boolean
   status: 'active' | 'not_deployed' | 'pending_deploy'
@@ -500,16 +554,34 @@ type FLModel = {
 }
 
 const FeatherlessModels: Selector = (props) => {
+  const emitter = createEmitter('close')
+
+  const [customId, setCustomId] = createSignal('')
+  const [inputText, setInputText] = createSignal(FL_LAST_SEARCH.search)
   const [selectedClasses, setClasses] = createSignal<string[]>([])
   const [classesOpen, setClassesOpen] = createSignal(false)
+  const [minctx, setMinctx] = createSignal(FL_LAST_SEARCH.ctx)
+  const [minParameters, setMinParameters] = createSignal(FL_LAST_SEARCH.min_b)
+  const [maxParameters, setMaxParameters] = createSignal(FL_LAST_SEARCH.max_b)
 
-  const availableClasses = createMemo(() => {
+  const toModelClass = (className: string) => {
+    if (!className) return ''
+    return className.split('-').slice(0, -1).join('-')
+  }
+
+  const availables = createMemo(() => {
     const seen = new Set<string>()
-    const list = (props.setters.models.data as FLModel[])
-      .reduce((prev, curr) => {
-        if (!curr.model_class || seen.has(curr.model_class)) return prev
-        seen.add(curr.model_class)
-        prev.push({ label: curr.model_class, ctx: curr.context_length })
+    const models: { [id: string]: FLModel } = {}
+
+    const list = (props.setters.context.data as FLModel[])
+      .reduce((prev, orig) => {
+        const curr = { ...orig }
+        flaiParameters(curr)
+        models[curr.id] = curr
+        const currClass = toModelClass(curr.model_class)
+        if (!currClass || seen.has(currClass)) return prev
+        seen.add(currClass)
+        prev.push({ label: currClass, ctx: curr.context_length })
         return prev
       }, [] as Array<{ label: string; ctx: number }>)
       .map(({ label, ctx }) => ({
@@ -524,28 +596,33 @@ const FeatherlessModels: Selector = (props) => {
       return prev
     }, {} as Record<string, { ctx: number; label: string }>)
 
-    return { list, map }
+    return { list, map, models }
   })
 
   const label = createMemo(() => {
     const id = props.state.providerId
       ? props.state.providerModels?.[props.state.providerId] || props.state.thirdPartyModel
       : props.state.featherlessModel
-    const match = props.setters.models.data.find((s) => s.id === id)
-    if (!match) return 'Model - None selected'
+    const match = props.setters.context.data.find((s) => s.id === id)
+    if (!match) return `Model - ${id}`
 
     return (
       <span title={`${match.status}, ${(match.health || '...').toLowerCase()}`}>
         {match.id}
         <span class="text-500 text-xs">
           {' '}
-          {flaiContext(match, availableClasses().map)} {match.status}
+          {flaiContext(match, availables().map)} {match.status}
         </span>
       </span>
     )
   })
 
   const options = createMemo(() => {
+    const ctxThreshold = +minctx() > 0 ? +minctx() * 1024 : 0
+    const minB = +minParameters()
+    const maxB = +maxParameters()
+
+    const classes = availables()
     const modelClasses = selectedClasses().reduce((prev, curr) => {
       prev.add(curr)
       return prev
@@ -553,20 +630,41 @@ const FeatherlessModels: Selector = (props) => {
 
     const categories: Record<string, { name: string; options: CustomOption[] }> = {}
 
-    for (const model of props.setters.models.data) {
+    for (const model of props.setters.context.data) {
       // Skip models that cannot be used
+      const modelClass = toModelClass(model.model_class)
+      const cached = classes.models[model.id]
+
+      const modelParams = cached?.parameters ?? 0
+      const modelCtx: number =
+        model.context_length ||
+        classes.map[model.model_class]?.ctx ||
+        FLAI_CONTEXTS[model.model_class]
+
       if (model.status && model.status !== 'active' && model.health && model.health !== 'HEALTHY') {
         continue
       }
 
-      // If classes are being filtered by the user, skip classes that aren't selected
-      if (modelClasses.size > 0 && !modelClasses.has(model.model_class)) continue
-
-      if (!categories[model.model_class]) {
-        categories[model.model_class] = { name: model.model_class, options: [] }
+      if (ctxThreshold > 0 && modelCtx > 0 && ctxThreshold > modelCtx) {
+        continue
       }
 
-      categories[model.model_class].options.push({
+      if (minB > 0 && modelParams > 0 && minB > modelParams) {
+        continue
+      }
+
+      if (maxB > 0 && modelParams > 0 && maxB < modelParams) {
+        continue
+      }
+
+      // If classes are being filtered by the user, skip classes that aren't selected
+      if (modelClasses.size > 0 && !modelClasses.has(modelClass)) continue
+
+      if (!categories[modelClass]) {
+        categories[modelClass] = { name: modelClass, options: [] }
+      }
+
+      categories[modelClass].options.push({
         label: (
           <div
             class="flex w-full flex-col"
@@ -574,7 +672,8 @@ const FeatherlessModels: Selector = (props) => {
           >
             <div class="ellipsis">{model.id}</div>
             <div class="text-500 text-xs">
-              {model.model_class} - {flaiContext(model, availableClasses().map)} {model.status}
+              {model.model_class} - {flaiContext(model, classes.map)}{' '}
+              {modelParams ? `${modelParams}B` : ''} {model.status}
             </div>
           </div>
         ),
@@ -609,32 +708,12 @@ const FeatherlessModels: Selector = (props) => {
   }
 
   const classes = createMemo(() => {
-    const list = availableClasses().list
+    const list = availables().list
 
     list
       .map(({ label, ctx }) => ({ label: `${label} - ${Math.round(ctx / 1024)}k`, value: label }))
       .sort((l, r) => l.label.localeCompare(r.label))
     return [{ label: 'All', value: '' }].concat(list)
-  })
-
-  const availables = createMemo(() => {
-    const map: Record<string, number> = {}
-    for (const model of props.setters.models.data) {
-      if (!map[model.model_class]) {
-        map[model.model_class] = 0
-      }
-
-      const filteredOut = FILTERED_CACHE[model.id]
-      if (filteredOut) {
-        continue
-      }
-
-      if (!model.status || model.status === 'active') {
-        map[model.model_class]++
-      }
-    }
-
-    return map
   })
 
   const deselectClass = (cls: string) => {
@@ -648,15 +727,35 @@ const FeatherlessModels: Selector = (props) => {
   }
 
   const classPills = createMemo(() => {
-    const available = availables()
     const set = new Set<string>()
     const selected = selectedClasses()
     for (const cls of selected) {
       set.add(cls)
     }
 
+    const searchText = inputText().trim()
+    const searchedClasses = new Set<string>()
+
+    for (const cat of options()) {
+      if (!searchText) {
+        searchedClasses.add(cat.name)
+        continue
+      }
+
+      if (set.has(cat.name)) {
+        searchedClasses.add(cat.name)
+        continue
+      }
+
+      for (const model of cat.options) {
+        if (!search(model.value, searchText)) continue
+        searchedClasses.add(cat.name)
+        break
+      }
+    }
+
     const pills = classes()
-      .filter((cls) => available[cls.value] > 0)
+      .filter((cls) => searchedClasses.has(cls.value))
       .map((cls) => {
         if (set.has(cls.value)) {
           return (
@@ -679,31 +778,96 @@ const FeatherlessModels: Selector = (props) => {
   return (
     <div class="flex items-center gap-1">
       <CustomSelect
+        closeSub={emitter.on}
         maxHeight
+        maxWidth="full"
+        displayMax={1000}
         size="sm"
-        modalTitle="Select a Model"
+        modalTitle={
+          <div class="flex flex-col gap-2">
+            <div>Select a Model</div>
+            <div class="flex gap-2">
+              <TextInput
+                prelabel="Manual Model ID"
+                parentClass="w-full !font-normal !text-sm !h-8"
+                class=""
+                value={customId()}
+                onChange={(ev) => {
+                  setCustomId(ev.currentTarget.value)
+                }}
+              />
+              <Button
+                size="sm"
+                schema="primary"
+                onClick={() => {
+                  setProviderModel(props, customId())
+                  emitter.emit.close()
+                }}
+              >
+                Confirm
+              </Button>
+            </div>
+          </div>
+        }
         categories={options()}
         search={search}
+        searchInit={FL_LAST_SEARCH.search}
+        searchText={(text) => {
+          FL_LAST_SEARCH.search = text
+          setInputText(text)
+        }}
         header={
-          <Accordian
-            class="!bg-opacity-10 !p-1"
-            title={<span class="text-sm">Model Classes</span>}
-            open={classesOpen()}
-            onChange={(ev) => setClassesOpen(ev)}
-          >
-            <div class="flex w-full flex-wrap gap-1">{classPills()}</div>
-          </Accordian>
+          <>
+            <Accordian
+              class="!bg-opacity-10 !p-1"
+              title={<span class="text-sm">Model Classes</span>}
+              open={classesOpen()}
+              titleClickOpen
+              onChange={(ev) => setClassesOpen(ev)}
+            >
+              <div class="flex w-full flex-wrap gap-1">{classPills()}</div>
+            </Accordian>
+            <div class="flex min-w-fit gap-2">
+              <TextInput
+                value={minctx()}
+                onChange={(ev) => {
+                  FL_LAST_SEARCH.ctx = ev.currentTarget.value
+                  setMinctx(ev.currentTarget.value)
+                }}
+                prelabel="Min CTX (K)"
+              />
+
+              <TextInput
+                value={minParameters()}
+                onChange={(ev) => {
+                  FL_LAST_SEARCH.min_b = ev.currentTarget.value
+                  setMinParameters(ev.currentTarget.value)
+                }}
+                prelabel="Min CTX (B)"
+              />
+
+              <TextInput
+                value={maxParameters()}
+                onChange={(ev) => {
+                  FL_LAST_SEARCH.max_b = ev.currentTarget.value
+                  setMaxParameters(ev.currentTarget.value)
+                }}
+                prelabel="Max Params (B)"
+              />
+            </div>
+          </>
         }
         onSelect={(opt) => {
           setProviderModel(props, opt.value, { featherlessModel: opt.value })
+          console.log(`Model: ${opt.value}`)
         }}
         buttonLabel={label()}
         selected={
           props.state.providerModels?.[props.state.providerId || 'na'] ||
           props.state.featherlessModel
         }
-        footer={<SelectorFooter setters={props.setters} />}
-      />
+        footer={<SelectorFooter state={props.state} setters={props.setters} />}
+      ></CustomSelect>
 
       <div class="">
         <Copy text={props.state.featherlessModel || ''} />
@@ -781,7 +945,7 @@ const ClaudeModel: Selector = (props) => {
       search={tokenizedSearch}
       buttonLabel={label()}
       closeSub={emitter.on}
-      footer={<SelectorFooter setters={props.setters} />}
+      footer={<SelectorFooter state={props.state} setters={props.setters} />}
     />
   )
 }
@@ -845,7 +1009,7 @@ const GoogleModels: Selector = (props) => {
         props.state.googleModel ||
         props.state.thirdPartyModel
       }
-      footer={<SelectorFooter setters={props.setters} />}
+      footer={<SelectorFooter state={props.state} setters={props.setters} />}
     />
   )
 }
@@ -971,6 +1135,22 @@ function flaiContext(model: FLModel, classes: Record<string, { ctx: number }>) {
   return `${Math.round(ctx / 1024)}K`
 }
 
+function flaiParameters(model: FLModel) {
+  if (model.parameters) return model.parameters
+  const parts = model.model_class.split('-')
+  const end = parts.slice(-1)[0]
+  const index = end.lastIndexOf('b')
+  if (index === -1) return
+
+  const val = +end.slice(0, index)
+
+  if (val > 0) {
+    model.parameters = val
+  }
+
+  return model.parameters
+}
+
 function arliContext(model: ArliModel, classes: Record<string, { ctx: number }>) {
   const ctx = model.ctx || classes[model.model_class]?.ctx || FLAI_CONTEXTS[model.model_class]
   if (!ctx) return ''
@@ -997,11 +1177,11 @@ function modelsToItems(models: Record<string, string>): Option<string>[] {
 function setProviderModel(
   { state, setters, page }: SelectorProps,
   model: string,
-  extras?: Partial<PresetState>
+  extras?: Partial<ContextPreset>
 ) {
   console.log(`[model updated] ${model}`)
-  const update: Partial<PresetState> = extras ?? {}
-  update.thirdPartyModel = model
+  const update: Partial<ContextPreset> = extras ?? {}
+  update.thirdPartyModel = ''
 
   const settings = state.providerSettings ? { ...state.providerSettings } : {}
   const models = state.providerModels ? { ...state.providerModels } : {}
@@ -1023,12 +1203,16 @@ function setProviderModel(
   }
 }
 
-const SelectorFooter: Component<{ children?: any; setters: PresetFuncs }> = (props) => {
-  const [ctx] = useAppContext()
+const SelectorFooter: Component<{ children?: any; state: ContextPreset; setters: PresetFuncs }> = (
+  props
+) => {
   return (
     <>
-      <Show when={ctx.preset}>
-        <Button onClick={() => props.setters.refreshModels()}>
+      <Show when={props.state}>
+        <Button
+          onClick={() => props.setters.refreshModels(true)}
+          // disabled={props.setters.context.loading}
+        >
           <RefreshCcw size={20} />
           Refresh
         </Button>

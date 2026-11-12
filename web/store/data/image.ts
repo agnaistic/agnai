@@ -1,23 +1,26 @@
 import * as horde from '../../../common/horde-gen'
-import { createImagePrompt, getMaxImageContext } from '../../../common/image-prompt'
+import { getMaxImageContext } from '../../../common/image-prompt'
 import { api } from '../api'
 import { getStore } from '../create'
-import { msgsApi } from './messages'
-import { AIAdapter } from '/common/adapters'
-import { decode, encode, getEncoder } from '/common/tokenize'
-import { parseTemplate } from '/common/template-parser'
-import { neat, wait } from '/common/util'
-import { AppSchema } from '/common/types'
+import { decode, encode } from '/common/tokenize'
+import { cleanPrompt, neat, wait } from '/common/util'
 import { localApi } from './storage'
-import { subscribe } from '../socket'
+import { localEmit, subscribe } from '../socket'
 import { getAssetUrl } from '/web/shared/util'
 import { v4 } from 'uuid'
 import { md5 } from './md5'
-import { getImagePromptEntities, getPromptEntities, PromptEntities } from './common'
-import { genApi } from './inference'
+import { getImagePromptEntities, getPromptEntities } from './common'
+import { inferenceHelper } from './inference'
 import { TickHandler } from '/common/prompt'
 import { extractReasoning } from '/common/reasoning'
-import { replaceTags } from '/common/presets/templates'
+import { swarmApi } from '/common/requests/swarmui'
+import { ImageRequestOpts } from '/srv/image/types'
+import { getImagePrompt, getImageSettings } from '/common/image'
+import { imageStore } from '../images'
+import { isChatPage } from '/web/shared/hooks'
+import { FileInputResult } from '/web/shared/FileInput'
+
+export type ImageRequestEntities = Awaited<ReturnType<typeof createImageRequest>>
 
 type GenerateOpts = {
   chatId?: string
@@ -28,6 +31,7 @@ type GenerateOpts = {
   source: string
   parent?: string
   question?: string
+  signal?: AbortController
 
   /** If true, the Image Settings prefix and suffix won't be applied */
   noAffix?: boolean
@@ -39,28 +43,80 @@ export const ALLOWED_TYPES = new Map([
   ['png', 'image/png'],
   ['apng', 'image/apng'],
   ['gif', 'image/gif'],
+  ['webp', 'image/webp'],
 ])
+
+export function getImageType(image: string) {
+  for (const [ext, _mimetype] of ALLOWED_TYPES.entries()) {
+    if (image.toLowerCase().endsWith(`.${ext}`)) return { type: 'url' as const, image }
+  }
+
+  return { type: 'base64' as const, image }
+}
 
 export const imageApi = {
   generateImage,
   generateImagePrompt,
-  generateImageWithPrompt,
   generateImageAsync,
+  getSummaryTemplate,
   dataURLtoFile,
   getImageData,
   getSDModelList,
+  getImageModelList,
+  getImageBase64,
+  processBase64,
+  asyncImage,
+  processImageFile,
   ALLOWED_TYPES,
 }
 
-export async function generateImagePrompt(opts?: { onTick?: TickHandler; question?: string }) {
-  const entities = await getPromptEntities()
-  const summary = await createSummarizedImagePrompt({
-    entities,
-    onTick: opts?.onTick,
-    question: opts?.question,
-  })
+async function processImageFile(file: File): Promise<FileInputResult> {
+  const buf = await file.arrayBuffer()
+  const buffer = Buffer.from(buf)
+  const base64 = `data:${file.type};base64,${buffer.toString('base64')}`
 
-  return summary
+  return {
+    file,
+    content: base64,
+  }
+}
+export async function generateImagePrompt(opts: {
+  onTick?: TickHandler
+  question?: string
+  messageId?: string
+  signal?: AbortController
+}) {
+  const imgEnts = await getImagePromptEntities(opts.messageId)
+  const helper = inferenceHelper({ preset: imgEnts.preset, onTick: opts.onTick })
+  const template = getSummaryTemplate({
+    task: imgEnts.summary,
+    generate: 'Image Caption',
+    focus: opts.question,
+  })
+  const settings = imgEnts.preset || imgEnts.entities.settings
+
+  console.log(
+    'Using',
+    settings.service,
+    'to summarise:',
+    settings.name || '',
+    `\n${imgEnts.summary || ''}`
+  )
+
+  const stream = await helper.send({ prompt: template, preset: settings, signal: opts.signal })
+  const result = await stream.promise
+
+  if (result.result?.response) {
+    const { content } = extractReasoning(result.result.response)
+    if (content) {
+      result.result.response = content
+    }
+  }
+
+  const summary = result?.result?.response
+
+  console.log('Image caption: ', summary)
+  return result
 }
 
 const SD_MODEL_CACHE = new Map<string, SDModel[]>()
@@ -84,102 +140,142 @@ export async function getSDModelList(
   return { models: [] }
 }
 
-export async function generateImage(
-  opts: GenerateOpts,
-  callbacks?: { onDone?: (summary: string) => void; onTick?: TickHandler }
-) {
-  const entities = await getPromptEntities()
-
-  if (opts.messageId) {
-    const index = entities.messages.findLastIndex((m) => m._id === opts.messageId)
-    if (index >= 0) {
-      entities.messages = entities.messages.slice(0, index + 1)
-    }
+export async function getImageModelList(opts: {
+  type: 'sd' | 'swarm'
+  url: string
+  key?: string
+  local?: boolean
+  providerId?: string
+}) {
+  if (opts.type === 'swarm' && opts.local) {
+    const models = await swarmApi.getModelList(opts.url)
+    const loras = await swarmApi.getModelList(opts.url, 'LoRA')
+    return { ...models, loras: loras.models }
   }
 
+  const res = await api.post<{ models: SDModel[] }>('/chat/image-models', opts)
+  if (res.result) {
+    return res.result
+  }
+
+  return { models: [] }
+}
+
+export async function generateImage(
+  opts: GenerateOpts,
+  callbacks?: { onSummary?: (summary: string) => void; onTick?: TickHandler }
+) {
+  const entities = await getPromptEntities({ messageId: opts.messageId })
   const result = opts.prompt
     ? await localApi.result({ response: opts.prompt })
-    : await createSummarizedImagePrompt({
-        entities,
+    : await generateImagePrompt({
+        messageId: opts.messageId,
         onTick: callbacks?.onTick,
         question: opts.question,
       })
 
-  if (!result.result?.response) {
-    return result
+  if (result.error || !result.result) {
+    return localApi.error(result.error)
   }
 
   const summary = result.result.response
 
-  callbacks?.onDone?.(result.result?.response)
-
-  const characterId = entities.messages.reduceRight((id, msg) => id || msg.characterId)
+  callbacks?.onSummary?.(summary)
 
   const max = getMaxImageContext(entities.user)
   const trimmed = await encode(summary)
     .then((tokens) => tokens.slice(0, max))
     .then(decode)
 
-  const res = await api.post<{ success: boolean }>(
-    `/chat/${opts.chatId || entities.chat._id}/image`,
+  const req = await createImageRequest({ prompt: trimmed, messageId: opts.messageId })
+  const requestId = v4()
+
+  try {
+    const image = await dispatchImage(req, opts, requestId)
+
+    const payload = {
+      type: 'image-generated',
+      chatId: opts.chatId,
+      messageId: opts.messageId,
+      image: image.content,
+      requestId,
+      source: opts.source,
+      summary,
+    }
+
+    localEmit(payload)
+    return localApi.result({ ...image, summary, messageId: opts.messageId, requestId })
+  } catch (ex: any) {
+    localEmit({ type: 'image-error', error: ex?.message || ex })
+    return localApi.error(ex?.message || ex)
+  }
+}
+
+async function dispatchImage(req: ImageRequestEntities, opts: GenerateOpts, requestId: string) {
+  if (req.provider?.type === 'horde') {
+    try {
+      const { text: image } = await horde.generateImage(
+        req.entities.user,
+        req.request.prompt,
+        req.request.negative,
+        (status) => {}
+      )
+
+      const file = await dataURLtoFile(image)
+      const buffer = await file.arrayBuffer()
+      const data = await getImageData(file)
+
+      return { buffer, file, content: data }
+    } catch (ex: any) {
+      throw ex
+    }
+  }
+
+  if (req.provider?.local && req.provider.type === 'swarm') {
+    const signal = opts.signal || new AbortController()
+    imageStore.setState({ signal })
+
+    const result = await swarmApi.generateImageWS(req.request, {
+      signal,
+      onDone: () => imageStore.setState({ preview: undefined }),
+      onError: () => imageStore.setState({ preview: undefined }),
+      onPreview: (step) => imageStore.setState({ preview: step }),
+    })
+
+    return result
+  }
+
+  const res = await api.post<{ success: boolean; output?: string; error?: string }>(
+    `/chat/${opts.chatId}/image`,
     {
-      prompt: trimmed,
-      user: entities.user,
+      sync: true,
+      prompt: req.request.prompt,
       messageId: opts.messageId,
       ephemeral: opts.ephemeral,
       append: opts.append,
       source: opts.source,
       chatId: opts.chatId,
-      characterId,
+      characterId: req.entities.message?.characterId,
       parent: opts.parent,
-      requestId: v4(),
+      requestId,
+      user: req.entities.user,
     }
   )
-  return res
-}
 
-export async function generateImageWithPrompt(opts: {
-  prompt: string
-  source: string
-  onDone: (result: { image: string; file: File; data?: string }) => void
-  onTick?: (status: horde.HordeCheck) => void
-}) {
-  const { prompt, source, onDone } = opts
-  const user = getStore('user').getState().user
-
-  if (!user) {
-    throw new Error('Could not get user settings')
+  if (res.error) {
+    throw new Error(res.error)
   }
 
-  if (!user.images || user.images.type === 'horde') {
-    try {
-      const { text: image } = await horde.generateImage(
-        user,
-        prompt,
-        user.images?.negative || horde.defaults.image.negative,
-        (status) => {
-          opts.onTick?.(status)
-        }
-      )
-
-      const file = await dataURLtoFile(image)
-      const data = await getImageData(file)
-
-      onDone({ image, file, data })
-      return localApi.result({})
-    } catch (ex: any) {
-      return localApi.error(ex.message)
-    }
+  if (!res.result?.output) {
+    const msg = res.result?.error || `Image generation failed to return a result`
+    throw new Error(msg)
   }
 
-  const res = await api.post<{ success: boolean; requestId: string }>(`/character/image`, {
-    prompt,
-    user,
-    ephemeral: true,
-    source,
-  })
+  const base64 = await imageApi.getImageBase64(res.result.output)
+  const proc = imageApi.processBase64(base64)
 
-  return res
+  const buffer = await proc.file.arrayBuffer()
+  return { content: base64, file: proc.file, buffer }
 }
 
 export type ImageResult = { image: string; file: File; data?: string; error?: string }
@@ -187,6 +283,8 @@ export type ImageResult = { image: string; file: File; data?: string; error?: st
 export async function generateImageAsync(
   prompt: string,
   opts: {
+    chatId?: string
+    messageId?: string
     model?: string
     requestId?: string
     noAffix?: boolean
@@ -201,49 +299,51 @@ export async function generateImageAsync(
     throw new Error('Could not get user settings')
   }
 
-  if (!user.images || user.images.type === 'horde') {
-    try {
-      const { text: image } = await horde.generateImage(
-        user,
-        prompt,
-        user.images?.negative || '',
-        (status) => {
-          opts.onTick?.(status)
-        }
-      )
-
-      const file = await dataURLtoFile(image)
-      const data = await getImageData(file)
-
-      opts.onDone?.({ image, file, data })
-
-      return { image, file, data }
-    } catch (ex: any) {
-      throw ex
-    }
-  }
-
+  const req = await createImageRequest({ prompt, noAffix: opts.noAffix, messageId: opts.messageId })
   const requestId = opts.requestId || v4()
 
-  const promise = new Promise<ImageResult>((resolve, reject) => {
-    callbacks.set(requestId, (image) => {
-      opts.onDone?.(image)
-      if (image.error) return reject(new Error(image.error))
-      resolve(image)
-    })
-  })
+  const image = await dispatchImage(
+    req,
+    {
+      source,
+      noAffix: opts.noAffix,
+      ephemeral: true,
+      chatId: opts.chatId,
+      messageId: opts.messageId,
+    },
+    requestId
+  )
 
-  await api.post<{ success: boolean }>(`/character/image`, {
-    prompt,
-    user,
-    ephemeral: true,
-    source,
-    noAffix: opts.noAffix,
-    model: opts.model,
+  const payload = {
+    type: 'image-generated',
+    chatId: opts.chatId,
+    messageId: opts.messageId,
+    image: image.content,
     requestId,
-  })
+    source,
+  }
 
-  return promise
+  localEmit(payload)
+  opts.onDone?.({ file: image.file, image: image.content!, data: image.content })
+
+  const result: ImageResult = {
+    file: image.file,
+    image: image.content!,
+    data: image.content!,
+  }
+
+  return result
+}
+
+export async function getImageBase64(image: string) {
+  if (image.startsWith('data:')) return image
+
+  if (!image.startsWith('http')) {
+    image = getAssetUrl(image)
+  }
+
+  const base64 = await imageApi.getImageData(image)
+  return base64!
 }
 
 const callbacks = new Map<string, (result: ImageResult) => void>()
@@ -301,115 +401,21 @@ subscribe('image-failed', { requestId: 'string', error: 'string' }, (body) => {
   callback({ file: {} as any, image: '', error: body.error })
 })
 
-async function createSummarizedImagePrompt(opts: {
-  entities: PromptEntities
-  onTick?: TickHandler
-  question?: string
-}) {
-  const { entities, question, onTick } = opts
+function getSummaryTemplate(opts: { task: string | undefined; focus?: string; generate?: string }) {
+  let prompt =
+    opts.task ||
+    neat`Write an image caption of the current scene using physical descriptions without names. Respond using comma-separate BOORU TAGS.`
 
-  if (entities.user.images?.summariseChat) {
-    const imageEntities = await getImagePromptEntities(entities)
-    const settings = imageEntities.preset || entities.settings
-
-    console.log(
-      'Using',
-      settings.service,
-      'to summarise:',
-      settings.name || '',
-      `\n${imageEntities.summary || ''}`
-    )
-    const result = await getChatSummary(settings, {
-      prompt: imageEntities.summary,
-      onTick,
-      question,
-    })
-
-    if (result.result?.response) {
-      const { content } = extractReasoning(result.result.response)
-      if (content) {
-        result.result.response = content
-      }
-    }
-
-    const summary = result?.result?.response
-
-    console.log('Image caption: ', summary)
-    return result
+  if (opts?.focus) {
+    prompt += `\nSpecifically focus on: ${opts.focus}`
   }
 
-  const prompt = await createImagePrompt(entities)
-  return localApi.result({ response: prompt, meta: {} })
-}
+  const generate = opts.generate || 'Chat Summary'
+  const prefix = ['a', 'e', 'i', 'o', 'u'].includes(generate[0].toLowerCase()) ? 'an' : 'a'
 
-async function getChatSummary(
-  settings: Partial<AppSchema.GenSettings>,
-  params: {
-    prompt: string
-    question?: string
-    onTick?: TickHandler
-  }
-) {
-  const opts = await msgsApi.getActiveTemplateParts()
-  opts.limit = {
-    context: 4096,
-    encoder: await getEncoder(),
-  }
-
-  let template = getSummaryTemplate(settings.service!, {
-    prompt: params.prompt,
-    question: params.question,
-  })
-
-  if (!template) throw new Error(`No chat summary template available for "${settings.service!}"`)
-
-  const parsed = await parseTemplate(template, opts)
-
-  let prompt = parsed.parsed
-  prompt = replaceTags(prompt, settings.modelFormat || 'None')
-
-  const response = await genApi.inferenceStream(
-    {
-      prompt,
-      settings,
-      messages: parsed.blocks,
-    },
-    (text, state) => {
-      if (!params.onTick) return
-      const { content } = extractReasoning(text)
-      params.onTick?.(content.trim(), state)
-    }
-  )
-
-  return response
-}
-
-function getSummaryTemplate(service: AIAdapter, opts?: { prompt?: string; question?: string }) {
-  switch (service) {
-    case 'novel': {
-      const prompt =
-        opts?.prompt ||
-        `Write a detailed image caption of the current scene with a description of each character's appearance`
-      return neat`
-      {{char}}'s personality: {{personality}}
-      [ Style: chat ]
-      ***
-      {{history}}
-      { ${prompt} }`
-    }
-
-    default: {
-      let prompt =
-        opts?.prompt ||
-        neat`Write an image caption of the current scene using physical descriptions without names. Respond using comma-separate BOORU TAGS.`
-
-      if (opts?.question) {
-        prompt += `\nSpecifically focus on: ${opts.question}`
-      }
-
-      return neat`
-      <system>Your task is to generate a Booru Tag Image Caption by summarizing the most recent moment in a roleplay scenario.
-      Generate an image caption using the details and conversation below.</system>
+  return neat`
+      <system>Your task is to generate ${prefix} ${generate} in the format that is specified by the user using the details of the conversation below at the current moment in the roleplay scenario.
+      Generate ${prefix} ${generate} using the details and conversation below.</system>
 
       <instruct>
       {{char}}'s Persona: {{personality}}
@@ -417,15 +423,13 @@ function getSummaryTemplate(service: AIAdapter, opts?: { prompt?: string; questi
       The scenario of the conversation: {{scenario}}
 
       Then the roleplay chat begins.</instruct>
-  
+
       {{#each msg}}{{#if .isbot}}<bot>{{.name}}: {{.msg}}</bot>{{/if}}{{#if .isuser}}<user>{{.name}}: {{.msg}}</user>{{/if}}
       {{/each}}
 
       <instruct>${prompt}</instruct>
 
-      <assistant>Image caption:</assistant>`
-    }
-  }
+      <assistant>${generate}:</assistant>`
 }
 
 export async function dataURLtoFile(base64: string, name?: string): Promise<File> {
@@ -463,4 +467,81 @@ export async function getImageData(file: File | Blob | string | undefined, name?
       resolve(evt.target.result.toString())
     }
   })
+}
+
+export function asyncImage(src: string) {
+  return new Promise<{ name: string; image: HTMLImageElement }>(async (resolve, reject) => {
+    const data = await getImageBase64(src)
+    const image = new Image()
+    image.setAttribute('crossorigin', 'anonymous')
+    image.src = data
+
+    image.onload = () => resolve({ name: src, image })
+    image.onerror = (ev) => reject(ev)
+  })
+}
+
+export function processBase64(base64: string) {
+  const full = base64.startsWith('data:') ? base64 : `data:image/png;base64,${base64}`
+  const blob = new Blob([full])
+  const file = new File([blob], `image_${Date.now()}.png`, { type: 'image/png' })
+  return { base64: full, file }
+}
+
+export async function createImageRequest(input: {
+  prompt: string
+  messageId?: string
+  noAffix?: boolean
+}) {
+  const ents = getImageEntities()
+  const { user } = getStore('user').getState()
+  const { settings, provider } = getImageSettings(ents.chat, ents.char, ents.user)
+  const { rawPrompt, prompt } = getImagePrompt(input, settings)
+
+  const opts: ImageRequestOpts = {
+    negative: settings?.negative || '',
+    prompt,
+    raw_prompt: rawPrompt,
+    settings,
+    user: user!,
+    override: '',
+    provider,
+    params: {
+      cfg_scale: settings?.cfg,
+      clip_skip: settings?.clipSkip,
+      height: settings?.height,
+      negative: settings?.negative || '',
+      seed: settings?.seed ?? -1,
+      steps: settings?.steps,
+      width: settings?.width,
+    },
+  }
+
+  if (settings?.autofix) {
+    opts.prompt = cleanPrompt(opts.prompt)
+  }
+
+  if (!opts.params?.width || !opts.params.height) {
+    opts.params!.width = 1024
+    opts.params!.height = 1024
+  }
+
+  return { request: opts, settings, provider, entities: ents }
+}
+
+function getImageEntities(messageId?: string) {
+  const { user } = getStore('user').getState()
+  const { details, lastChatId } = getStore('chat').getState()
+  const { graph } = getStore('messages').getState()
+  const active = details[lastChatId]
+  const isChat = isChatPage()
+
+  const message = messageId ? graph.tree[messageId]?.msg : undefined
+
+  return {
+    user: user!,
+    chat: isChat ? active?.chat : undefined,
+    char: isChat ? active?.char : undefined,
+    message,
+  }
 }

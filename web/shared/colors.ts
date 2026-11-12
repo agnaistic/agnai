@@ -41,6 +41,10 @@ export function getRootVariable(name: string) {
   return value
 }
 
+export function getSafeVariableName(name: string) {
+  return name.startsWith('--') ? name : `--${name}`
+}
+
 export function setRootVariable(name: string, value: string) {
   const root = document.documentElement
   root.style.setProperty(name.startsWith('--') ? name : `--${name}`, value)
@@ -55,7 +59,7 @@ export function parseHex(hex: string) {
 }
 
 export function hexToRgb(hex: string) {
-  const bare = hex.replaceAll('#', '')
+  const bare = hex.replaceAll(/#/g, '')
   const r = parseInt(bare.slice(0, 2), 16)
   const g = parseInt(bare.slice(2, 4), 16)
   const b = parseInt(bare.slice(4, 6), 16)

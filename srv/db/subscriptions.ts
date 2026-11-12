@@ -6,6 +6,7 @@ import { now } from './util'
 import { sendAll } from '../api/ws'
 import { setContextLimitStrategy } from '/common/prompt'
 import { getSubscriptionModelLimits, getUserSubscriptionTier } from '/common/util'
+import { logger } from '../middleware'
 
 const subCache = new Map<string, AppSchema.SubscriptionModel>()
 const tierCache = new Map<string, AppSchema.SubscriptionTier>()
@@ -146,6 +147,11 @@ export function toModelOption(sub: AppSchema.SubscriptionModel): AppSchema.Subsc
       levels: sub.levels || [],
       subLevel: sub.subLevel,
       subVisionModel: sub.subVisionModel,
+      tokenizer: sub.tokenizer,
+      postUserRole: sub.postUserRole,
+      reasoning: sub.reasoning?.enabled ? sub.reasoning : undefined,
+      prefill: sub.prefill,
+      skipRoleMerging: sub.skipRoleMerging,
     },
   }
 }
@@ -159,7 +165,13 @@ setInterval(async () => {
   await Promise.all([prepSubscriptionCache().catch(() => null), prepTierCache().catch(() => null)])
 }, 5000)
 
-export async function prepSubscriptionCache() {
+const caches = {
+  sub: false,
+  tier: false,
+}
+export async function prepSubscriptionCache(log = false) {
+  if (caches.sub) return
+  caches.sub = true
   try {
     const presets = await getSubscriptions()
 
@@ -169,7 +181,13 @@ export async function prepSubscriptionCache() {
         subCache.set(preset._id, preset)
       }
     }
-  } catch (ex) {}
+    if (log) {
+      logger.info('sub cached successfully')
+    }
+  } catch (ex) {
+  } finally {
+    caches.sub = false
+  }
 }
 
 setContextLimitStrategy((user, gen) => {
@@ -190,14 +208,23 @@ setContextLimitStrategy((user, gen) => {
   return { context: limits.maxContextLength, tokens: limits.maxTokens }
 })
 
-export async function prepTierCache() {
+export async function prepTierCache(log = false) {
+  if (caches.tier) return
+  caches.tier = true
   try {
     const tiers = await getTiers()
     tierCache.clear()
     for (const tier of tiers) {
       tierCache.set(tier._id, tier)
     }
-  } catch (ex) {}
+
+    if (log) {
+      logger.info('tiers cached successfully')
+    }
+  } catch (ex) {
+  } finally {
+    caches.tier = false
+  }
 }
 
 export async function getTiers() {

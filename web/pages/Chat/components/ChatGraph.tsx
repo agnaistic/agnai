@@ -1,13 +1,15 @@
-import cyto from 'cytoscape'
+import cyto, { NodeSingular } from 'cytoscape'
 import dagre from 'cytoscape-dagre'
-import { Component, createEffect, createSignal, on, onCleanup } from 'solid-js'
+import { Component, createEffect, createSignal, on, onCleanup, onMount } from 'solid-js'
 import { ChatNode, ChatTree } from '/common/chat'
-import { msgStore, settingStore } from '/web/store'
+import { msgStore, pageStore } from '/web/store'
 import { getSettingColor } from '/web/shared/colors'
 import { FeatureFlags } from '/web/store/flags'
 import { AppSchema } from '/common/types'
 import { SetStoreFunction } from 'solid-js/store'
-import { toShortDuration } from '/web/shared/util'
+import { ComponentEmit, ComponentSubscriber, toShortDuration } from '/web/shared/util'
+import { debug } from '/common/debug'
+import { getStore } from '/web/store/create'
 
 export { ChatGraph as default }
 
@@ -16,8 +18,12 @@ cyto.use(dagre as any)
 export type GraphState = {
   hovered: string
   clicked: string
+  rejoin: string
+  parent: string
   msg?: AppSchema.ChatMessage
 }
+
+const log = debug('graph')
 
 export const ChatGraph: Component<{
   leafId: string
@@ -25,30 +31,25 @@ export const ChatGraph: Component<{
   nodes: 'short' | 'full'
   state: GraphState
   setter: SetStoreFunction<GraphState>
+  emit: ComponentEmit<'reset' | 'click' | 'hover' | 'unhover'>
+  sub: ComponentSubscriber<'reset' | 'click' | 'hover' | 'unhover'>
 }> = (props) => {
   let cyRef: any
 
-  const graph = msgStore((s) => s.graph)
-  const flags = settingStore((s) => s.flags)
-
-  createEffect(() => {
-    const id = props.state.hovered || props.state.clicked
-    if (!id) {
-      props.setter({ msg: undefined })
-      return
-    }
-
-    const msg = graph.tree[id]
-    props.setter({ msg: msg?.msg })
-  })
+  const graph = msgStore((s) => ({ tree: s.graph.tree, root: s.graph.root }))
+  const flags = pageStore((s) => s.flags)
 
   const [instance, setInstance] = createSignal<cyto.Core>()
   const init = (ref: HTMLDivElement, tree: ChatTree) => {
     cyRef = ref
-    redraw(tree)
+    redraw()
   }
 
-  const redraw = (tree: ChatTree) => {
+  const redraw = () => {
+    const {
+      graph: { tree, root },
+    } = getStore('messages').getState()
+    log('redraw')
     instance()?.destroy()
 
     const cy = cyto({
@@ -91,32 +92,40 @@ export const ChatGraph: Component<{
       wheelSensitivity: 0.1,
       elements:
         props.nodes === 'full'
-          ? getAllElements(graph.tree, props.leafId)
-          : getElements(graph.tree, graph.root, props.leafId, flags),
+          ? getAllElements(tree, props.state, props.leafId)
+          : getElements(tree, props.state, root, props.leafId, flags),
     })
 
-    cy.on('click', 'node', function (this: any, evt) {
-      const id = this.id()
-      props.setter('clicked', props.state.clicked === id ? '' : id)
-      msgStore.fork(id)
-    })
+    // cy.on('click', 'node', function (this: any, evt) {
+    //   console.log(this.id(), 'click')
+    //   props.emit.click(this.id(), this)
+    // })
 
     cy.on('tap', 'node', function (this: any, evt) {
-      const id = this.id()
-      props.setter('clicked', props.state.clicked === id ? '' : id)
-      msgStore.fork(id)
+      props.emit.click(this.id(), this)
+      recolor()
     })
 
     cy.on('mouseover', 'node', function (this: any, evt) {
-      props.setter('hovered', this.id())
+      props.emit.hover(this.id(), this)
       document.body.style.cursor = 'pointer'
-      this.style('border-color', getSettingColor('hl-200'))
-      this.style('border-width', '1')
+      styleNode(tree, props.state, this, props.leafId)
+      // this.style('border-color', getSettingColor('hl-200'))
+      // this.style('border-width', '4')
     })
 
     cy.on('mouseout', 'node', function (this: any) {
+      props.emit.unhover()
+      styleNode(tree, props.state, this, props.leafId)
       document.body.style.cursor = ''
-      this.style('border-width', '0')
+
+      // const id = this.id()
+      // if (props.state.clicked === id) {
+      //   this.style('border-color', getSettingColor('green-400'))
+      //   this.style('border-width', '4')
+      //   return
+      // }
+      // this.style('border-width', '0')
     })
 
     const win: any = window
@@ -129,16 +138,32 @@ export const ChatGraph: Component<{
     return cy
   }
 
+  const recolor = () => {
+    const {
+      graph: { tree },
+    } = getStore('messages').getState()
+    const cy = instance()
+    if (!cy) return
+
+    const nodes = cy.nodes()
+
+    nodes.each((ele) => {
+      styleNode(tree, props.state, ele, props.leafId)
+    })
+  }
+
   createEffect(
     on(
       () => graph.tree,
       (tree) => {
+        const latest = getStore('messages').getState()
+        log('tree changed')
         const win: any = window
-        win.tree = { ...graph.tree }
+        win.tree = { ...latest.graph.tree }
         const cy = instance()
         if (!cy) return
 
-        redraw(tree)
+        redraw()
       }
     )
   )
@@ -147,10 +172,12 @@ export const ChatGraph: Component<{
     on(
       () => props.nodes,
       () => {
+        log('graph size: %s', props.nodes)
         const cy = instance()
         if (!cy) return
 
-        redraw(graph.tree)
+        redraw()
+        recolor()
       }
     )
   )
@@ -158,22 +185,8 @@ export const ChatGraph: Component<{
   createEffect(
     on(
       () => props.leafId,
-      (leafId) => {
-        const cy = instance()
-        if (!cy) return
-
-        const nodes = cy.nodes()
-
-        nodes.each((ele) => {
-          const color =
-            ele.id() === leafId
-              ? 'green-500'
-              : graph.tree[ele.id()]?.msg.userId
-              ? 'bg-500'
-              : 'hl-500'
-
-          ele.style({ 'background-color': getSettingColor(color) })
-        })
+      () => {
+        recolor()
       }
     )
   )
@@ -182,12 +195,21 @@ export const ChatGraph: Component<{
     on(
       () => props.dir,
       (dir) => {
+        log('direction: %s', props.dir)
         const result = instance()?.layout({ name: 'dagre', rankDir: dir || 'LR' } as any)
         result?.run()
-        instance()?.fit()
+        redraw()
+        recolor()
       }
     )
   )
+
+  onMount(() => {
+    props.sub('reset', () => {
+      redraw()
+      recolor()
+    })
+  })
 
   onCleanup(() => {
     instance()?.destroy()
@@ -201,7 +223,13 @@ export const ChatGraph: Component<{
   )
 }
 
-function getElements(tree: ChatTree, root: string, leafId: string, flags: FeatureFlags) {
+function getElements(
+  tree: ChatTree,
+  state: GraphState,
+  root: string,
+  leafId: string,
+  flags: FeatureFlags
+) {
   const elements: cyto.ElementDefinition[] = []
 
   const short = getShorthandTree(tree, root, flags)
@@ -222,12 +250,7 @@ function getElements(tree: ChatTree, root: string, leafId: string, flags: Featur
         data: { id: smsg._id, label: toLabel(smsg) },
         style: {
           shape: smsg._id === root ? 'star' : 'ellipse',
-          'background-color':
-            root === smsg._id || leafId === smsg._id
-              ? getSettingColor('green-500')
-              : !smsg.userId
-              ? getSettingColor('hl-500')
-              : getSettingColor('bg-500'),
+          'background-color': getNodeColor(tree, state, leafId, smsg._id),
         },
       })
     }
@@ -238,12 +261,7 @@ function getElements(tree: ChatTree, root: string, leafId: string, flags: Featur
         group: 'nodes',
         data: { id: emsg._id, label: toLabel(emsg) },
         style: {
-          'background-color':
-            leafId === emsg._id
-              ? getSettingColor('green-500')
-              : !emsg.userId
-              ? getSettingColor('hl-500')
-              : getSettingColor('bg-500'),
+          'background-color': getNodeColor(tree, state, leafId, emsg._id),
         },
       })
     }
@@ -261,7 +279,7 @@ function getElements(tree: ChatTree, root: string, leafId: string, flags: Featur
   return elements
 }
 
-function getAllElements(tree: ChatTree, leafId: string) {
+function getAllElements(tree: ChatTree, state: GraphState, leafId: string) {
   const elements: cyto.ElementDefinition[] = []
 
   for (const node of Object.values(tree)) {
@@ -269,19 +287,22 @@ function getAllElements(tree: ChatTree, leafId: string) {
       group: 'nodes',
       data: { id: node.msg._id, label: toLabel(node.msg) },
       style: {
-        'background-color':
-          leafId === node.msg._id ? getSettingColor('hl-500') : getSettingColor('bg-500'),
+        'background-color': getNodeColor(tree, state, leafId, node.msg._id),
       },
     })
   }
 
   for (const node of Object.values(tree)) {
-    if (node.children.size === 0) continue
+    if (node.msg.parent) {
+      const parent = tree[node.msg.parent]
+      if (!parent) {
+        log(`[${node.msg._id.slice(0, 4)}] parent missing: ${node.msg.parent}`)
+        continue
+      }
 
-    for (const child of Array.from(node.children.values())) {
       elements.push({
         group: 'edges',
-        data: { source: node.msg._id, target: child },
+        data: { source: node.msg.parent, target: node.msg._id },
       })
     }
   }
@@ -296,11 +317,32 @@ function getShorthandTree(tree: ChatTree, root: string, flags: FeatureFlags) {
     console.log('eval: ', root)
   }
 
-  const skips = getPathSkips(tree, root, flags)
-  return skips || []
+  const skips = getPathSkips(tree, root) || []
+  const orphans: string[] = []
+
+  for (const msgId in tree) {
+    const msg = tree[msgId]
+    if (!msg) continue
+
+    if (!msg.msg.parent) continue
+    const parent = tree[msg.msg.parent]
+    if (parent) continue
+
+    orphans.push(msgId)
+  }
+
+  for (const orphan of orphans) {
+    const orphanSkips = getPathSkips(tree, orphan)
+    if (orphanSkips) {
+      log('sub-tree: %s', orphan.slice(0, 4))
+      skips.push(...orphanSkips)
+    }
+  }
+
+  return skips
 }
 
-function getPathSkips(tree: ChatTree, id: string, flags: FeatureFlags): PathSkip[] | undefined {
+function getPathSkips(tree: ChatTree, id: string): PathSkip[] | undefined {
   const start = tree[id]
 
   const visited = new Set<string>([id])
@@ -309,13 +351,13 @@ function getPathSkips(tree: ChatTree, id: string, flags: FeatureFlags): PathSkip
   let length = 1
 
   do {
-    if (curr.children.size === 0) {
+    if (Object.keys(curr.children).length === 0) {
       if (id === curr.msg._id) return
       return [{ start, end: curr, length }]
     }
 
-    if (curr.children.size === 1) {
-      const next = curr.children.values().next().value!
+    if (Object.keys(curr.children).length === 1) {
+      const next = Object.keys(curr.children)[0]
       if (visited.has(next)) {
         throw new Error(`Invalid chat tree: Contains a circular reference (${next})`)
       }
@@ -331,47 +373,66 @@ function getPathSkips(tree: ChatTree, id: string, flags: FeatureFlags): PathSkip
     if (start.msg._id !== curr.msg._id) {
       edges.push({ start, end: curr, length })
     }
-    for (const child of curr.children) {
+    for (const child in curr.children) {
       const end = tree[child]
       if (!end) continue
 
       edges.push({ start: curr, end, length: 1 })
 
-      const inner = getPathSkips(tree, child, flags)
+      const inner = getPathSkips(tree, child)
       if (inner) {
         edges.push(...inner)
       }
     }
     return edges
-
-    // for (const child of curr.children) {
-    //   const end = tree[child]
-    //   if (!end) continue
-
-    //   if (flags.debug) {
-    //     // if (end.children.size === 1) {
-    //     //   const subpath = getPathSkips(tree, end.msg._id, flags)
-    //     //   if (!subpath) continue
-    //     //   if (!Array.isArray(subpath)) {
-    //     //     paths.push({ start, end: subpath.end, length: length + subpath.length })
-    //     //     continue
-    //     //   }
-    //     //   const mapped = subpath.map((sub) => ({
-    //     //     start,
-    //     //     end: sub.end,
-    //     //     length: length + sub.length,
-    //     //   }))
-    //     //   paths.push(...mapped)
-    //     //   continue
-    //     // }
-    //   }
-
-    //   paths.push({ start: curr, end, length })
-    // }
-    return edges
   } while (true)
 }
 
 function toLabel(msg: AppSchema.ChatMessage) {
-  return toShortDuration(msg.createdAt, 1)
+  const duration = toShortDuration(msg.createdAt, 1)
+  const up = msg.parent ? msg.parent.slice(0, 4) : 'root'
+  const self = msg._id.slice(0, 4)
+  return self
+  return `${up} - ${duration} - ${self}`
+}
+
+function getNodeColor(tree: ChatTree, state: GraphState, leafId: string, nodeId: string) {
+  if (nodeId === state.clicked) return getSettingColor('red-500')
+  if (nodeId === leafId) return getSettingColor('green-500')
+  const node = tree[nodeId]?.msg
+
+  if (node?.userId) return getSettingColor('bg-500')
+  return getSettingColor('hl-500')
+}
+
+function getNodeStyles(tree: ChatTree, state: GraphState, leafId: string, nodeId: string) {
+  const color = getNodeColor(tree, state, leafId, nodeId)
+  if (state.hovered === nodeId) {
+    return {
+      'background-color': color,
+      'border-color': getSettingColor('green-400'),
+      'border-width': '4',
+    }
+  }
+
+  if (state.clicked === nodeId) {
+    return {
+      'background-color': color,
+      'border-color': getSettingColor('hl-200'),
+      'border-width': '4',
+    }
+  }
+
+  return {
+    'background-color': color,
+    'border-color': color,
+    'border-width': '4',
+  }
+}
+
+function styleNode(tree: ChatTree, state: GraphState, node: NodeSingular, leafId: string) {
+  const id = node.id()
+
+  const styles = getNodeStyles(tree, state, leafId, id)
+  node.style(styles)
 }

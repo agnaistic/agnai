@@ -13,7 +13,7 @@ const VolumeControl: Component<{
 }> = (props) => {
   let input: HTMLInputElement | undefined
 
-  const audio = audioStore()
+  const audio = audioStore((s) => ({ tracks: s.tracks }))
 
   const isMaster = createMemo(() => props.trackId === 'master')
   const masterMuted = createMemo(() => audio.tracks.master.muted)

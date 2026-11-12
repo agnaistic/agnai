@@ -4,6 +4,7 @@ import { AppSchema } from '../../common/types/schema'
 import { now } from './util'
 import { WithId } from 'mongodb'
 import { StatusError } from '../api/wrap'
+import { logger } from '../middleware'
 
 // let PAGE_SIZE = config.limits.msgPageSize
 // if (isNaN(PAGE_SIZE) || PAGE_SIZE < 20) {
@@ -32,9 +33,25 @@ export type NewMessage = {
 
 export type ImportedMessage = NewMessage & { createdAt: string }
 
+export async function checkExistance(messageIds: string[]) {
+  const res = await db('chat-message')
+    .find({ _id: { $in: messageIds } })
+    .project({ _id: 1, name: 1 })
+    .toArray()
+
+  const missing = new Set(messageIds)
+
+  for (const item of res) {
+    missing.delete(item._id)
+  }
+
+  return { missing: Array.from(missing), valid: missing.size === 0, found: res.length }
+}
+
 export async function createChatMessage(creating: NewMessage, ephemeral?: boolean) {
+  const id = creating._id || v4()
   const doc: AppSchema.ChatMessage = {
-    _id: creating._id || v4(),
+    _id: id,
     kind: 'chat-message',
     chatId: creating.chatId,
     characterId: creating.characterId,
@@ -56,8 +73,26 @@ export async function createChatMessage(creating: NewMessage, ephemeral?: boolea
     doc.imagePrompt = creating.imagePrompt
   }
 
-  if (!ephemeral) await db('chat-message').insertOne(doc)
-  return doc
+  if (ephemeral) return doc
+
+  try {
+    await db('chat-message').insertOne(doc)
+    return doc
+  } catch (ex) {
+    const existing = await db('chat-message').findOne({ _id: id })
+    if (!existing) {
+      throw new StatusError(`Failed to write message to database`, 500)
+    }
+
+    if (existing.chatId !== doc.chatId) {
+      logger.error({ err: ex, payload: { _id: id, chatid: doc.chatId } }, `Failed to write message`)
+      throw new StatusError(`Invalid message ID`, 400)
+    }
+
+    const { _id, ...update } = doc
+    await db('chat-message').updateOne({ _id: id }, { $set: update })
+    return doc
+  }
 }
 
 export async function importMessages(userId: string, messages: NewMessage[]) {
@@ -120,7 +155,8 @@ export async function getMessage(messageId: string) {
 }
 
 export async function deleteMessages(messageIds: string[]) {
-  await db('chat-message').deleteMany({ _id: { $in: messageIds } })
+  const res = await db('chat-message').deleteMany({ _id: { $in: messageIds } })
+  return res
 }
 
 export async function editChatMessage(

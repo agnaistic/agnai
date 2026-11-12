@@ -58,7 +58,7 @@ const CreateChatForm: Component<{
   const nav = useNavigate()
 
   const scen = scenarioStore((s) => s.scenarios)
-  const cfg = settingStore()
+  const cfg = settingStore((s) => ({ config: s.config }))
   const user = userStore((s) => ({ ...s.user, sub: s.sub, userLevel: s.userLevel }))
   const chars = characterStore((s) => ({
     char: s.editing,
@@ -66,7 +66,7 @@ const CreateChatForm: Component<{
     loaded: s.characters.loaded,
   }))
 
-  const [state, setState] = createStore(getInitState(chars.char))
+  const [state, setState] = createStore(getInitState(chars.char, { presetId: user.defaultPreset }))
   const [selectedId, setSelected] = createSignal<string | undefined>(params.id)
 
   const scenarios = createMemo(() => {
@@ -74,14 +74,19 @@ const CreateChatForm: Component<{
     return [{ value: '', label: 'None' }, ...scen.map((s) => ({ label: s.name, value: s._id }))]
   })
 
-  createEffect(() => {
-    if (props.charId) return
-    const curr = selectedId()
-    if (curr) return
+  createEffect(
+    on(
+      () => [props.charId, chars.chars],
+      () => {
+        if (props.charId) return
+        const curr = selectedId()
+        if (curr) return
 
-    if (!chars.chars.length) return
-    setSelected(chars.chars[0]._id)
-  })
+        if (!chars.chars.length) return
+        setSelected(chars.chars[0]._id)
+      }
+    )
+  )
 
   createEffect(() => {
     const id = selectedId()
@@ -106,7 +111,13 @@ const CreateChatForm: Component<{
   const presetOptions = createMemo(() => {
     const opts = getPresetOptions(presets, { builtin: true }).filter((pre) => pre.value !== 'chat')
     const combined = [
-      { label: 'System Built-in Preset (Horde)', value: AutoPreset.service, custom: false },
+      {
+        label: 'System Built-in Preset (Horde)',
+        value: AutoPreset.service,
+        custom: false,
+        name: 'System Built-in Preset',
+        provider: 'Horde',
+      },
     ].concat(opts)
 
     const defaultPreset = presets.find((p) => p._id === user.defaultPreset)
@@ -116,6 +127,8 @@ const CreateChatForm: Component<{
         label: `[${label}] Your Default Preset`,
         value: '',
         custom: true,
+        provider: label,
+        name: 'Your Default Preset',
       })
     }
 
@@ -366,7 +379,7 @@ const CreateChatForm: Component<{
   )
 }
 
-function getInitState(char?: AppSchema.Character, previous?: ChatState): ChatState {
+function getInitState(char?: AppSchema.Character, previous?: Partial<ChatState>): ChatState {
   return {
     name: previous?.name || '',
     presetId: previous?.presetId || '',

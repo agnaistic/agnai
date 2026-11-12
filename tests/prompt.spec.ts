@@ -16,14 +16,15 @@ describe('Prompt building', async () => {
   })
 
   it('will build a continue prompt', async () => {
-    const actual = await build([botMsg('FIRST')], { continue: 'ORIGINAL', replyAs: main })
+    const actual = await build([botMsg('FIRST'), botMsg('ORIGINAL')], {
+      replyAs: main,
+    })
     expect(actual.template.parsed).toMatchSnapshot()
   })
 
   // i dont understand this test. @malfoyslastname 2023-06-07
   it('will exclude sample chat when gaslight contains sample chat placeholder', async () => {
-    const actual = await build([botMsg('FIRST'), toMsg('SECOND')], {
-      continue: 'ORIGINAL',
+    const actual = await build([botMsg('FIRST'), toMsg('SECOND'), botMsg('ORIGINAL')], {
       chat: { ...chat, adapter: 'openai' },
       settings: {
         oaiModel: OPENAI_MODELS.Turbo,
@@ -36,8 +37,7 @@ This is how {{char}} should talk: {{example_dialogue}}`,
   })
 
   it('will include sample chat when gaslight does not contain sample chat placeholder', async () => {
-    const actual = await build([botMsg('FIRST'), toMsg('SECOND')], {
-      continue: 'ORIGINAL',
+    const actual = await build([botMsg('FIRST'), toMsg('SECOND'), botMsg('ORIGINAL')], {
       chat,
       settings: { service: 'openai', oaiModel: OPENAI_MODELS.Turbo, gaslight: 'Gaslight' },
     })

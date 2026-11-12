@@ -1,3 +1,6 @@
+import { getSchemaAliases, parseVariableName, StructureEntities } from './guidance/json-schema'
+import { Admin } from './types'
+import { FeatureAccess, UserType } from './types/admin'
 import type { AppSchema } from './types/schema'
 import type { GenerateRequestV2 } from '/srv/adapter/type'
 
@@ -15,6 +18,21 @@ export function incompleteJson(data: string) {
     return true
   }
   return false
+}
+
+export function getUserType(user: AppSchema.User): UserType {
+  if (!user) return 'guests'
+  if (user.admin) return 'admins'
+  if (user.role === 'admin') return 'admins'
+  if (user.role === 'moderator') return 'moderators'
+  if (user.sub?.level && user.sub.level > 0) return 'subscribers'
+  if (user._id === 'anon') return 'guests'
+  return 'users'
+}
+
+export function randomElement<T>(elems: T[]) {
+  const rand = Math.floor(Math.random() * elems.length)
+  return elems[rand]
 }
 
 export function parseEvent(msg: string) {
@@ -42,6 +60,47 @@ export function getMimeTypeBase64(base64: string) {
 
 export function replace<T extends { _id: string }>(id: string, list: T[], item: Partial<T>) {
   return list.map((li) => (li._id === id ? { ...li, ...item } : li))
+}
+
+export function updateList<T extends { _id: string }>(original: T[], incoming: T[]) {
+  const map = toMap(incoming)
+  const next: T[] = []
+
+  for (const item of original) {
+    const inc = map[item._id]
+    if (!inc) {
+      next.push(item)
+      continue
+    }
+
+    next.push({ ...item, ...inc })
+  }
+
+  return next
+}
+
+/**
+ * Replace original items with incoming.
+ * Items that don't cause a replacement are appended.
+ */
+export function combine<T extends { _id: string }>(original: T[], incoming: T[]) {
+  const map = toMap(incoming)
+  const replaced: Record<string, boolean> = {}
+
+  const next: T[] = original.map((item) => {
+    if (map[item._id]) {
+      replaced[item._id] = true
+      return map[item._id]
+    }
+    return item
+  })
+
+  for (const inc of incoming) {
+    if (replaced[inc._id]) continue
+    next.push(inc)
+  }
+
+  return next
 }
 
 export function exclude<T extends { _id: string }>(list: T[], ids: string[]) {
@@ -270,6 +329,9 @@ export function cleanPrompt(prompt: string) {
     .join(',')
     .replace(/ +/, ' ')
     .replace(/,+/g, ',')
+    .split(',')
+    .map((t) => t.trim().replace(/_/g, ' '))
+    .join(', ')
   return next
 }
 
@@ -285,18 +347,30 @@ export function getMessageAuthor(opts: {
   chars: Record<string, AppSchema.Character>
   members: Map<string, AppSchema.Profile>
   sender: AppSchema.Profile
-  impersonate?: AppSchema.Character
+  impersonate: AppSchema.Character | undefined
+  replyAs: AppSchema.Character | undefined
 }): { role: 'user' | 'model'; name: string } {
   const { chat, msg, chars, members, sender, impersonate } = opts
 
+  /**
+   * All messages not from the `replying` character should be role:user
+   */
   if (msg.characterId) {
+    if (opts.replyAs?._id === msg.characterId) {
+      return { role: 'model', name: opts.replyAs.name || 'Assistant' }
+    }
+
+    if (opts.impersonate?._id === msg.characterId) {
+      return { role: 'user', name: opts.impersonate.name || 'You' }
+    }
+
     const char =
       msg.characterId === impersonate?._id
         ? impersonate
         : chars[msg.characterId] || chat.tempCharacters?.[msg.characterId]
 
     return {
-      role: !!msg.userId && msg.userId === sender.userId ? 'user' : 'model',
+      role: 'user',
       name: char?.name || msg.name || 'Unknown',
     }
   }
@@ -457,9 +531,17 @@ export function getUserSubscriptionTier(
 
   const nativeExpired = isExpired(user.billing?.validUntil) || user.billing?.status === 'cancelled'
   const patronGifted = user.patreon?.member?.attributes?.is_gifted === true
-  const patronExpired =
-    isExpired(user.patreon?.member?.attributes.next_charge_date) ||
-    user.patreon?.member?.attributes.patron_status !== 'active_patron'
+  let patronExpired = isExpired(user.patreon?.member?.attributes.next_charge_date)
+
+  // There is a several hour window when subscriptions renew
+  // We will give the benefit of the doubt during this period
+  if (patronExpired) {
+    const isActive = user.patreon?.member?.attributes.patron_status === 'active_patron'
+    const isEntitled = +(user.patreon?.member?.attributes.currently_entitled_amount_cents || 0) > 0
+    const isPaid = user.patreon?.member?.attributes.last_charge_status === 'Paid'
+
+    patronExpired = !isActive || !isEntitled || !isPaid
+  }
 
   if (nativeExpired) {
     nativeTier = undefined
@@ -556,8 +638,12 @@ export function tryParseConcat<T = any>(value: string, prev?: string): T | undef
 
 export function tryParse<T = any>(value?: any, aliases?: Record<string, string>): T | undefined {
   if (!value) return
+
   try {
-    const obj = JSON.parse(value)
+    const obj =
+      typeof value === 'string' ? JSON.parse(value) : typeof value === 'object' ? value : null
+
+    if (!obj) return
 
     if (aliases) {
       for (const key in aliases) {
@@ -591,22 +677,32 @@ export function parsePartialJson(value: string, aliases?: Record<string, string>
     const obj = tryParse(value.trim() + '"}', aliases)
     if (obj) return obj
   }
+
+  return {}
 }
 
 const SAFE_NAME = /[_\/'"!@#$%^&*()\[\],\.:;=+-]+/g
 
-export function hydrateTemplate(def: Ensure<AppSchema.Character['json']>, json: any) {
+export function hydrateTemplate(
+  def: Ensure<AppSchema.Character['json']>,
+  values: any,
+  opts: StructureEntities,
+  aliases?: Record<string, string>
+) {
+  const json = values || {}
   const map = new Map<string, string>()
+  const allAliases = { ...aliases, ...getSchemaAliases(def.schema) }
 
-  for (const key in def.schema) {
-    map.set(key.toLowerCase().replace(SAFE_NAME, ' '), key)
+  for (const field of def.schema) {
+    const parsed = parseVariableName(field.name, opts, allAliases)
+    map.set(parsed.toLowerCase().replace(SAFE_NAME, ' '), field.name)
   }
 
   const output: any = {}
 
   for (const [key, value] of Object.entries(json)) {
-    const safe = key.replace(SAFE_NAME, ' ')
-    const alias = map.get(safe)
+    // const safe = key.replace(SAFE_NAME, ' ')
+    const alias = map.get(key)
 
     if (alias) {
       output[alias] = value
@@ -617,15 +713,19 @@ export function hydrateTemplate(def: Ensure<AppSchema.Character['json']>, json: 
 
   let response = def.response || ''
   let history = def.history || ''
+  let imageCaption = def.imageCaption || ''
 
   const resVars = response.match(JSON_NAME_RE())
   const histVars = history.match(JSON_NAME_RE())
+  const captionVars = imageCaption.match(JSON_NAME_RE())
 
   if (resVars) {
     for (const holder of resVars) {
       const trimmed = holder.slice(2, -2)
-      const safe = trimmed.replace(SAFE_NAME, ' ')
-      const value = output[safe] ?? output[trimmed]
+      const parsed = parseVariableName(trimmed, opts, allAliases)
+      const safe = parsed //.replace(SAFE_NAME, ' ')
+      const value =
+        output[safe] ?? output[parsed] ?? output[trimmed] ?? json[trimmed] ?? json[parsed]
 
       response = response.split(holder).join(value ?? '')
     }
@@ -634,71 +734,47 @@ export function hydrateTemplate(def: Ensure<AppSchema.Character['json']>, json: 
   if (histVars) {
     for (const holder of histVars) {
       const trimmed = holder.slice(2, -2)
-      const safe = trimmed.replace(SAFE_NAME, ' ')
-      const value = output[safe] ?? output[trimmed]
+      const parsed = parseVariableName(trimmed, opts, allAliases)
+      const safe = parsed //.replace(SAFE_NAME, ' ')
+      const value =
+        output[safe] ?? output[parsed] ?? output[trimmed] ?? json[trimmed] ?? json[parsed]
 
       history = history.split(holder).join(value ?? '')
     }
   }
 
-  return { values: output, response, history }
-}
+  if (captionVars) {
+    for (const holder of captionVars) {
+      const trimmed = holder.slice(2, -2)
+      const parsed = parseVariableName(trimmed, opts, allAliases)
+      const safe = parsed //.replace(SAFE_NAME, ' ')
+      const value =
+        output[safe] ?? output[parsed] ?? output[trimmed] ?? json[trimmed] ?? json[parsed]
 
-export type HydratedJson = {
-  values: any
-  response: string
-  history: string
+      imageCaption = imageCaption.split(holder).join(value ?? '')
+    }
+  }
+
+  return { values: output, response, history, imageCaption }
 }
 
 export const JSON_NAME_RE = () => /{{[a-zA-Z0-9 _'!@#$&*%()^=+-:;",\.<>?\/\[\]]+}}/g
 
-export function jsonHydrator(def: Ensure<AppSchema.Character['json']>) {
+export function jsonHydrator(
+  def: Ensure<AppSchema.Character['json']>,
+  opts: StructureEntities,
+  aliases?: Record<string, string>
+) {
   const map = new Map<string, string>()
-  const resVars = (def.response || '').match(JSON_NAME_RE())
-  const histVars = (def.history || '').match(JSON_NAME_RE())
 
   for (const key in def.schema) {
     map.set(key.toLowerCase().replace(SAFE_NAME, ' '), key)
   }
 
-  const hydrate = (json: any) => {
-    const output: any = {}
-
-    for (const [key, value] of Object.entries(json)) {
-      const safe = key.replace(SAFE_NAME, ' ')
-      const alias = map.get(safe)
-
-      if (alias) {
-        output[alias] = value
-      } else {
-        output[key] = value
-      }
-    }
-
-    let response = def.response || ''
-    let history = def.history || ''
-
-    if (resVars) {
-      for (const holder of resVars) {
-        const trimmed = holder.slice(2, -2)
-        const safe = trimmed.replace(SAFE_NAME, ' ')
-        const value = output[safe] ?? output[trimmed]
-
-        response = response.split(holder).join(value ?? '')
-      }
-    }
-
-    if (histVars) {
-      for (const holder of histVars) {
-        const trimmed = holder.slice(2, -2)
-        const safe = trimmed.replace(SAFE_NAME, ' ')
-        const value = output[safe] ?? output[trimmed]
-
-        history = history.split(holder).join(value ?? '')
-      }
-    }
-
-    return { values: output, response, history }
+  const hydrate = (incoming: any) => {
+    const json = typeof incoming === 'string' ? parsePartialJson(incoming, aliases) : incoming
+    const hydrated = hydrateTemplate(def, json, opts, aliases)
+    return hydrated
   }
 
   return hydrate
@@ -785,4 +861,144 @@ export function inline(obj: object): string {
 
 function bold(text: string) {
   return `\x1b[1m${text}\x1b[0m`
+}
+
+export function toMap<T extends { _id: string }>(list: T[]): Record<string, T> {
+  const map = list.reduce((prev, curr) => Object.assign(prev, { [curr._id]: curr }), {})
+  return map
+}
+
+export function toPropMap<T extends object, U extends PickProps<T, string>>(
+  list: T[],
+  prop: U
+): Record<string, T> {
+  const map: Record<string, T> = list.reduce((prev, curr) => {
+    const value = curr[prop] as string
+    const next = Object.assign(prev, { [value]: curr })
+    return next
+  }, {})
+  return map
+}
+
+type PickProps<T, U = string> = keyof { [key in keyof T as T[key] extends U ? key : never]: T[key] }
+
+export type LazyPromise<T = any> = {
+  resolve: (result: T) => void
+  reject: (error: any) => void
+  promise: Promise<T>
+}
+
+export function lazyPromise<T = any>() {
+  const parts = {
+    state: 'pending' as 'pending' | 'resolved' | 'rejected',
+    resolve: (result: T) => {},
+    reject: (error: any) => {},
+    promise: {} as any as Promise<{ result?: T; error?: any }>,
+  }
+
+  parts.promise = new Promise<{ result?: T; error?: any }>((resolve, reject) => {
+    parts.resolve = (result: any) => {
+      if (parts.state !== 'pending') return
+      if (parts.state === 'pending') parts.state = 'resolved'
+
+      resolve({ result, error: undefined })
+    }
+    parts.reject = (error: any) => {
+      if (parts.state !== 'pending') return
+      if (parts.state === 'pending') parts.state = 'rejected'
+      reject(error)
+    }
+  })
+
+  return parts
+}
+
+export function lazySimplePromise<T = any>() {
+  const parts = {
+    state: 'pending' as 'pending' | 'resolved' | 'rejected',
+    resolve: (result: T) => {},
+    reject: (error: any) => {},
+    promise: {} as any as Promise<T>,
+  }
+
+  parts.promise = new Promise<T>((resolve, reject) => {
+    parts.resolve = (result: any) => {
+      if (parts.state !== 'pending') return
+      if (parts.state === 'pending') parts.state = 'resolved'
+      resolve(result)
+    }
+    parts.reject = (error: any) => {
+      if (parts.state !== 'pending') return
+      if (parts.state === 'pending') parts.state = 'rejected'
+      reject(error)
+    }
+  })
+
+  return parts
+}
+
+export function sortAlpha<T extends {}>(opts: {
+  prop: keyof T
+
+  /** Descending order? */
+  desc?: boolean
+
+  /** Case insensitive */
+  ignoreCase?: boolean
+}) {
+  const sorter = (left: T, right: T) => {
+    let l = '' + (left[opts.prop] || '')
+    let r = '' + (right[opts.prop] || '')
+
+    if (opts.ignoreCase) {
+      l = l.toLowerCase()
+      r = r.toLowerCase()
+    }
+
+    return l.localeCompare(r) * (opts.desc ? -1 : 1)
+  }
+
+  return sorter
+}
+
+export function getUserFeatureAccess(
+  user: AppSchema.User | undefined,
+  tier: UserSub | undefined
+): Admin.UserType {
+  if (!user) return 'guests'
+  if (user.admin) return 'admins'
+  if (tier && tier.level > 0) return 'subscribers'
+  if (tier && tier.level === 0) return 'users'
+  if (user._id !== 'anon') return 'users'
+
+  return 'guests'
+}
+
+export function canUseFeature(requires: FeatureAccess, userType: UserType): boolean {
+  switch (requires) {
+    case 'off': {
+      return false
+    }
+
+    case 'admins': {
+      return userType === 'admins'
+    }
+
+    case 'subscribers': {
+      return userType === 'subscribers' || userType === 'moderators' || userType === 'admins'
+    }
+
+    case 'users': {
+      return (
+        userType === 'users' ||
+        userType === 'subscribers' ||
+        userType === 'moderators' ||
+        userType === 'admins'
+      )
+    }
+
+    case 'all': {
+      return true
+    }
+  }
 }

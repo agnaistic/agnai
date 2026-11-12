@@ -31,6 +31,7 @@ const dataExtractors: Record<string, (buffer: Buffer) => Promise<string>> = {
 
   // EXIF data
   webp: extractExif,
+  json: (buffer: any) => (typeof buffer === 'string' ? JSON.parse(buffer) : buffer),
 }
 
 export async function extractCardData(file: File) {

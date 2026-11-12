@@ -1,7 +1,7 @@
 import { ChevronLeft, ChevronRight } from 'lucide-solid'
 import { Component, Show } from 'solid-js'
 import Button from '/web/shared/Button'
-import { chatStore, msgStore } from '/web/store'
+import { msgStore } from '/web/store'
 import { AppSchema, UI } from '/common/types'
 
 export const SwipeMessage: Component<{
@@ -36,19 +36,13 @@ export const SwipeMessage: Component<{
   )
 }
 
-export const LoadMore: Component<{ canFetch?: boolean }> = (props) => {
-  const state = msgStore((s) => ({
-    msgs: s.msgs,
-    history: s.messageHistory,
-  }))
-  const chat = chatStore((s) => ({ loaded: s.loaded }))
-
+export const LoadMore: Component<{ canFetch?: boolean; showMore: boolean }> = (props) => {
   return (
-    <Show when={chat.loaded && state.msgs.length > 0}>
+    <Show when={props.showMore}>
       <div class="flex w-full justify-center">
         <a
-          class="link"
-          classList={{ hidden: state.history.length === 0 }}
+          class="link select-none"
+          classList={{ hidden: !props.showMore }}
           onClick={() => {
             msgStore.getNextMessages()
           }}
@@ -78,15 +72,23 @@ export function getChatWidth(
 export function emptyMsg(opts: {
   id?: string
   charId?: string
+  chatId?: string
   userId?: string
   adapter?: string
   handle?: string
+  parent?: string
   message: string
+  meta?: any
+  ooc?: boolean
+  event?: AppSchema.ScenarioEventType
 }): AppSchema.ChatMessage & { handle?: string } {
   return {
     kind: 'chat-message',
     _id: opts.id || '',
-    chatId: '',
+    event: opts.event,
+    ooc: opts.ooc,
+    chatId: opts.chatId || '',
+    parent: opts.parent,
     characterId: opts.charId,
     userId: opts.userId,
     msg: opts.message || '',
@@ -95,6 +97,7 @@ export function emptyMsg(opts: {
     handle: opts.handle,
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
+    meta: opts.meta,
   }
 }
 

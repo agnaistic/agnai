@@ -1,0 +1,28 @@
+.image-modal {
+  height: 100%;
+  display: grid;
+  grid-template-columns: 300px auto;
+  grid-template-rows: min-content 1fr 32px;
+  grid-template-areas:
+    'options options'
+    'content content'
+    'footer footer';
+}
+
+.image-modal-body {
+  display: flex;
+  align-items: center;
+}
+
+@media (min-width: 1024px) {
+  .image-modal {
+    grid-template-areas:
+      'options content'
+      'options content'
+      'options footer';
+  }
+
+  .image-modal-body {
+    justify-content: center;
+  }
+}

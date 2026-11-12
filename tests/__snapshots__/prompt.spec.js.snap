@@ -181,8 +181,9 @@ Object {
   "lines": Array [
     Object {
       "_id": "",
+      "json": Object {},
       "msg": "MainChar: bot response",
-      "role": "model",
+      "role": "user",
     },
   ],
   "parts": Object {
@@ -208,15 +209,17 @@ Object {
   },
   "template": Object {
     "addedLines": Array [],
+    "blockPrompt": "",
     "blocks": Array [],
     "flags": Object {
       "is_final": true,
+      "jsonAliases": Object {},
       "messages": Array [],
       "pre_render": false,
     },
     "history": Array [
       Object {
-        "id": undefined,
+        "id": "",
         "line": "MainChar: bot response",
         "role": "user",
         "type": "history",

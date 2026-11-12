@@ -15,13 +15,14 @@ import { AppLog } from '../middleware'
 import { getTokenCounter } from '../tokenize'
 import { toChatCompletionPayload } from './chat-completion'
 import { sendOne } from '../api/ws'
-import { joinUrl, sanitiseAndTrim } from '/common/requests/util'
+import { joinUrl } from '/common/requests/util'
 import { GenSettings } from '/common/types/presets'
 import { OPENAI_MODELS } from '/common/presets/openai'
 import { CLAUDE_MODELS, CLAUDE_TEXT_MODELS } from '/common/presets/claude'
 import { fetchStream } from '/common/requests/stream'
-import { remapMessages, stripImageContent, toChatMessages } from './template-chat-payload'
+import { remapMessages } from './template-chat-payload'
 import { getMimeTypeBase64 } from '/common/util'
+import { stripImageContent, toChatMessages } from '/common/template-messages'
 
 const CHAT_URL = `https://api.anthropic.com/v1/messages`
 const TEXT_URL = `https://api.anthropic.com/v1/complete`
@@ -48,18 +49,27 @@ type CompletionGenerator = (opts: {
   log: AppLog
 }) => AsyncGenerator<{ error?: string; token?: string; meta?: any }, ClaudeCompletion | undefined>
 
+const TEMP_TOPP_EXCLUSIVE: Record<string, boolean> = {
+  'claude-haiku-4-5-20251001': false,
+  'claude-sonnet-4-5-20250929': false,
+  'claude-opus-4-1-20250805': false,
+  'claude-opus-4-20250514': false,
+  'claude-sonnet-4-20250514': false,
+  'claude-3-haiku-20240307': false,
+}
+
 // There's no tokenizer for Claude, we use OpenAI's as an estimation
 const encoder = () => getTokenCounter('claude', '')
 
 export const handleClaude: ModelAdapter = async function* (opts) {
-  let { members, user, log, guest, gen, isThirdParty } = opts
+  let { user, log, guest, gen, isThirdParty } = opts
   if (gen.providerId) {
     isThirdParty = true
   }
 
   const claudeModel =
     gen.service === 'kobold'
-      ? gen.thirdPartyModel || gen.claudeModel
+      ? gen.thirdPartyModel || gen.claudeModel!
       : gen.thirdPartyModel || gen.claudeModel || CLAUDE_MODELS.ClaudeV37_Sonnet_Latest
 
   const base = getBaseUrl(gen, claudeModel || defaultPresets.claude.claudeModel, isThirdParty)
@@ -137,6 +147,11 @@ export const handleClaude: ModelAdapter = async function* (opts) {
    * Claude specifies that the budget must be GTE 1024, but less than MAX_TOKENS
    * Reasoning is not supported in any text (old) models
    */
+  const exclusive = TEMP_TOPP_EXCLUSIVE[claudeModel] ?? true
+  if (formatting === 'v2' && exclusive) {
+    delete payload.top_p
+  }
+
   if (formatting === 'v2' && gen.reasoning?.enabled) {
     const effort = gen.reasoning.effort || 'low'
     const max = opts.gen.maxTokens ?? 1024
@@ -247,14 +262,16 @@ export const handleClaude: ModelAdapter = async function* (opts) {
 
     if ('token' in generated.value) {
       acc += generated.value.token
-      yield {
-        partial: sanitiseAndTrim({
-          text: acc,
-          char: opts.replyAs,
-          members,
-          gen: opts.gen,
-        }),
-      }
+      yield { partial: acc }
+    }
+
+    if ('thoughts' in generated.value) {
+      yield { thoughts: generated.value.thoughts! as string }
+    }
+
+    if ('tokens' in generated.value) {
+      acc = generated.value.tokens! as string
+      break
     }
   }
 
@@ -264,12 +281,7 @@ export const handleClaude: ModelAdapter = async function* (opts) {
       log.error({ body: resp }, 'Claude request failed: Empty response')
       yield { error: `Claude request failed: Received empty response. Try again.` }
     } else {
-      yield sanitiseAndTrim({
-        text: completion,
-        char: opts.replyAs,
-        members,
-        gen: opts.gen,
-      })
+      yield completion
     }
   } catch (ex: any) {
     log.error({ err: ex }, 'Claude failed to parse')
@@ -462,12 +474,17 @@ export async function createClaudeChatCompletionV2(opts: AdapterProps) {
 export async function createClaudeChatCompletion(opts: AdapterProps) {
   const result = {
     system: '',
-    messages: await toChatCompletionPayload(
+    messages: opts.messages!,
+  }
+
+  if (!result.messages) {
+    result.messages = await toChatCompletionPayload(
       opts,
       getTokenCounter('openai', OPENAI_MODELS.Turbo),
       opts.gen.maxTokens!
-    ),
+    )
   }
+
   // Claude doesn't have a system role, so we extract the first message to put it in the system
   // field (https://docs.anthropic.com/claude/docs/system-prompts)
   if (result.messages[0].role === 'system') {
@@ -483,7 +500,7 @@ export async function createClaudeChatCompletion(opts: AdapterProps) {
     }
   }
 
-  let last: CompletionItem
+  let last: CompletionItem<string>
 
   // We need to ensure each role alternates so we will naively merge consecutive messages :/
   result.messages = result.messages.reduce((msgs, msg) => {
@@ -505,7 +522,7 @@ export async function createClaudeChatCompletion(opts: AdapterProps) {
 
     last.content += ('\n\n' + msg.content).trim()
     return msgs
-  }, [] as CompletionItem[])
+  }, [] as CompletionItem<string>[])
 
   return result
 }

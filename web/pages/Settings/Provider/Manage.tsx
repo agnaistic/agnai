@@ -1,4 +1,13 @@
-import { Component, createEffect, createMemo, createSignal, Match, Show, Switch } from 'solid-js'
+import {
+  Component,
+  createEffect,
+  createMemo,
+  createSignal,
+  Match,
+  on,
+  Show,
+  Switch,
+} from 'solid-js'
 import { AppSchema } from '/common/types'
 import { presetStore } from '/web/store/presets'
 import {
@@ -38,16 +47,17 @@ export const ManageProvider: Component<{
   const [url, setUrl] = createSignal(props.provider?.url || '')
   const [key, setKey] = createSignal('')
   const [format, setFormat] = createSignal('')
+  const [subFormat, setSubFormat] = createSignal('')
   const [autourl, setAutourl] = createSignal(false)
 
   const state = presetStore((s) => ({ testLoading: s.testLoading }))
 
-  const isUsableProvider = (id: string) => {
-    if (!props.user?.providers) return true
-    if (props.provider?.provider === id) return true
-    const match = props.user.providers.find((p) => p.provider === id)
-    return !match
-  }
+  // const isUsableProvider = (id: string) => {
+  //   if (!props.user?.providers) return true
+  //   if (props.provider?.provider === id) return true
+  //   const match = props.user.providers.find((p) => p.provider === id)
+  //   return !match
+  // }
 
   const categories = createMemo(() => {
     const known = {
@@ -56,13 +66,13 @@ export const ManageProvider: Component<{
         .map(([key, info]) => ({
           label: info.name,
           value: `known-${key}`,
-          disabled: !isUsableProvider(`known-${key}`),
+          // disabled: !isUsableProvider(`known-${key}`),
         }))
         .sort(sortAlpha) as CustomOption[],
     }
 
     const self = {
-      name: 'Self-Host',
+      name: 'Local / Self-Host',
       options: Object.entries(KNOWN_SELF_HOST)
         .map(([key, info]) => ({
           label: info.name,
@@ -72,7 +82,7 @@ export const ManageProvider: Component<{
     }
 
     const custom = {
-      name: 'Custom - OpenAI Compatible',
+      name: 'Custom',
       options: Object.entries(CUSTOM_PROVIDERS)
         .map(([key, info]) => ({
           label: info.name,
@@ -84,29 +94,36 @@ export const ManageProvider: Component<{
     return [known, self, custom]
   })
 
-  createEffect(() => {
-    if (!props.show) return
-    setTested(undefined)
-    setProvider(props.provider?.provider || '')
-    setUrl(props.provider?.url || '')
-    setName(props.provider?.name || '')
-    setKey('')
-    setAutourl(props.provider?.disableAutoUrl ?? false)
+  createEffect(
+    on(
+      () => [props.show, props.provider],
+      () => {
+        if (!props.show) return
+        setTested(undefined)
+        setProvider(props.provider?.provider || '')
+        setSubFormat(props.provider?.subFormat || '')
+        setUrl(props.provider?.url || '')
+        setName(props.provider?.name || '')
+        setKey('')
+        setAutourl(props.provider?.disableAutoUrl ?? false)
 
-    if (!props.provider?.provider || !props.provider.format) return
+        if (!props.provider?.provider || !props.provider.format) return
 
-    const detail = getSafeProviderDetail(props.provider?.provider)
-    if (!detail?.detail?.formats) return
+        const detail = getSafeProviderDetail(props.provider?.provider)
+        if (!detail?.detail?.formats) return
 
-    for (let idx = 0; idx < detail.detail.formats.length; idx++) {
-      const fmt = detail.detail.formats[idx]
+        for (let idx = 0; idx < detail.detail.formats.length; idx++) {
+          const fmt = detail.detail.formats[idx]
 
-      if (fmt.type !== props.provider.format.type) continue
-      if (fmt.value !== props.provider.format.value) continue
-      setFormat(`${idx}`)
-      break
-    }
-  })
+          if (fmt.type !== props.provider.format.type) continue
+          if (fmt.value !== props.provider.format.value) continue
+          setFormat(`${idx}`)
+          setSubFormat(props.provider.subFormat || fmt?.subs?.[0]?.value || '')
+          break
+        }
+      }
+    )
+  )
 
   const isCustom = createMemo(() => provider().startsWith('custom-'))
   const isSelf = createMemo(() => provider().startsWith('self-'))
@@ -125,6 +142,7 @@ export const ManageProvider: Component<{
       provider: provider(),
       url: url(),
       disableAutoUrl: autourl(),
+      subFormat: subFormat(),
     }
 
     if (fmt >= 0 && def.detail?.formats) {
@@ -155,6 +173,7 @@ export const ManageProvider: Component<{
       setUrl(detail.detail?.url?.trim())
     }
 
+    setSubFormat(detail.detail?.formats?.[0]?.subs?.[0]?.value || '')
     setFormat('0')
   }
 
@@ -206,11 +225,37 @@ export const ManageProvider: Component<{
     })
   })
 
+  const subFormatOptions = createMemo(() => {
+    const prv = provider()
+    const detail = getSafeProviderDetail(prv)
+    const formats = detail?.detail?.formats
+    if (!formats) return []
+
+    const formatId = format()
+    const selected = format() ? formats[+formatId] : undefined
+    if (!selected) return []
+
+    const list = selected?.subs
+    if (!list) {
+      return []
+    }
+
+    return list.map((format) => {
+      return { label: format.name, value: format.value }
+    })
+  })
+
   const testConnection = () => {
     try {
       new URL(url()) // Validate the URL
       presetStore.testConnection(
-        { providerId: provider(), url: url(), key: key() },
+        {
+          // if the user is providing a new key, ignore the saved key
+          providerId: key() ? undefined : props.provider?._id,
+          providerType: provider(),
+          url: url(),
+          key: key(),
+        },
         (success, goodUrl) => {
           if (!success) {
             setTested(false)
@@ -266,7 +311,6 @@ export const ManageProvider: Component<{
           placeholder="Custom label for this provider"
           value={name()}
           onChange={(ev) => setName(ev.currentTarget.value)}
-          hide={!isCustom() && !isSelf()}
         />
 
         <TextInput
@@ -280,13 +324,24 @@ export const ManageProvider: Component<{
           hide={!isCustom() && !isSelf()}
         />
 
-        <TextInput
-          helperText="API Key"
-          type="password"
-          placeholder={props.provider?.keySet ? 'Key is set' : 'E.g. sk-...'}
-          onChange={(ev) => setKey(ev.currentTarget.value)}
-          value={key()}
-        />
+        <div class="flex gap-2">
+          <TextInput
+            parentClass="w-full"
+            helperText="API Key"
+            type="password"
+            placeholder={props.provider?.keySet ? 'Key is set' : 'E.g. sk-...'}
+            onChange={(ev) => setKey(ev.currentTarget.value)}
+            value={key()}
+          />
+          <Show when={props.provider?.keySet && props.provider._id}>
+            <div
+              class="icon-button flex items-end pb-3"
+              onClick={() => userStore.deleteProviderKey(props.provider?._id!)}
+            >
+              <X />
+            </div>
+          </Show>
+        </div>
 
         <Show when={isCustom()}>
           <Toggle
@@ -296,13 +351,24 @@ export const ManageProvider: Component<{
           />
         </Show>
 
-        <Select
-          items={formatOptions()}
-          helperText={'Request Format'}
-          value={format()}
-          onChange={(ev) => onFormatChange(ev.value)}
-          hide={formatOptions().length <= 1}
-        />
+        <div class="flex flex-col">
+          <div class="text-500 text-sm">Request Format</div>
+          <div class="flex gap-1">
+            <Select
+              items={formatOptions()}
+              value={format()}
+              onChange={(ev) => onFormatChange(ev.value)}
+              hide={formatOptions().length <= 1}
+            />
+
+            <Select
+              items={subFormatOptions()}
+              value={subFormat()}
+              hide={subFormatOptions().length === 0}
+              onChange={(ev) => setSubFormat(ev.value)}
+            />
+          </div>
+        </div>
 
         <CustomProviderContent
           setKey={setKey}

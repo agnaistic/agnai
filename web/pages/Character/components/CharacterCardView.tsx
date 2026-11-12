@@ -4,20 +4,11 @@ import Divider from '/web/shared/Divider'
 import { A, useNavigate } from '@solidjs/router'
 import AvatarContainer from '/web/shared/Avatar/Container'
 import { getAssetUrl, toDuration } from '/web/shared/util'
-import {
-  ArrowRight,
-  Copy,
-  Download,
-  Menu,
-  MessageCirclePlus,
-  Pencil,
-  Star,
-  Trash,
-  VenetianMask,
-} from 'lucide-solid'
+import { ArrowRight, Download, Menu, Star, Trash, VenetianMask } from 'lucide-solid'
 import { DropMenu } from '/web/shared/DropMenu'
 import Button from '/web/shared/Button'
-import { getStore } from '/web/store/create'
+import { quickCreateChat } from '/web/store'
+import { Selectable } from '/web/shared/Selectable'
 
 export const CharacterCardView: Component<ViewProps> = (props) => {
   return (
@@ -30,13 +21,19 @@ export const CharacterCardView: Component<ViewProps> = (props) => {
           <div class="grid w-full grid-cols-[repeat(auto-fit,minmax(160px,1fr))] flex-row flex-wrap justify-start gap-2 py-2">
             <For each={group.list}>
               {(char) => (
-                <Character
-                  edit={() => props.setEdit(char)}
-                  char={char}
-                  delete={() => props.setDelete(char)}
-                  download={() => props.setDownload(char)}
-                  toggleFavorite={(value) => props.toggleFavorite(char._id, value)}
-                />
+                <Selectable
+                  selecting={props.selecting}
+                  selected={props.selected[char._id] === true}
+                  onSelect={() => props.select(char._id)}
+                >
+                  <Character
+                    edit={() => props.setEdit(char)}
+                    char={char}
+                    delete={() => props.setDelete(char)}
+                    download={() => props.setDownload(char)}
+                    toggleFavorite={(value) => props.toggleFavorite(char._id, value)}
+                  />
+                </Selectable>
               )}
             </For>
             <Show when={group.list.length < 4}>
@@ -113,7 +110,10 @@ const Character: Component<CardProps> = (props) => {
         </div>
         <div class="flex justify-between p-1">
           <button
-            onClick={() => props.toggleFavorite(!props.char.favorite)}
+            onClick={(ev) => {
+              ev.preventDefault()
+              props.toggleFavorite(!props.char.favorite)
+            }}
             aria-label="Toggle Favorite"
           >
             <Show when={props.char.favorite}>
@@ -132,7 +132,10 @@ const Character: Component<CardProps> = (props) => {
           <Switch>
             <Match when={props.char.chat}>
               <button
-                onClick={() => nav(`/chat/${props.char.chat?._id}`)}
+                onClick={(ev) => {
+                  ev.preventDefault()
+                  nav(`/chat/${props.char.chat?._id}`)
+                }}
                 aria-label="Open Recent Chat"
               >
                 <ArrowRight size={size} />
@@ -141,7 +144,10 @@ const Character: Component<CardProps> = (props) => {
 
             <Match when={!props.char.chat}>
               <button
-                onClick={() => nav(`/chats/create/${props.char._id}`)}
+                onClick={(ev) => {
+                  ev.preventDefault()
+                  nav(`/chats/create/${props.char._id}`)
+                }}
                 aria-label="Open Character Chats"
               >
                 <ArrowRight size={size} />
@@ -163,7 +169,10 @@ const Character: Component<CardProps> = (props) => {
             positioned parent to be the sitewide container */}
         <div
           class="float-right mr-[3px] mt-[-224px] flex justify-end"
-          onClick={() => setOpts(true)}
+          onClick={() => {
+            console.log('show')
+            setOpts(true)
+          }}
         >
           <div
             class="rounded-md border-[1px] border-[var(--bg-400)] bg-[var(--bg-700)] p-[2px]"
@@ -175,22 +184,37 @@ const Character: Component<CardProps> = (props) => {
             show={opts()}
             close={() => setOpts(false)}
             vert="down"
-            horz="right"
-            parent={itemMenu}
+            horz="left"
+
+            // parent={itemMenu}
           >
             <div class="flex flex-col gap-2 p-2">
-              <Button
-                alignLeft
-                onClick={() =>
-                  getStore('chat').quickCreateChat(props.char._id, (id) => nav(`/chat/${id}`))
-                }
-                size="sm"
-              >
-                <MessageCirclePlus size={size} /> New Chat
+              <Button alignLeft onClick={() => quickCreateChat(props.char._id, nav)} size="sm">
+                New Chat
               </Button>
 
               <Button onClick={props.edit} aria-label="Edit" alignLeft size="sm">
-                <Pencil size={size} /> Edit
+                Edit
+              </Button>
+
+              <Button
+                alignLeft
+                size="sm"
+                ariaLabel="Toggle Favorite"
+                onClick={() => props.toggleFavorite(!props.char.favorite)}
+              >
+                <Show when={props.char.favorite} fallback={<>Favorite</>}>
+                  Unfavorite
+                </Show>
+              </Button>
+
+              <Button
+                onClick={() => nav(`/character/${props.char._id}/chats`)}
+                aria-label="Chat List"
+                alignLeft
+                size="sm"
+              >
+                Chat List
               </Button>
 
               <Button
@@ -198,7 +222,7 @@ const Character: Component<CardProps> = (props) => {
                 onClick={() => nav(`/character/create/${props.char._id}`)}
                 size="sm"
               >
-                <Copy /> Duplicate
+                Duplicate
               </Button>
 
               <Button

@@ -1,5 +1,5 @@
 import * as uuid from 'uuid'
-import type { NextFunction, Response } from 'express'
+import type { NextFunction, Response, Request } from 'express'
 import { StatusError, errors } from './api/wrap'
 import { verifyApiKey } from './db/oauth'
 import { verifyJwt } from './db/user'
@@ -32,6 +32,11 @@ function isInferenceUrl(url: string) {
 
 export function logMiddleware() {
   const middleware = async (req: any, res: Response, next: NextFunction) => {
+    if (config.requestTimeout) {
+      const request = req as Request
+      request.setTimeout(config.requestTimeout * 1000)
+    }
+
     for (const prop in ID_KEYS) {
       const value = req.params[prop]
       if (value && !VALID_ID.test(value)) {
@@ -101,6 +106,7 @@ export function logMiddleware() {
 
       const sub = getUserSubscriptionTier(user, getCachedTiers())
       req.authed = user
+      req.user.admin = user.admin
       req.tier = sub?.tier
     }
 

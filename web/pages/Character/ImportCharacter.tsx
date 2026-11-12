@@ -16,7 +16,7 @@ const ImportCharacterModal: Component<{
   charhubPath?: string
   single?: boolean
 }> = (props) => {
-  const state = characterStore()
+  const state = characterStore((s) => ({ creating: s.creating }))
   const [imported, setImported] = createSignal<NewCharacter[]>([])
   const [images, setImages] = createSignal<Array<File | undefined>>([])
   const [failed, setFailed] = createSignal<string[]>([])

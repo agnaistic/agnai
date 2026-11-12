@@ -6,10 +6,11 @@ import Tabs, { TabHook } from './Tabs'
 import { markdown } from './markdown'
 import { Portal } from 'solid-js/web'
 import { useMobileDetect } from './hooks'
-import { PartialEmitter } from './util'
+import { PartialEventEmitter } from './util'
 
 interface Props {
   title?: string | JSX.Element
+  debug?: string
   show: boolean
   children?: JSX.Element
   close: () => void
@@ -27,9 +28,22 @@ interface Props {
   ariaLabel?: string
   ariaDescription?: string
 
-  emitter?: PartialEmitter<'width'>
+  emitter?: PartialEventEmitter<'width'>
 
   contentClass?: string
+}
+
+export const ConditionalModal: Component<Props & { modal: boolean }> = (props) => {
+  return (
+    <>
+      <Switch>
+        <Match when={props.modal}>
+          <Modal {...props} />
+        </Match>
+        <Match when={!props.modal}>{props.children}</Match>
+      </Switch>
+    </>
+  )
 }
 
 const Modal: Component<Props> = (props) => {
@@ -60,7 +74,10 @@ const Modal: Component<Props> = (props) => {
   return (
     <Show when={props.show}>
       <Portal>
-        <div class="fixed inset-x-0 top-0 z-[100] items-center justify-center px-2 sm:inset-0 sm:flex sm:items-center sm:justify-center">
+        <div
+          class={`fixed inset-x-0 top-0 z-[100] items-center justify-center px-2 sm:inset-0 sm:flex sm:items-center sm:justify-center`}
+          classList={{ '!hidden': !props.show }}
+        >
           <div class="fixed inset-0 -z-10 opacity-40 transition-opacity">
             <div class="absolute inset-0 bg-black" />
           </div>
@@ -68,8 +85,8 @@ const Modal: Component<Props> = (props) => {
             <form
               ref={autofocus}
               onSubmit={props.onSubmit || defaultSubmit}
-              class={`modal-height bg-900 z-50 w-[calc(100vw-0px)] overflow-hidden rounded-lg shadow-md shadow-black transition-all ${width()} `}
-              classList={{ 'h-full': props.maxHeight || full(), 'opacity-80': props.transparent }}
+              class={`modal-container bg-900 z-50 w-[calc(100vw-0px)] overflow-hidden rounded-lg shadow-md shadow-black transition-all ${width()}`}
+              classList={{ 'h-screen': props.maxHeight || full(), 'opacity-80': props.transparent }}
               role="dialog"
               aria-modal="true"
               aria-label={props.ariaLabel}
@@ -78,7 +95,7 @@ const Modal: Component<Props> = (props) => {
             >
               <Switch>
                 <Match when={props.tabs}>
-                  <div class="flex h-[56px] flex-row justify-between text-lg">
+                  <div class="modal-header flex h-[56px] flex-row justify-between text-lg">
                     <Tabs
                       selected={props.tabs?.selected!}
                       select={props.tabs?.select!}
@@ -107,7 +124,7 @@ const Modal: Component<Props> = (props) => {
                 </Match>
 
                 <Match when>
-                  <div class="flex w-full flex-row justify-between p-4 text-lg font-bold">
+                  <div class="modal-header flex w-full flex-row justify-between p-4 text-lg font-bold">
                     <div class="w-full">{props.title}</div>
                     <div class="flex gap-2">
                       <a class="icon-button" classList={{ hidden: mobile() }} onClick={toggleFull}>
@@ -131,7 +148,9 @@ const Modal: Component<Props> = (props) => {
 
               {/* 132px is the height of the title + footer*/}
               <div
-                class={`overflow-y-auto p-2 pt-0 text-lg ${props.contentClass || ''}`}
+                class={`modal-content-area overflow-y-auto p-2 pt-0 text-lg ${
+                  props.contentClass || ''
+                }`}
                 classList={{
                   'modal-height-fixed': !!minHeight(),
                   'h-full': props.maxHeight,
@@ -142,7 +161,9 @@ const Modal: Component<Props> = (props) => {
                 {props.children}
               </div>
               <Show when={props.footer}>
-                <div class="flex w-full flex-row justify-end gap-2 p-4">{props.footer}</div>
+                <div class="modal-footer flex w-full flex-row justify-end gap-2 p-4">
+                  {props.footer}
+                </div>
               </Show>
             </form>
           </div>

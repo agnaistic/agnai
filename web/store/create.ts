@@ -1,6 +1,7 @@
 import create, { StoreApi } from 'zustand/vanilla'
 import * as solidstore from 'solid-js/store'
 import { onCleanup } from 'solid-js'
+import type { pageStore } from './page'
 import type { userStore } from './user'
 import type { chatStore } from './chat'
 import type { toastStore } from './toasts'
@@ -14,6 +15,8 @@ import type { presetStore } from './presets'
 import type { scenarioStore } from './scenario'
 import type { audioStore } from './audio'
 import type { promptStore } from './prompt'
+import type { imageStore } from './images'
+import type { responseStore } from './response'
 
 type StoreMap = {
   user: typeof userStore
@@ -29,6 +32,9 @@ type StoreMap = {
   scenario: typeof scenarioStore
   audio: typeof audioStore
   prompt: typeof promptStore
+  page: typeof pageStore
+  image: typeof imageStore
+  responses: typeof responseStore
 }
 
 type HandlerReturn<S> =
@@ -43,8 +49,19 @@ type MaybeState<S> = Partial<S> | void
 type SetterFunction<S> = (state: S, ...args: any[]) => HandlerReturn<S>
 
 const win: any = window
-const devTools = win.__REDUX_DEVTOOLS_EXTENSION__?.connect?.() || {
+
+const devTools = {
   send: () => {},
+} as any
+
+const canDebug = localStorage.getItem('devtools') === 'true'
+
+if (canDebug) {
+  console.log('Debug Tools Enabled')
+  const res = win.__REDUX_DEVTOOLS_EXTENSION__?.connect?.()
+  if (res) {
+    devTools.send = res.send
+  }
 }
 
 type CachedStore = (() => any) & StoreApi<any>
@@ -168,8 +185,17 @@ export function createStore<State extends {}>(
       return solid as T
     }
 
-    type PatchedStore = typeof useStore & Wrapped & typeof store
+    const mapState = <T>(mapFn: (state: State) => T) => {
+      const current = store.getState()
+      const mapped = mapFn(current)
+      return mapped
+    }
+
+    type PatchedStore = typeof useStore & Wrapped & typeof store & { mapState: typeof mapState }
     const patchedStore = useStore as PatchedStore
+
+    patchedStore.mapState = mapState
+
     Object.assign(patchedStore, store)
 
     for (const key of Object.keys(wrapped) as Array<keyof Handler>) {

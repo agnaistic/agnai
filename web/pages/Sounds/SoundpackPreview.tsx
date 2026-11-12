@@ -12,7 +12,7 @@ import { SoundPreview, getSoundSource } from './SoundPreview'
 const SoundpackPreview: Component<{
   soundpackId?: SoundpackId
 }> = (props) => {
-  const audio = audioStore()
+  const audio = audioStore((s) => ({ soundpacks: s.soundpacks }))
 
   let soundpack = createMemo(() => audio.soundpacks.find((sp) => sp.id === props.soundpackId))
 

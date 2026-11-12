@@ -56,7 +56,10 @@ export interface Character extends BaseCharacter {
   insert?: { depth: number; prompt: string }
   creator?: string
   characterVersion?: string
+  prefill?: string
+
   imageSettings?: ImageSettings
+  imageProviderId?: string
 }
 
 export interface LibraryCharacter extends Omit<Character, 'kind' | 'tags'> {
@@ -74,6 +77,9 @@ export interface ResponseSchema {
   schema: JsonField[]
   response: string
   history: string
+  imageCaption: string
+  systemPrompt: string
+  jailbreak: string
 }
 
 type BaseLibaryItem = { _id: string; kind: 'library-item'; userId: string }

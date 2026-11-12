@@ -9,14 +9,14 @@ import { embedApi } from '/web/store/embeddings'
 import Select from '/web/shared/Select'
 import { getStore } from '/web/store/create'
 import { SolidCard } from '/web/shared/Card'
-import { settingStore } from '/web/store'
+import { pageStore } from '/web/store'
 import { createStore } from 'solid-js/store'
 import { v4 } from 'uuid'
 
 export { EmbedContent as default }
 
 const EmbedContent: Component = (props) => {
-  const user = getStore('user')()
+  const user = getStore('user')((s) => ({ ui: s.ui }))
 
   const options = ['Article', 'PDF', 'Text file', 'Plain Text']
   const [store, setStore] = createStore({
@@ -97,7 +97,7 @@ const EmbedContent: Component = (props) => {
       <Show when={!user.ui.embeddingModel}>
         <SolidCard bg="premium-700">
           You need to enable{' '}
-          <b class="underline hover:cursor-pointer" onClick={() => settingStore.modal(true)}>
+          <b class="underline hover:cursor-pointer" onClick={() => pageStore.settings(true)}>
             Embeddings/Long-Term Memory
           </b>{' '}
           in your Settings

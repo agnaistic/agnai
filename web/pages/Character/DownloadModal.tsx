@@ -8,6 +8,7 @@ import { exportCharacter } from '/common/characters'
 import { charsApi } from '/web/store/data/chars'
 import { toastStore } from '/web/store'
 import { downloadCharCard } from './util'
+import { downloadJson } from '/web/shared/util'
 
 type CharacterFileType = 'png' | 'json'
 
@@ -83,10 +84,10 @@ export const DownloadModal: Component<{
   const objectUrl = createMemo(() => {
     if (!char()) return
 
-    const url = URL.createObjectURL(
-      new Blob([charToJson(char()!, format())], { type: 'text/json' })
-    )
-    return url
+    const json = charToJson(char()!, format())
+    return json
+    // const url = URL.createObjectURL(new Blob([json], { type: 'text/json' }))
+    // return url
   })
 
   return (
@@ -101,11 +102,15 @@ export const DownloadModal: Component<{
           </Button>
           <Switch>
             <Match when={fileType() === 'json'}>
-              <a href={objectUrl()} download={`${char()!.name}.json`}>
-                <Button>
-                  <Save /> Download (JSON)
-                </Button>
-              </a>
+              <Button
+                onClick={() => {
+                  const downloadableChar = objectUrl()
+                  if (!downloadableChar) return
+                  downloadJson(downloadableChar, `${char()?.name}.json`)
+                }}
+              >
+                <Save /> Download (JSON)
+              </Button>
             </Match>
 
             <Match when={fileType() === 'png'}>

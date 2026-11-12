@@ -1,15 +1,27 @@
-import { Accessor, JSX, Signal, createEffect, createMemo, on, onCleanup, onMount } from 'solid-js'
+import {
+  Accessor,
+  JSX,
+  Signal,
+  createEffect,
+  createMemo,
+  createResource,
+  on,
+  onCleanup,
+  onMount,
+} from 'solid-js'
 import { createSignal, createRenderEffect } from 'solid-js'
-import { ModalOptions, rootModalStore } from '../store/root-modal'
-import { useLocation, useSearchParams } from '@solidjs/router'
+import { useLocation, useParams, useSearchParams } from '@solidjs/router'
 import { createImageCache } from '../store/images'
 import { createStore } from 'solid-js/store'
 import { getSettingColor, hexToRgb } from './colors'
-import { getAssetUrl, storage } from './util'
+import { getAssetUrl, getJsonSchema, storage } from './util'
 import { AutoPreset, getPresetOptions } from './adapter'
 import { ADAPTER_LABELS } from '/common/adapters'
 import { getStore } from '../store/create'
-import { clamp, inline, tryParse } from '/common/util'
+import { clamp, hydrateTemplate, inline, tryParse } from '/common/util'
+import { debug } from '/common/debug'
+import { getActivePresets } from '../store/data/common'
+import { getAppContext } from '../store/context'
 
 const PANE_BREAKPOINT = 1280
 
@@ -17,9 +29,37 @@ export function getPlatform() {
   return window.innerWidth >= 1280 ? 'xl' : window.innerWidth > 720 ? 'lg' : 'sm'
 }
 
+export function getMessageImagePrompt(messageId: string) {
+  const { graph } = getStore('messages').getState()
+
+  const msg = graph.tree[messageId]
+
+  if (!msg) return ''
+
+  if (msg.msg.imagePrompt) return msg.msg.imagePrompt
+
+  if (msg.msg.json?.imageCaption) {
+    return msg.msg.json.imageCaption
+  }
+
+  if (!msg.msg.json?.values) return ''
+
+  const presets = getActivePresets()
+  const schema = getJsonSchema({ characterId: msg.msg.characterId, preset: presets.current })
+
+  if (!schema?.schema?.imageCaption) return ''
+  const context = getAppContext()
+  const rendered = hydrateTemplate(schema.schema, msg.msg.json.values, {
+    char: context.char?.name || '',
+    sender: context.handle,
+  })
+
+  return rendered.imageCaption || ''
+}
+
 export function usePresetOptions() {
   const presets = getStore('presets')((s) => s.presets)
-  const user = getStore('user')()
+  const user = getStore('user')((s) => ({ user: s.user }))
 
   const options = createMemo(() => {
     const opts = getPresetOptions(presets, { builtin: true }).filter((pre) => pre.value !== 'chat')
@@ -75,6 +115,7 @@ export function useWindowSize(): {
 export type ImageCache = ReturnType<typeof useImageCache>
 
 type ImageCacheOpts = {
+  id?: string
   initial?: number
   clean?: boolean
   include?: string[]
@@ -90,7 +131,27 @@ export function useRef<T = HTMLElement>() {
   return [ref, onRef] as const
 }
 
-export function isChatPage(noSaga?: boolean) {
+export function useChatPageId() {
+  const memo = isChatPageMemo()
+  const params = useParams()
+  const [state, setState] = createStore({
+    isChat: isChatPage(),
+    chatId: isChatPage() ? params.id : undefined,
+  })
+
+  createEffect(
+    on(
+      () => memo(),
+      (next) => {
+        setState({ isChat: next, chatId: next ? params.id : undefined })
+      }
+    )
+  )
+
+  return state
+}
+
+export function isChatPageMemo(noSaga?: boolean) {
   const location = useLocation()
   const isChat = createMemo(() => {
     if (noSaga) {
@@ -103,13 +164,20 @@ export function isChatPage(noSaga?: boolean) {
   return isChat
 }
 
+export function isChatPage() {
+  return location.pathname.startsWith('/chat/')
+}
+
 export function useCharacterBg(src: 'layout' | 'page') {
   const isMobile = useMobileDetect()
-  const isChat = isChatPage()
+  const isChat = isChatPageMemo()
 
-  const state = getStore('user')()
-  const cfg = getStore('settings')()
-  const chat = getStore('chat')((s) => ({ active: s.active }))
+  const state = getStore('user')((s) => ({ ui: s.ui, background: s.background }))
+  const cfg = getStore('settings')((s) => ({ anonymize: s.anonymize }))
+  const chat = getStore('chat')((s) => ({
+    lastChatId: s.lastChatId,
+    active: s.details[s.lastChatId || 'unknown'],
+  }))
   const chars = getStore('character')((s) => ({ chatId: s.activeChatId, chars: s.chatChars }))
 
   const bg = createMemo(() => {
@@ -183,54 +251,76 @@ export function useCharacterBg(src: 'layout' | 'page') {
 
 export type ImageCacheHook = ReturnType<typeof useImageCache>
 
-export function useImageCache(collection: string, opts: ImageCacheOpts = {}) {
-  const reel = createImageCache(collection)
+export function useImageCache(opts: ImageCacheOpts = {}) {
+  const [collection, setCollection] = createSignal<{ id: string; pos: number } | undefined>(
+    opts.id ? { id: opts.id, pos: opts.initial ?? 0 } : undefined
+  )
+  const log = debug('use-cache')
+  const reel = createImageCache('')
 
-  const cleanIds = (imageId: string) => imageId.replace(`${collection}-`, '')
+  const cleanIds = (imageId: string) => {
+    const col = collection()?.id
+    if (!col) return imageId
+    return imageId.replace(`${col}-`, '')
+  }
 
   const [state, setState] = createStore({
-    id: collection,
     image: '',
     pos: 0,
     imageId: '',
     images: [] as string[],
   })
 
-  if (opts.clean) {
-    reel.removeAll()
-  }
+  const [data] = createResource(collection, async (col, { refetching }) => {
+    log('loading, refetch: %s', refetching)
+    if (refetching) {
+      // Skip any loading if the collection id is unchanged
+      if (reel.id === col.id) return
+    }
+    reel.id = col.id
 
-  const start = opts.clean ? reel.removeAll() : Promise.resolve()
-
-  // Initialise the reel
-  start.then(reel.getImageIds).then(async (images) => {
-    if (!images.length) {
-      setState({ images: images.map(cleanIds) })
-      return
+    if (opts.clean) {
+      await reel.removeAll()
     }
 
+    const imageIds = await reel.getImageIds()
+    const images = imageIds.map(cleanIds)
+
     const current = clamp(
-      opts.initial !== undefined ? opts.initial : images.length - 1,
+      col.pos !== undefined && col.pos >= 0 ? col.pos : images.length - 1,
       images.length - 1,
       0
     )
-    const image = await reel.getImage(images[current])
 
-    setState({ pos: current, image, images: images.map(cleanIds), imageId: images[current] })
+    const image = await reel.getImage(images[current])
+    setState({ pos: current, image, images, imageId: images[current] })
   })
 
   const load = async (collectionId: string, initial?: number) => {
-    if (collectionId) {
-      // Already loaded
-      if (collectionId === reel.id) return
+    log('loading %s', collectionId)
+    setCollection({ id: collectionId, pos: initial ?? 0 })
+    // if (collectionId) {
+    //   // Already loaded
+    //   if (collectionId === reel.id) {
+    //     return
+    //   }
+    //   setState('id', collectionId)
+    //   reel.id = collectionId
+    // }
+    // const images = await reel.getImageIds()
+    // setState({ images })
+    // await pos(initial ?? 0)
+  }
 
-      setState('id', collectionId)
-      reel.id = collectionId
-    }
+  const reload = async () => {
+    const id = collection()
+    if (!id) return
 
-    const images = await reel.getImageIds()
-    setState({ images })
-    await pos(initial ?? 0)
+    const imageIds = await reel.getImageIds()
+    const images = imageIds.map(cleanIds)
+    const current = images.length - 1
+    const image = await reel.getImage(images[current])
+    setState({ images, pos: current, imageId: images[current], image })
   }
 
   const pos = async (position: number) => {
@@ -326,6 +416,8 @@ export function useImageCache(collection: string, opts: ImageCacheOpts = {}) {
     prev,
     addImage,
     removeImage,
+    data,
+    reload,
   }
 }
 
@@ -355,27 +447,34 @@ export function useDeviceType() {
 }
 
 export function useDraft(id: string) {
-  const key = `chat:${id}:draft`
-  const text = localStorage.getItem(key) || ''
+  const [draftId, setDraftId] = createSignal(id)
+
+  const key = () => `chat:${draftId()}:draft`
+  const text = localStorage.getItem(key()) || ''
+
+  const open = (id: string) => {
+    setDraftId(id)
+    return restore()
+  }
 
   const restore = () => {
-    const text = localStorage.getItem(key)
+    const text = localStorage.getItem(key())
     return text || ''
   }
 
   const update = (value?: string) => {
     if (value) {
-      localStorage.setItem(key, value)
+      localStorage.setItem(key(), value)
     } else {
-      localStorage.removeItem(key)
+      localStorage.removeItem(key())
     }
   }
 
   const clear = () => {
-    localStorage.removeItem(key)
+    localStorage.removeItem(key())
   }
 
-  return { text, restore, update, clear }
+  return { open, text, restore, update, clear }
 }
 
 export function clearDraft(id: string) {
@@ -467,11 +566,16 @@ export const usePaneManager = () => {
   )
   const [pane, setPane] = createSignal(search.pane)
 
-  createEffect(() => {
-    const next = search.pane !== undefined && typeof search.pane === 'string'
-    setShowing(next)
-    setPane(search.pane)
-  })
+  createEffect(
+    on(
+      () => search.pane,
+      () => {
+        const next = search.pane !== undefined && typeof search.pane === 'string'
+        setShowing(next)
+        setPane(search.pane)
+      }
+    )
+  )
 
   const update = (pane?: string) => {
     setSearch({ pane })
@@ -481,7 +585,7 @@ export const usePaneManager = () => {
 }
 
 export function useBgStyle(props: { hex: string; opacity?: number; blur: boolean }) {
-  const user = getStore('user')()
+  const user = getStore('user')((s) => ({ ui: s.ui }))
 
   const bgStyle = createMemo(() => {
     // This causes this memoized value to re-evaluated as it becomes a subscriber of ui.mode
@@ -506,11 +610,6 @@ function isDefined<T>(value: T | undefined | null): value is T {
 
 function isFunction<T>(value: T | Function): value is Function {
   return typeof value === 'function'
-}
-
-export function useRootModal(modal: ModalOptions) {
-  onMount(() => rootModalStore.addModal(modal))
-  onCleanup(() => rootModalStore.removeModal(modal.id))
 }
 
 /**
@@ -582,7 +681,7 @@ export function getPagePlatform(width: number) {
 export function useGoogleReady() {
   const [ready, setReady] = createSignal(false)
 
-  createEffect(() => {
+  onMount(() => {
     const timer = setInterval(() => {
       const win: any = window
       if (win.default_gsi) {

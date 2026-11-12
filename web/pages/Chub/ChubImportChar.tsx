@@ -6,12 +6,14 @@ import TextInput from '../../shared/TextInput'
 import { NewCharacter, characterStore, toastStore } from '../../store'
 import Loading from '/web/shared/Loading'
 import { Pill } from '/web/shared/Card'
+import { ChubEntity } from '/web/store/chub'
 
 const ChubImportCharModal: Component<{
   show: boolean
   close: () => void
   id?: string
   char?: NewCharacter
+  entity?: ChubEntity
 }> = (props) => {
   let ref: any
 
@@ -27,7 +29,7 @@ const ChubImportCharModal: Component<{
     try {
       characterStore.createCharacter(props.char)
     } catch (error) {
-      toastStore.error(`Error importing ${props.char.name}! ${error}`)
+      toastStore.error(error, { prefix: `Error importing ${props.char.name}` })
     }
     props.close()
   }
@@ -70,6 +72,9 @@ const ChubImportCharModal: Component<{
           <div class="mb-4 text-sm">
             The information provided here will be saved with the character on import.
           </div>
+
+          <div class="text-sm font-bold">{props.entity?.name || ''}</div>
+          <div class="text-800 text-sm">{props.entity?.tagline || ''}</div>
 
           <Show when={props.char?.name}>
             <TextInput

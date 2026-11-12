@@ -45,6 +45,9 @@ export async function getServerConfiguration() {
     actionCalls: [],
     lockSeconds: 0,
     stripeCustomerPortal: '',
+    defaultImageModel: '',
+    embedding: '',
+    embeddings: [],
   }
 
   await db('configuration').insertOne(next)
@@ -54,6 +57,52 @@ export async function getServerConfiguration() {
 export async function updateServerConfiguration(update: Partial<AppSchema.Configuration>) {
   await db('configuration').updateOne({ kind: 'configuration' }, { $set: update }, { upsert: true })
   const cfg = await getServerConfiguration()
+  return cfg
+}
+
+export async function createServerEmbedding(embed: AppSchema.ServerEmbedding) {
+  const cfg = await getServerConfiguration()
+  const embeddings = cfg.embeddings || []
+
+  if (!embed._id) {
+    embed._id = v4()
+  }
+
+  embeddings.push(embed)
+
+  await updateServerConfiguration({ embeddings })
+  cfg.embeddings = embeddings
+
+  return cfg
+}
+
+export async function updateServerEmbedding(embed: AppSchema.ServerEmbedding) {
+  const cfg = await getServerConfiguration()
+  const embeddings = cfg.embeddings || []
+
+  if (!cfg.embeddings) {
+    throw new StatusError('Cannot update embedding: Embeddings not found in config', 500)
+  }
+
+  if (!embed._id) {
+    throw new StatusError('Cannot update embedding: ID not supplied', 400)
+  }
+
+  let updated = false
+  const next = embeddings.map((e) => {
+    if (e._id !== embed._id) return e
+
+    updated = true
+    if (!embed.key) embed.key = e.key
+    return embed
+  })
+
+  if (!updated) {
+    throw new StatusError('Cannot update embedding: Embedding not found', 400)
+  }
+
+  await updateServerConfiguration({ embeddings: next })
+  cfg.embeddings = next
   return cfg
 }
 
@@ -135,14 +184,14 @@ export async function getUserInfo(userId: string) {
     }
   )
   const profile = await db('profile').findOne({ userId })
-  const chats = await db('chat').countDocuments({ userId })
-  const characters = await db('character').countDocuments({ userId })
+  // const chats = await db('chat').countDocuments({ userId })
+  // const characters = await db('character').countDocuments({ userId })
   const state = await domain.subscription.getAggregate(userId)
 
   return {
     userId,
-    chats,
-    characters,
+    chats: 0,
+    characters: 0,
     handle: profile?.handle,
     avatar: profile?.avatar,
     state,

@@ -3,7 +3,8 @@ import * as redis from 'redis'
 import { config } from '../../config'
 import { logger } from '../../middleware'
 import { AppSocket } from './types'
-import { PING_INTERVAL_MS } from '/common/util'
+import { lazySimplePromise, PING_INTERVAL_MS } from '/common/util'
+import { v4 } from 'uuid'
 
 export const allSockets = new Map<string, AppSocket>()
 export const userSockets = new Map<string, AppSocket[]>()
@@ -149,6 +150,8 @@ export async function initMessageBus() {
     })
 
     CONNECTED = true
+
+    setInterval(pingClients, 30000)
   } catch (ex) {
     if (CLIENT_INTERVAL) {
       clearInterval(CLIENT_INTERVAL)
@@ -161,6 +164,48 @@ export async function initMessageBus() {
       `Message bus not connected - Running in non-distributed mode. If you are self-hosting you can ignore this warning.`
     )
   }
+}
+
+function reconnectRedis() {
+  clients.pub = redis.createClient({ url: getUri(), socket: { reconnectStrategy: 250 } })
+  clients.sub = redis.createClient({ url: getUri(), socket: { reconnectStrategy: 250 } })
+}
+
+async function pingClients() {
+  const pingId = `ping-${v4()}`
+
+  const lazy = lazySimplePromise()
+  const start = Date.now()
+
+  try {
+    const timer = setTimeout(() => {
+      clients.sub.unsubscribe(pingId)
+      lazy.reject(true)
+    }, 5000)
+
+    clients.sub.subscribe(pingId, (msg) => {
+      logger.debug(`Redis ping received [${Date.now() - start}ms]`)
+      clearTimeout(timer)
+      lazy.resolve(true)
+      clients.sub.unsubscribe(pingId)
+    })
+
+    clients.pub.publish(pingId, JSON.stringify({ sent: start }))
+    await lazy.promise
+    return
+  } catch (ex) {
+    ex
+  }
+
+  logger.warn(`Reconnecting to message bus`)
+
+  reconnectRedis()
+  await Promise.all([
+    clients.pub.disconnect().catch((ex) => {}),
+    clients.sub.disconnect().catch((ex) => {}),
+  ])
+  await Promise.all([clients.pub.connect(), clients.sub.connect()])
+  logger.info(`Reconnected to message bus`)
 }
 
 function handleErrors() {

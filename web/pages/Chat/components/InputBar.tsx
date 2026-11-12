@@ -31,10 +31,11 @@ import {
   chatStore,
   toastStore,
   userStore,
-  settingStore,
   characterStore,
   ChatMessageExt,
   promptStore,
+  pageStore,
+  responseStore,
 } from '../../../store'
 import { msgStore } from '../../../store'
 import { SpeechRecognitionRecorder } from './SpeechRecognitionRecorder'
@@ -48,14 +49,22 @@ import NoCharacterIcon from '/web/icons/NoCharacterIcon'
 import WizardIcon from '/web/icons/WizardIcon'
 import { EVENTS, events } from '/web/emitter'
 import { AutoComplete } from '/web/shared/AutoComplete'
-import FileInput, { FileInputResult, getFileAsDataURL } from '/web/shared/FileInput'
+import FileInput, { FileInputResult } from '/web/shared/FileInput'
 import AvatarIcon from '/web/shared/AvatarIcon'
-import { api } from '/web/store/api'
 import { resizeImage } from '/web/shared/image-resize'
-import { ALLOWED_TYPES } from '/web/store/data/image'
+import { ALLOWED_TYPES, imageApi } from '/web/store/data/image'
 import { MsgAttachment } from '/srv/adapter/type'
+import { extractReasoning } from '/common/reasoning'
+import { usePresetContext } from '/web/store/preset-context'
+import { debug } from '/common/debug'
+import { Pill } from '/web/shared/Card'
 
-export type SendFunc = (opts: { msg: string; ooc: boolean; onSuccess?: () => void }) => void
+export type SendFunc = (opts: {
+  msg: string
+  ooc: boolean
+  onSuccess?: () => void
+  onError?: (err?: string) => void
+}) => void
 
 const InputBar: Component<{
   chat: AppSchema.Chat
@@ -73,9 +82,10 @@ const InputBar: Component<{
   let ref: HTMLTextAreaElement | undefined
 
   const [ctx] = useAppContext()
+  const [preset] = usePresetContext()
 
-  const prompt = promptStore()
-  const user = userStore()
+  const prompt = promptStore((s) => ({ hintsEnabled: s.hintsEnabled, hint: s.hint }))
+  const user = userStore((s) => ({ user: s.user, profile: s.profile, ui: s.ui }))
   const state = msgStore((s) => ({
     lastMsg: s.msgs.reduceRight<ChatMessageExt>((prev, curr, i) => {
       if (prev) return prev
@@ -86,8 +96,7 @@ const InputBar: Component<{
     msgs: s.msgs,
     canCaption: s.canImageCaption,
   }))
-  const chats = chatStore((s) => ({ replyAs: s.active?.replyAs }))
-  const chars = characterStore()
+  const chars = characterStore((s) => ({ impersonating: s.impersonating }))
 
   useEffect(() => {
     const listener = (text: string) => {
@@ -139,7 +148,7 @@ const InputBar: Component<{
 
   const placeholder = createMemo(() => {
     if (props.ooc) return 'Send a message... (OOC)'
-    if (chats.replyAs) return `Send a message to ${ctx.allBots[chats.replyAs]?.name}...`
+    if (ctx.replyAs) return `Send a message to ${ctx.allBots[ctx.replyAs]?.name}...`
     return `Send a message...`
   })
 
@@ -164,14 +173,20 @@ const InputBar: Component<{
       return toastStore.warn(`Confirm or cancel swiping before sending`)
     }
 
+    ref.value = ''
+    setText('')
+    setCleared(0)
+
     props.send({
       msg: value,
       ooc: props.ooc,
       onSuccess: () => {
-        ref.value = ''
-        setText('')
-        setCleared(0)
         draft.clear()
+      },
+      onError: () => {
+        ref.value = value
+        setText(value)
+        draft.update(value)
       },
     })
   }, 100)
@@ -182,7 +197,7 @@ const InputBar: Component<{
   }
 
   const respondAgain = () => {
-    msgStore.request(props.chat._id, props.chat.characterId)
+    responseStore.request(props.chat._id, props.chat.characterId)
   }
 
   const more = () => {
@@ -206,9 +221,14 @@ const InputBar: Component<{
     const char = ctx.allBots[lastTextMsg.characterId]
     if (!char?.voice) return
 
-    msgStore.textToSpeech(
+    const text = extractReasoning(lastTextMsg.msg, {
+      tags: preset.current?.reasoning,
+      display: ctx.ui.displayReasoning,
+    })
+
+    responseStore.textToSpeech(
       lastTextMsg._id,
-      lastTextMsg.msg,
+      text.content,
       char.voice,
       props.char?.culture || defaultCulture
     )
@@ -216,8 +236,7 @@ const InputBar: Component<{
   }
 
   const triggerEvent = () => {
-    const char =
-      chats.replyAs && chats.replyAs in props.botMap ? props.botMap[chats.replyAs] : undefined
+    const char = ctx.replyAs && ctx.replyAs in props.botMap ? props.botMap[ctx.replyAs] : undefined
 
     eventStore.triggerEvent(props.chat, char)
     setMenu(false)
@@ -259,13 +278,21 @@ const InputBar: Component<{
         toastStore.warn(`Invalid file type: Must be an image`)
         return
       }
-      const buffer = await getFileAsDataURL(file)
+
       if (file.size > 1024 * 1024 * 1024) {
         toastStore.warn(`Attachment exceeds size limit (1MB)`)
         return
       }
 
-      const resized = await resizeImage(buffer, { type: 'fit', max: 768 })
+      const proc = await imageApi.processImageFile(file)
+      const resized = await resizeImage(proc, { type: 'fit', max: 768 })
+      debug('resize')(
+        'Orig: %sx%s, New: %sx%s',
+        resized.original.w,
+        resized.original.h,
+        resized.w,
+        resized.h
+      )
       toAttach.push({ type: 'image', image: resized.content })
     }
 
@@ -274,18 +301,35 @@ const InputBar: Component<{
 
   return (
     <>
+      <Show when={window.flags.debug}>
+        <div class="mb-2 flex justify-center gap-2">
+          <Pill small inverse>
+            <b>Leaf:&nbsp;</b>
+            {ctx.active?.chat?.treeLeafId?.slice(0, 4)}
+          </Pill>
+
+          <Pill small inverse>
+            <b>Cutoff:&nbsp;</b>
+            {ctx.showMessageCount}
+          </Pill>
+        </div>
+      </Show>
+
       <Show when={prompt.hintsEnabled}>
         <div class="flex w-full justify-center pb-0.5">
-          <div class="flex flex-1 justify-center gap-0.5 sm:w-3/4 sm:max-w-[75%]">
+          <div
+            class="flex flex-1 justify-center gap-0.5 sm:w-3/4 sm:max-w-[75%]"
+            classList={{ '!w-full': window.flags.debug === true }}
+          >
             <TextInput
+              class="max-h-[80px] !outline-0"
               parentClass="!p-0.5 text-sm flex flex-1"
-              placeholder="Response hint... 🗭"
+              placeholder="Response hint..."
               value={prompt.hint}
               onChange={(ev) =>
                 promptStore.hint({ chatId: props.chat._id, text: ev.currentTarget.value })
               }
               isMultiline
-              class="max-h-[80px]"
               growup
             />
             <div
@@ -299,12 +343,13 @@ const InputBar: Component<{
       </Show>
 
       <div class="relative flex items-start justify-center rounded-md bg-[var(--bg-800)]">
-        <Show when={ctx.waiting?.signal && !api.isCdnApi()}>
+        <Show when={ctx.waiting?.signal}>
           <button
             class="animate-pulse cursor-pointer p-2"
-            onClick={() => {
+            onClick={(ev) => {
+              ev.preventDefault()
               console.log('Cancel clicked', !!ctx.waiting?.signal)
-              msgStore.abortMessage()
+              responseStore.abortMessage()
             }}
           >
             <StopCircle />
@@ -327,7 +372,7 @@ const InputBar: Component<{
             role="button"
             aria-label="Open impersonation menu"
             class="icon-button"
-            onClick={() => settingStore.toggleImpersonate(true)}
+            onClick={() => pageStore.toggleImpersonate(true)}
           >
             <AvatarIcon
               avatarUrl={chars.impersonating?.avatar || user.profile?.avatar}
@@ -355,7 +400,7 @@ const InputBar: Component<{
           placeholder={placeholder()}
           parentClass="flex w-full"
           classList={{ 'blur-md': dragging() }}
-          class="input-bar max-h-[120px] min-h-[40px] rounded-r-none !border-0 hover:bg-[var(--bg-800)] active:bg-[var(--bg-800)]"
+          class="input-bar max-h-[120px] min-h-[40px] rounded-r-none !border-0 !outline-0 hover:bg-[var(--bg-800)] active:bg-[var(--bg-800)]"
           onKeyDown={(ev) => {
             if (ev.key === '@') {
               setComplete(true)
@@ -408,7 +453,7 @@ const InputBar: Component<{
               class="w-full"
               onClick={() => {
                 setMenu(false)
-                msgStore.selfGenerate()
+                responseStore.selfGenerate()
               }}
               alignLeft
               disabled={!ctx.impersonate}
@@ -422,7 +467,7 @@ const InputBar: Component<{
                 schema="secondary"
                 size="sm"
                 onClick={() => setAutoReplyAs('')}
-                disabled={!chats.replyAs}
+                disabled={!ctx.replyAs}
               >
                 None
               </Button>
@@ -432,7 +477,7 @@ const InputBar: Component<{
                     schema="secondary"
                     size="sm"
                     onClick={() => setAutoReplyAs(char._id)}
-                    disabled={chats.replyAs === char._id}
+                    disabled={ctx.replyAs === char._id}
                   >
                     {char.name}
                   </Button>
@@ -472,12 +517,12 @@ const InputBar: Component<{
                 </Button>
               </Show>
             </Show>
-            <Show when={ctx.canUseAttachments}>
+            <Show when={preset.attachments}>
               <FileInput
                 fieldName="imageCaption"
                 parentClass="hidden"
                 onUpdate={onFile}
-                accept="image/jpg,image/png,image/jpeg"
+                accept="image/jpg,image/png,image/jpeg,image/webp"
                 multiple
               />
               <LabelButton for="imageCaption" schema="secondary" class="w-full" alignLeft>

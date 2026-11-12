@@ -5,20 +5,36 @@ import { store } from '../db'
 import { config } from '../config'
 import { v4 } from 'uuid'
 import { saveFile } from '../api/upload'
-import { handleSDImage } from './stable-diffusion'
+import { handleSDImage, handleSwarmImage } from './stable-diffusion'
 import { sendGuest, sendMany, sendOne } from '../api/ws'
 import { handleHordeImage } from './horde'
 import { AppSchema } from '/common/types'
-import { ImageSettings } from '/common/types/image-schema'
+import { BaseImageSettings, ImageProviderSettings } from '/common/types/image-schema'
+import { getImagePrompt, getImageSettings } from '/common/image'
+import { StatusError } from '../api/wrap'
 
 const DEFAULT_NEGATIVE = ``
 
 export async function generateImageSync(opts: ImageGenerateRequest, log: AppLog) {
   const imageSettings = opts.user.images
-  const prompt = getImagePrompt(opts, imageSettings)
+  const { prompt, rawPrompt } = getImagePrompt(opts, imageSettings)
+  opts.raw_prompt = rawPrompt
+
+  const id = opts.user.imageProviderId || opts.user.images?.type || 'horde'
+  let provider = opts.user.imageProviders?.find((i) => i._id === id)
+
+  if (!provider) {
+    const type = opts.user.images?.type || 'horde'
+    provider = opts.user.images?.[type] as any
+  }
+
+  if (!provider) {
+    throw new StatusError('Cannot locate Image Provider settings', 500)
+  }
 
   let { error, image } = await runImageGenerate({
     imageSettings,
+    provider,
     user: opts.user,
     prompt,
     log,
@@ -51,12 +67,18 @@ export async function generateImage(opts: ImageGenerateRequest, log: AppLog, gue
     }
   }
 
-  const imageSettings = getImageSettings(chat, character, user)
-  const prompt = getImagePrompt(opts, imageSettings)
+  const { settings: imageSettings, provider } = getImageSettings(chat, character, user)
+
+  if (!provider) {
+    throw new StatusError('Cannot locate Image Provider', 500)
+  }
+
+  const { prompt, rawPrompt } = getImagePrompt(opts, imageSettings)
+  opts.raw_prompt = rawPrompt
 
   log.debug({ prompt, type: imageSettings?.type, source: chat?.imageSource }, 'Image prompt')
 
-  if (!guestId) {
+  if (!guestId && !opts.sync) {
     sendOne(user._id, {
       type: 'image-generation-started',
       prompt,
@@ -68,6 +90,7 @@ export async function generateImage(opts: ImageGenerateRequest, log: AppLog, gue
 
   let { image, output, error } = await runImageGenerate({
     imageSettings,
+    provider,
     user,
     prompt,
     log,
@@ -110,7 +133,7 @@ export async function generateImage(opts: ImageGenerateRequest, log: AppLog, gue
           meta: { negative: imageSettings?.negative },
         })
 
-        if (msg) return
+        if (msg) return { output }
       }
     } else {
       output = output || (await saveFile(`temp-${v4()}.${image.ext}`, image.content, 300))
@@ -129,6 +152,10 @@ export async function generateImage(opts: ImageGenerateRequest, log: AppLog, gue
     })
   }
 
+  if (!image && !error) {
+    error = 'Invalid image settings (No handler found)'
+  }
+
   const message = image
     ? {
         type: 'image-generated',
@@ -141,28 +168,31 @@ export async function generateImage(opts: ImageGenerateRequest, log: AppLog, gue
     : {
         type: 'image-failed',
         chatId,
-        error: error || 'Invalid image settings (No handler found)',
+        error,
         requestId: opts.requestId,
       }
 
-  if (broadcastIds.length) {
-    sendMany(broadcastIds, message)
-  } else if (guestId) {
-    sendGuest(guestId, message)
+  if (!opts.sync) {
+    if (broadcastIds.length) {
+      sendMany(broadcastIds, message)
+    } else if (guestId) {
+      sendGuest(guestId, message)
+    }
   }
 
-  return { output }
+  return { output, error }
 }
 
 async function runImageGenerate(options: {
-  imageSettings: ImageSettings | undefined
+  imageSettings: BaseImageSettings | undefined
+  provider: ImageProviderSettings
   user: AppSchema.User
   prompt: string
   log: AppLog
   guestId: string | undefined
   opts: ImageGenerateRequest
 }) {
-  const { imageSettings, user, prompt, log, guestId, opts } = options
+  const { imageSettings, user, prompt, log, guestId, opts, provider } = options
 
   let image: ImageAdapterResponse | undefined
   let output: string = ''
@@ -171,7 +201,25 @@ async function runImageGenerate(options: {
   const negative = imageSettings?.negative || DEFAULT_NEGATIVE
 
   try {
-    switch (imageSettings?.type || 'horde') {
+    switch (provider.type) {
+      case 'swarm': {
+        image = await handleSwarmImage(
+          {
+            user,
+            prompt,
+            negative,
+            settings: imageSettings,
+            provider,
+            override: opts.model,
+            params: opts.params,
+            raw_prompt: opts.prompt,
+          },
+          log,
+          guestId
+        )
+        break
+      }
+
       case 'novel':
         image = await handleNovelImage(
           {
@@ -179,6 +227,7 @@ async function runImageGenerate(options: {
             prompt,
             negative,
             settings: imageSettings,
+            provider,
             params: opts.params,
             raw_prompt: opts.prompt,
           },
@@ -189,12 +238,14 @@ async function runImageGenerate(options: {
 
       case 'sd':
       case 'agnai':
+      case 'openai':
         image = await handleSDImage(
           {
             user,
             prompt,
             negative,
             settings: imageSettings,
+            provider,
             override: opts.model,
             params: opts.params,
             raw_prompt: opts.prompt,
@@ -212,6 +263,7 @@ async function runImageGenerate(options: {
             prompt,
             negative,
             settings: imageSettings,
+            provider,
             params: opts.params,
             raw_prompt: opts.prompt,
           },
@@ -225,64 +277,11 @@ async function runImageGenerate(options: {
       { err: ex, body: ex.body },
       `[${imageSettings?.type || 'default'}] Image generation failed `
     )
-    error = ex.message || ex
+
+    error = `Request failed: ${ex.message || ex}`
   }
 
   return { image, output, error }
-}
-
-function getImagePrompt(opts: ImageGenerateRequest, imageSettings: ImageSettings | undefined) {
-  let parsed = opts.prompt.replace(/\{\{prompt\}\}/g, ' ')
-  let prompt = parsed
-
-  if (imageSettings?.template) {
-    prompt = imageSettings.template.replace(/\{\{prompt\}\}/g, parsed)
-    if (!prompt.includes(parsed)) {
-      prompt = prompt + ' ' + parsed
-    }
-  }
-
-  prompt = prompt.trim()
-  opts.raw_prompt = prompt
-
-  if (!opts.noAffix) {
-    const parts = [prompt]
-    if (imageSettings?.prefix) {
-      parts.unshift(imageSettings.prefix)
-    }
-
-    if (imageSettings?.suffix) {
-      parts.push(imageSettings.suffix)
-    }
-
-    prompt = parts
-      .join(', ')
-      .split(',')
-      .filter((p) => !!p.trim())
-      .join(', ')
-      .replace(/,+/g, ',')
-      .replace(/ +/g, ' ')
-  }
-
-  return prompt
-}
-
-function getImageSettings(
-  chat: AppSchema.Chat | null | undefined,
-  character: AppSchema.Character | undefined,
-  user: AppSchema.User
-) {
-  let imageSettings =
-    chat?.imageSource === 'main-character' || chat?.imageSource === 'last-character'
-      ? character?.imageSettings
-      : chat?.imageSource === 'chat'
-      ? chat?.imageSettings
-      : user.images
-
-  if (!imageSettings) {
-    imageSettings = user.images
-  }
-  return imageSettings
 }
 
 async function updateMessageImages(opts: {

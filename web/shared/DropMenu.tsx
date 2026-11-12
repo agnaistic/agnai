@@ -1,7 +1,10 @@
 import { ChevronDown, ChevronUp } from 'lucide-solid'
-import { Component, createEffect, createMemo, createSignal, Show } from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, on, Show } from 'solid-js'
 import { useEffect } from './hooks'
 import { v4 } from 'uuid'
+
+export type Horz = 'left' | 'right'
+export type Vert = 'up' | 'down'
 
 export const Dropup: Component<{ children: any }> = (props) => {
   const [show, setShow] = createSignal(false)
@@ -9,7 +12,10 @@ export const Dropup: Component<{ children: any }> = (props) => {
   return (
     <div class="relative text-sm">
       <button
-        onClick={() => setShow(!show())}
+        onClick={(ev) => {
+          ev.preventDefault()
+          setShow(!show())
+        }}
         class="bg-800 rounded-l-none rounded-r-md border-l border-[var(--bg-700)] px-2 py-2 hover:bg-[var(--bg-700)]"
       >
         <ChevronUp />
@@ -27,7 +33,10 @@ export const Dropdown: Component<{ children: any }> = (props) => {
   return (
     <div class="relative text-sm">
       <button
-        onClick={() => setShow(!show())}
+        onClick={(ev) => {
+          ev.preventDefault()
+          setShow(!show())
+        }}
         class="bg-800 rounded-l-none rounded-r-md border-l border-[var(--bg-700)] px-2 py-2 hover:bg-[var(--bg-700)]"
       >
         <ChevronDown />
@@ -40,9 +49,6 @@ export const Dropdown: Component<{ children: any }> = (props) => {
     </div>
   )
 }
-
-type Horz = 'left' | 'right'
-type Vert = 'up' | 'down'
 
 export const DropMenu: Component<{
   show: boolean
@@ -132,13 +138,18 @@ export const DropMenu: Component<{
     return setAuto({ vert, horz })
   }
 
-  createEffect(() => {
-    if (props.show) {
-      onRef()
-      return
-    }
-    setOpened(false)
-  })
+  createEffect(
+    on(
+      () => props.show,
+      () => {
+        if (props.show) {
+          onRef()
+          return
+        }
+        setOpened(false)
+      }
+    )
+  )
 
   useEffect(() => {
     const handler = (event: MouseEvent | TouchEvent) => {

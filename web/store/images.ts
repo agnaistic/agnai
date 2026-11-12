@@ -1,6 +1,99 @@
 import { v4 } from 'uuid'
 import { imageApi } from './data/image'
 import { storage } from '../shared/util'
+import { ImageCacheHook } from '../shared/hooks'
+import { ButtonSchema } from '../shared/Button'
+import { createStore } from './create'
+import { debug } from '/common/debug'
+
+const log = debug('image-cache')
+
+export type ImageState = {
+  showImgSettings: boolean
+  preview?: { file: File; base64: string; percent: number }
+  signal?: AbortController
+
+  imggen: {
+    show: boolean
+    prompt?: string
+    action?: {
+      text: string
+      handler: (image: string) => void
+    }
+  }
+
+  showImage?: {
+    src: ImageSource
+    options: ImageButton[]
+    onClose?: () => void
+  }
+}
+
+export type ImageSource = {
+  type: 'collection' | 'url' | 'message'
+  messageId?: string
+  id: string
+  initial?: number
+  prompt?: string
+}
+
+export type ImageButton = {
+  schema: ButtonSchema
+  text: string
+  onClick: (ents?: { reel: ImageCacheHook; prompt: string }) => void
+}
+
+export const imageStore = createStore<ImageState>('image', {
+  imggen: { show: false },
+  showImgSettings: false,
+})(() => {
+  return {
+    openImageGen: (_, opts?: { prompt?: string; handler?: ImageButton; collectionId?: string }) => {
+      return {
+        showImage: {
+          options: opts?.handler ? [opts.handler] : [],
+          src: {
+            type: 'collection',
+            id: opts?.collectionId || '', // No ID = ephemeral
+            initial: 0,
+            prompt: opts?.prompt || '',
+          },
+        },
+      }
+    },
+    closeImageGen: () => {
+      return { showImage: undefined }
+    },
+    imageSettings({ showImgSettings }, next?: boolean) {
+      if (next === undefined) {
+        return { showImgSettings: !showImgSettings }
+      }
+
+      return { showImgSettings: next }
+    },
+    showImage(_, opts: { src: ImageSource; actions?: ImageButton[]; onClose?: () => void }) {
+      return { showImage: { src: opts.src, options: opts.actions || [], onClose: opts.onClose } }
+    },
+    showMessageImages(prev, opts: { id: string; position?: number }) {
+      if (prev.showImage) return
+
+      return {
+        showImage: {
+          src: {
+            type: 'message',
+            id: `message-images-${opts.id}`,
+            initial: opts.position,
+            messageId: opts.id,
+          },
+          options: [],
+        },
+      }
+    },
+    clearImage() {
+      return { showImage: undefined }
+    },
+  }
+})
 
 // const store = lf.createInstance({ name: `agnai-images` })
 
@@ -30,13 +123,12 @@ export function createImageCache(collection: string): ImageReel {
 }
 
 async function getImageIds(collection: string): Promise<string[]> {
-  console.log(`[img-cache] loading ${collection}`)
-  const json = await storage.getItem(`${collection}`)
-  if (!json) return []
+  log(`loading %s`, collection.slice(0, 20) + '...')
+  const json = (await storage.getItem(`${collection}`)) || JSON.stringify([])
 
-  const ids = JSON.parse(json as string)
-
-  return ids as string[]
+  const ids = JSON.parse(json as string) as string[]
+  log(`loaded %s: %s`, collection.slice(0, 20) + '...', ids.length)
+  return ids
 }
 
 async function addImage(
@@ -59,6 +151,7 @@ async function addImage(
 }
 
 async function getImage(collection: string, imageId: string): Promise<string | undefined> {
+  if (!imageId) return
   if (imageId.startsWith('cache:')) {
     const image = await storage.getItem(imageId)
     if (image) return image
@@ -94,5 +187,6 @@ async function removeAll(collection: string) {
 
 async function saveImageIds(collection: string, ids: string[]) {
   await storage.setItem(`${collection}`, JSON.stringify(ids))
+  log(`saved ${collection.slice(0, 2)}: ${ids.length}`)
   return ids
 }

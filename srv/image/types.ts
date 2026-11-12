@@ -1,6 +1,6 @@
 import { AppSchema } from '../../common/types/schema'
 import { AppLog } from '../middleware'
-import { ImageSettings } from '/common/types/image-schema'
+import { BaseImageSettings, ImageProviderSettings } from '/common/types/image-schema'
 
 export type ImageGenerateRequest = {
   user: AppSchema.User
@@ -37,7 +37,8 @@ export type ImageRequestOpts = {
   user: AppSchema.User
   prompt: string
   negative: string
-  settings: ImageSettings | undefined
+  settings: BaseImageSettings | undefined
+  provider: ImageProviderSettings
   override?: string
   raw_prompt: string | undefined
   params?: ImageGenerateRequest['params']

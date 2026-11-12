@@ -1,6 +1,6 @@
 import { decryptText } from '../db/util'
 import { ModelAdapter } from './type'
-import { sanitise, sanitiseAndTrim, trimResponseV2 } from '/common/requests/util'
+import { sanitise } from '/common/requests/util'
 import {
   Content,
   GenerateContentConfig,
@@ -9,22 +9,17 @@ import {
   HarmCategory,
   SafetySetting,
 } from '@google/genai'
-import { remapMessages, toChatMessages } from './template-chat-payload'
+import { remapMessages } from './template-chat-payload'
 import { getMimeTypeBase64 } from '/common/util'
 import { getEncoderByName } from '../tokenize'
 import { getJsonSchemaPayload } from '/common/guidance/json-schema'
 import { getStoppingStrings } from '/common/requests/payloads'
+import { toChatMessages } from '/common/template-messages'
+import { LLM_DEBUG } from './util'
 
 const SYSTEM_INCAPABLE: Record<string, boolean> = {
   'gemini-1.0-pro-latest': true,
 }
-
-const DEBUG =
-  typeof window !== 'undefined'
-    ? false
-    : typeof process !== 'undefined'
-    ? process.env.LOG_LEVEL === 'debug' && !!process.env.LOG_CHUNKS
-    : false
 
 export const handleGemini: ModelAdapter = async function* (opts) {
   const key = opts.guest ? opts.gen.thirdPartyKey : decryptText(opts.gen.thirdPartyKey!)
@@ -54,10 +49,9 @@ export const handleGemini: ModelAdapter = async function* (opts) {
     presencePenalty: opts.gen.presencePenalty,
     frequencyPenalty: opts.gen.frequencyPenalty,
     abortSignal: opts.signal.signal,
-    responseSchema:
-      opts.gen.jsonEnabled && opts.jsonSchema
-        ? getJsonSchemaPayload(opts.jsonSchema, 'gemini', opts)
-        : undefined,
+    responseSchema: opts.jsonSchema
+      ? getJsonSchemaPayload(opts.jsonSchema, 'gemini', opts)
+      : undefined,
   }
 
   if (opts.gen.reasoning?.enabled) {
@@ -219,42 +213,22 @@ export const handleGemini: ModelAdapter = async function* (opts) {
 
       if (!text) continue
 
-      if (thought) {
-        thoughts += text
-      }
-
-      if (DEBUG) {
+      if (LLM_DEBUG) {
         console.log([`[g:chunk] ${JSON.stringify(tick)}`])
       }
 
-      if (!thought) {
+      if (thought) {
+        thoughts += text
+        yield { thoughts: text }
+      } else {
         accum += text || ''
-      }
-
-      yield {
-        partial: sanitiseAndTrim({
-          text: (thoughts ? '<think>' : '') + thoughts + (thoughts ? '</think>' : '') + accum,
-          char: opts.replyAs,
-          members: opts.members,
-          gen: opts.gen,
-        }),
+        yield { partial: accum }
       }
     }
   }
 
-  const parsed = sanitise(
-    (thoughts ? '<think>' : '') + thoughts + (thoughts ? '</think>' : '') + accum
-  )
-
-  const trimmed = trimResponseV2(
-    parsed,
-    opts.replyAs,
-    opts.members,
-    opts.gen,
-    generationConfig.stopSequences
-  )
-
-  yield trimmed || parsed
+  const parsed = sanitise(accum)
+  yield parsed
 }
 
 const safetySettings: SafetySetting[] = [

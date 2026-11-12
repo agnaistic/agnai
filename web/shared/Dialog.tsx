@@ -1,11 +1,11 @@
 import { Component, JSX, Show } from 'solid-js'
-import { PartialEmitter } from './util'
+import { PartialEventEmitter } from './util'
 import { Portal } from 'solid-js/web'
 
 export const Dialog: Component<{
   show: boolean
   close: () => void
-  emitter?: PartialEmitter<'close'>
+  emitter?: PartialEventEmitter<'close'>
   class?: string
   children: any
 

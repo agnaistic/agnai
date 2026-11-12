@@ -7,7 +7,6 @@ import {
   ChevronRight,
   HeartHandshake,
   HelpCircle,
-  Image,
   ImagePlus,
   LogIn,
   MailQuestion,
@@ -38,18 +37,19 @@ import {
 } from 'solid-js'
 import AvatarIcon, { CharacterAvatar } from './shared/AvatarIcon'
 import {
-  UserState,
   announceStore,
   audioStore,
   characterStore,
+  imageStore,
   inviteStore,
+  pageStore,
   settingStore,
   toastStore,
   userStore,
 } from './store'
 import Slot from './shared/Slot'
 import {
-  isChatPage,
+  isChatPageMemo,
   useEffect,
   usePaneManager,
   useRef,
@@ -70,14 +70,16 @@ const Navigation: Component = () => {
   let parent: any
   let content: any
 
-  const state = settingStore()
-  const user = userStore()
+  const page = pageStore((s) => ({ showMenu: s.showMenu }))
+  const state = settingStore((s) => ({ config: s.config }))
+  const user = userStore((s) => ({ userLevel: s.userLevel, loggedIn: s.loggedIn }))
+
   const size = useWindowSize()
   const pane = usePaneManager()
-  const nav = navStore()
+  const nav = navStore((s) => ({ body: s.body, header: s.header, title: s.title }))
 
   const [subnav, setSubnav] = createSignal(false)
-  const isChat = isChatPage()
+  const isChat = isChatPageMemo()
 
   createEffect(
     on(
@@ -93,14 +95,19 @@ const Navigation: Component = () => {
     )
   )
 
-  createEffect(() => {
-    if (isChat()) return
-    const platform = size.platform()
+  createEffect(
+    on(
+      () => isChat(),
+      () => {
+        if (isChat()) return
+        const platform = size.platform()
 
-    if (platform === 'xl' && !state.showMenu) {
-      settingStore.menu(true)
-    }
-  })
+        if (platform === 'xl' && !page.showMenu) {
+          pageStore.menu(true)
+        }
+      }
+    )
+  )
 
   const suffix = createMemo(() => (user.userLevel > 0 ? '+' : ''))
 
@@ -135,11 +142,11 @@ const Navigation: Component = () => {
 
   return (
     <>
-      <Show when={!state.showMenu && dismissable()}>
+      <Show when={!page.showMenu && dismissable()}>
         <div
           class="icon-button absolute left-2 top-4 z-50 rounded-md px-2 py-2"
           style={{ background: getRgbaFromVar('bg-700', 0.3)?.background }}
-          onClick={() => settingStore.menu(true)}
+          onClick={() => pageStore.menu(true)}
           classList={{ hidden: !isChat() }}
         >
           <Menu />
@@ -149,8 +156,8 @@ const Navigation: Component = () => {
         ref={parent}
         class={`drawer bg-800 flex flex-col gap-2 pt-2`}
         classList={{
-          flex: !state.showMenu,
-          'drawer--hide': dismissable() && !state.showMenu,
+          flex: !page.showMenu,
+          'drawer--hide': dismissable() && !page.showMenu,
           'drawer--pane-open': pane.showing(),
         }}
         role="navigation"
@@ -162,7 +169,7 @@ const Navigation: Component = () => {
               class="icon-button flex w-2/12 justify-start p-1"
               onClick={() => {
                 if (!dismissable()) return
-                settingStore.menu()
+                pageStore.menu()
               }}
             >
               <Menu classList={{ hidden: !dismissable() }} />
@@ -177,10 +184,10 @@ const Navigation: Component = () => {
                 aria-label="Agnaistic main page"
               >
                 <div
-                  class="flex h-8 w-full items-center justify-center rounded-lg font-bold"
+                  class="flex h-8 w-full items-center justify-center rounded-lg text-lg font-bold tracking-wide"
                   aria-hidden="true"
                 >
-                  Agn<span class="text-[var(--hl-500)]">ai</span>
+                  Agn<span class="text-[var(--hl-400)]">ai</span>
                   {suffix()}
                 </div>
               </A>
@@ -249,8 +256,11 @@ const Navigation: Component = () => {
 }
 
 const UserNavigation: Component = () => {
-  const user = userStore()
-  const menu = settingStore()
+  const user = userStore((s) => ({ user: s.user }))
+  const page = pageStore((s) => ({ flags: s.flags, showMenu: s.showMenu }))
+  const menu = settingStore((s) => ({
+    config: s.config,
+  }))
 
   const guidance = createMemo(() => {
     const usable = menu.config.subs.some((sub) => sub.guidance)
@@ -265,7 +275,7 @@ const UserNavigation: Component = () => {
       <div class="flex flex-col gap-1 px-2">
         <UserProfile />
 
-        <Show when={menu.flags.chub}>
+        <Show when={page.flags.chub}>
           <MultiItem>
             <Item href="/chub" ariaLabel="Character hub">
               <ShoppingBag aria-hidden="true" />
@@ -301,7 +311,7 @@ const UserNavigation: Component = () => {
           </EndItem>
         </MultiItem>
 
-        <Show when={menu.flags.sounds}>
+        <Show when={page.flags.sounds}>
           <Sounds />
         </Show>
 
@@ -329,9 +339,7 @@ const UserNavigation: Component = () => {
         <NavIcons
           supportEmail={menu.config.serverConfig?.supportEmail}
           patreon={menu.config.patreon}
-          user={user}
-          showMenu={menu.showMenu}
-          mode={user.ui.mode}
+          showMenu={page.showMenu}
         />
       </div>
 
@@ -341,12 +349,10 @@ const UserNavigation: Component = () => {
 }
 
 const GuestNavigation: Component = () => {
-  const user = userStore()
+  const page = pageStore((s) => ({ flags: s.flags, showMenu: s.showMenu }))
   const menu = settingStore((s) => ({
-    showMenu: s.showMenu,
     config: s.config,
     guest: s.guestAccessAllowed,
-    flags: s.flags,
   }))
 
   return (
@@ -368,7 +374,7 @@ const GuestNavigation: Component = () => {
 
           <CharacterLink />
 
-          <Show when={menu.flags.chub}>
+          <Show when={page.flags.chub}>
             <Item href="/chub" ariaLabel="Character hub">
               <ShoppingBag aria-hidden="true" />
               CHUB
@@ -399,7 +405,7 @@ const GuestNavigation: Component = () => {
             </EndItem>
           </MultiItem>
 
-          <Show when={menu.flags.sounds}>
+          <Show when={page.flags.sounds}>
             <Sounds />
           </Show>
         </Show>
@@ -407,9 +413,7 @@ const GuestNavigation: Component = () => {
         <NavIcons
           supportEmail={menu.config.serverConfig?.supportEmail}
           patreon={menu.config.patreon}
-          user={user}
-          showMenu={menu.showMenu}
-          mode={user.ui.mode}
+          showMenu={page.showMenu}
         />
       </div>
 
@@ -418,25 +422,62 @@ const GuestNavigation: Component = () => {
   )
 }
 
-const NavIcons: Component<{
-  patreon?: boolean
-  supportEmail?: string
-  user: UserState
-  showMenu: boolean
-  mode: 'light' | 'dark'
-}> = (props) => {
-  const invites = inviteStore()
-  const toasts = toastStore()
-  const announce = announceStore()
+export const NotificationBell: Component<{ showMenu?: boolean; size?: number }> = (props) => {
+  const toasts = toastStore((s) => ({ unseen: s.unseen }))
+  const announce = announceStore((s) => ({ list: s.list }))
+  const user = userStore((s) => ({ user: s.user, ui: s.ui }))
+  const invites = inviteStore((s) => ({ invites: s.invites }))
 
   const count = createMemo(() => {
-    const threshold = new Date(props.user.user?.announcement || 0).toISOString()
+    const threshold = new Date(user.user?.announcement || 0).toISOString()
     const unseen = announce.list.filter(
       (l) => l.location === 'notification' && l.showAt > threshold
     )
 
     return unseen.length + toasts.unseen + invites.invites.length
   })
+
+  return (
+    <Item
+      onClick={() => {
+        if (props.showMenu) pageStore.closeMenu()
+        toastStore.modal(true)
+      }}
+      ariaLabel="Show notification list"
+    >
+      <Switch>
+        <Match when={count() > 0}>
+          <div
+            class="relative flex"
+            role="status"
+            aria-label={`Status: You have ${count()} new notifications`}
+          >
+            <Bell fill="var(--bg-100)" aria-hidden="true" size={props.size} />
+            <span class="absolute bottom-[-0.5rem] right-[-0.5rem]" aria-hidden="true">
+              <Badge type="rose">{count() > 9 ? '9+' : count()}</Badge>
+            </span>
+          </div>
+        </Match>
+
+        <Match when={!count()}>
+          <Bell
+            color="var(--bg-500)"
+            role="status"
+            aria-label="Status: No new notifications"
+            size={props.size}
+          />
+        </Match>
+      </Switch>
+    </Item>
+  )
+}
+
+const NavIcons: Component<{
+  patreon?: boolean
+  supportEmail?: string
+  showMenu: boolean
+}> = (props) => {
+  const user = userStore((s) => ({ user: s.user, ui: s.ui }))
 
   return (
     <>
@@ -453,12 +494,12 @@ const NavIcons: Component<{
           <HelpCircle aria-hidden="true" />
         </Item>
 
-        <Item onClick={() => settingStore.modal(true)} ariaLabel="Open settings page">
+        <Item onClick={() => pageStore.settings(true)} ariaLabel="Open settings page">
           <Settings aria-hidden="true" />
         </Item>
 
         <Item
-          onClick={() => settingStore.openImageGen()}
+          onClick={() => imageStore.openImageGen({ collectionId: 'global' })}
           ariaLabel="Image Generation"
           tooltip="Image Generation"
         >
@@ -466,50 +507,17 @@ const NavIcons: Component<{
         </Item>
 
         <Item
-          onClick={() => settingStore.imageSettings(true)}
-          ariaLabel="Image Settings"
-          tooltip="Image Settings"
-        >
-          <Image aria-hidden="true" />
-        </Item>
-
-        <Item
           ariaLabel="Toggle between light and dark mode"
           onClick={() => {
-            userStore.saveUI({ mode: props.user.ui.mode === 'light' ? 'dark' : 'light' })
+            userStore.saveUI({ mode: user.ui.mode === 'light' ? 'dark' : 'light' })
           }}
         >
-          <Show when={props.user.ui.mode === 'dark'} fallback={<Sun />}>
+          <Show when={user.ui.mode === 'dark'} fallback={<Sun />}>
             <Moon aria-hidden="true" />
           </Show>
         </Item>
 
-        <Item
-          onClick={() => {
-            if (props.showMenu) settingStore.closeMenu()
-            toastStore.modal(true)
-          }}
-          ariaLabel="Show notification list"
-        >
-          <Switch>
-            <Match when={count() > 0}>
-              <div
-                class="relative flex"
-                role="status"
-                aria-label={`Status: You have ${count()} new notifications`}
-              >
-                <Bell fill="var(--bg-100)" aria-hidden="true" />
-                <span class="absolute bottom-[-0.5rem] right-[-0.5rem]" aria-hidden="true">
-                  <Badge type="rose">{count() > 9 ? '9+' : count()}</Badge>
-                </span>
-              </div>
-            </Match>
-
-            <Match when={!count()}>
-              <Bell color="var(--bg-500)" role="status" aria-label="Status: No new notifications" />
-            </Match>
-          </Switch>
-        </Item>
+        <NotificationBell showMenu={props.showMenu} />
       </div>
       <div class="flex flex-wrap justify-center gap-[2px] text-sm">
         <Show when={props.patreon}>
@@ -519,10 +527,10 @@ const NavIcons: Component<{
         </Show>
 
         <ExternalLink href="https://discord.agnai.chat" newtab ariaLabel="Discord">
-          <Show when={props.mode === 'dark'}>
+          <Show when={user.ui.mode === 'dark'}>
             <DiscordLightIcon />
           </Show>
-          <Show when={props.mode === 'light'}>
+          <Show when={user.ui.mode === 'light'}>
             <DiscordDarkIcon />
           </Show>
         </ExternalLink>
@@ -531,14 +539,14 @@ const NavIcons: Component<{
   )
 }
 
-function onItemClick(onClick?: () => void, menuOpen?: boolean) {
-  return () => {
+function onItemClick(onClick?: () => void) {
+  return (menuOpen?: boolean) => {
     onClick?.()
 
     if (menuOpen) return
 
-    const { showMenu } = settingStore.getState()
-    if (showMenu) settingStore.closeMenu()
+    const { showMenu } = pageStore.getState()
+    if (showMenu) pageStore.closeMenu()
   }
 }
 
@@ -551,7 +559,10 @@ const Item: Component<{
   tooltip?: string
   menuOpen?: boolean
   tipClass?: string
+  disabled?: boolean
 }> = (props) => {
+  const clicked = onItemClick(props.onClick)
+
   return (
     <Tooltip
       position="top"
@@ -568,7 +579,7 @@ const Item: Component<{
             'gap-4': !props.class?.includes('gap-'),
             'min-h-[2.25rem]': !props.class?.includes('h-'),
           }}
-          onClick={onItemClick(props.onClick, props.menuOpen)}
+          onClick={() => clicked(props.menuOpen)}
           tabindex={0}
           role="button"
           aria-label={props.ariaLabel}
@@ -584,8 +595,9 @@ const Item: Component<{
           }`}
           classList={{
             'min-h-[2.25rem]': !props.class?.includes('h-'),
+            '!text-300': !!props.disabled,
           }}
-          onClick={onItemClick(props.onClick, props.menuOpen)}
+          onClick={() => (props.disabled ? null : clicked())}
           role="button"
           aria-label={props.ariaLabel}
         >
@@ -615,7 +627,7 @@ const SubItem: Component<{
         href={props.href!}
         class="flex min-h-[2.5rem] items-center justify-start gap-4 rounded-lg px-2 pl-4 hover:bg-[var(--bg-700)] sm:min-h-[2.5rem]"
         onClick={() => {
-          if (settingStore.getState().showMenu) settingStore.closeMenu()
+          if (pageStore.getState().showMenu) pageStore.closeMenu()
         }}
         role="button"
         aria-label={props.ariaLabel}
@@ -662,7 +674,7 @@ const Library: Component<{}> = (props) => {
 }
 
 const Sounds: Component<{}> = (props) => {
-  const audioSettings = audioStore()
+  const audioSettings = audioStore((s) => ({ tracks: s.tracks }))
 
   return (
     <MultiItem>
@@ -725,9 +737,9 @@ const ChatLink = () => {
 }
 
 export const UserProfile = () => {
-  const chars = characterStore()
-  const user = userStore()
-  const menu = settingStore()
+  const chars = characterStore((s) => ({ impersonating: s.impersonating }))
+  const user = userStore((s) => ({ profile: s.profile }))
+  const menu = pageStore((s) => ({ showMenu: s.showMenu }))
 
   return (
     <>
@@ -740,19 +752,19 @@ export const UserProfile = () => {
         <Item
           ariaLabel="Edit user profile"
           onClick={() => {
-            if (menu.showMenu) settingStore.closeMenu()
+            if (menu.showMenu) pageStore.closeMenu()
             soundEmitter.emit('menu-item-clicked', 'profile')
             userStore.modal(true)
           }}
         >
           <Switch>
+            Darkl
             <Match when={chars.impersonating}>
               <CharacterAvatar
                 char={chars.impersonating!}
                 format={{ corners: 'circle', size: 'xs' }}
               />
             </Match>
-
             <Match when>
               <AvatarIcon
                 avatarUrl={chars.impersonating?.avatar || user.profile?.avatar}
@@ -769,8 +781,8 @@ export const UserProfile = () => {
             size="sm"
             aria-label="Open impersonation menu"
             onClick={() => {
-              settingStore.toggleImpersonate(true)
-              if (menu.showMenu) settingStore.closeMenu()
+              pageStore.toggleImpersonate(true)
+              if (menu.showMenu) pageStore.closeMenu()
             }}
           >
             Persona
@@ -807,8 +819,9 @@ const EndItem: Component<{ children: any }> = (props) => {
 
 const Slots: Component = (props) => {
   const [ref, onRef] = useRef()
-  const state = settingStore()
   const { load } = useResizeObserver()
+
+  const page = pageStore((s) => ({ showMenu: s.showMenu }))
 
   createEffect(() => {
     const ele = ref()
@@ -820,7 +833,7 @@ const Slots: Component = (props) => {
   createEffect(() => {
     if (rendered()) return
 
-    if (state.showMenu) {
+    if (page.showMenu) {
       setTimeout(() => setRendered(true), 500)
     }
   })
@@ -844,7 +857,7 @@ export const SubCTA: Component<{
   children?: any
   onClick?: () => void
 }> = (props) => {
-  const settings = settingStore()
+  const settings = settingStore((s) => ({ config: s.config }))
   const [, setSearch] = useSearchParams()
 
   const openSubPage = () => {

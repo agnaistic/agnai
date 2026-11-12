@@ -3,21 +3,15 @@ import TextInput from '../../shared/TextInput'
 import { Toggle } from '../../shared/Toggle'
 import Select from '../../shared/Select'
 import { toDropdownItems } from '../../shared/util'
-import { chubStore } from '../../store/chub'
-
-const sorts = [
-  'Download Count',
-  'ID',
-  'Rating',
-  'Rating Count',
-  'Last Activity',
-  'Creation Date',
-  'Name',
-  'Token Count',
-]
+import { CHUB_SORTS, chubStore } from '../../store/chub'
 
 const FilterSettings: Component = () => {
-  const state = chubStore()
+  const state = chubStore((s) => ({
+    nsfw: s.nsfw,
+    tags: s.tags,
+    excludeTags: s.excludeTags,
+    sort: s.sort as keyof typeof CHUB_SORTS,
+  }))
 
   return (
     <div class="relative flex flex-col gap-2">
@@ -54,8 +48,8 @@ const FilterSettings: Component = () => {
       <Select
         fieldName="sort"
         label="Sort By"
-        items={toDropdownItems(sorts)}
-        value={state.sort}
+        items={toDropdownItems(CHUB_SORTS)}
+        value={CHUB_SORTS[state.sort] ? state.sort : 'default'}
         onChange={(v) => {
           chubStore.setSort(v.value)
         }}

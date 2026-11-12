@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events'
-import { send } from './store/create'
+// import { send } from './store/create'
 
 export const EVENTS = {
   loggedIn: 'logged-in',
@@ -8,6 +8,7 @@ export const EVENTS = {
   init: 'init',
   charsReceived: 'chars-received',
   allChars: 'all-chars-recieved',
+  allChats: 'all-chats-received',
   setInputText: 'set-input-text',
   charUpdated: 'character-updated',
   clearMsgs: 'clear-messages',
@@ -21,6 +22,7 @@ export const EVENTS = {
   chatClosed: 'chat-closed',
   userBanned: 'user-banned',
   msgAttachment: 'msg-attachment',
+  setWaiting: 'set-waiting',
 } as const
 
 type EventType = (typeof EVENTS)[keyof typeof EVENTS]
@@ -28,12 +30,16 @@ type EventType = (typeof EVENTS)[keyof typeof EVENTS]
 const emitter = new EventEmitter()
 
 export const events = {
-  emit: (event: EventType, ...args: any[]) => emitter.emit(event, ...args),
+  emit: (event: EventType, ...args: any[]) => {
+    setTimeout(() => {
+      emitter.emit(event, ...args)
+    })
+  },
   on: (event: EventType, callback: (...args: any[]) => void) => emitter.on(event, callback),
   removeListener: (event: EventType, listener: (...args: any[]) => void) =>
     emitter.removeListener(event, listener),
 }
 
-for (const event of Object.values(EVENTS)) {
-  emitter.on(event, (...args) => send('[***] emitter', { type: event, args }, undefined))
-}
+// for (const event of Object.values(EVENTS)) {
+//   emitter.on(event, (...args) => send('[***] emitter', { type: event, args }, undefined))
+// }

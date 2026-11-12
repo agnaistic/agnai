@@ -1,14 +1,13 @@
 import { Component, For, Show, createEffect, createMemo, createSignal, on, onMount } from 'solid-js'
 import { FormLabel } from '../FormLabel'
-import { AIAdapter } from '/common/adapters'
-import { toMap } from '../util'
+import { getJsonSchema, toMap } from '../util'
 import { useEffect } from '../hooks'
 import { HelpCircle } from 'lucide-solid'
 import { Card, Pill } from '../Card'
 import Button from '../Button'
 import { parseTemplate } from '/common/template-parser'
 import { toBotMsg, toChar, toChat, toPersona, toProfile, toUser, toUserMsg } from '/common/dummy'
-import { ensureValidTemplate, buildPromptPlaceholders } from '/common/prompt'
+import { buildPromptPlaceholders } from '/common/prompt'
 import { isDefaultTemplate, replaceTags } from '../../../common/presets/templates'
 import TextInput from '../TextInput'
 import { presetStore } from '/web/store'
@@ -18,13 +17,12 @@ import { Toggle } from '/web/shared/Toggle'
 import { AutoEvent, PromptSuggestions, onPromptAutoComplete, onPromptKey } from './Suggestions'
 import { Interp, Optionals, placeholders, v2placeholders, Placeholder } from './types'
 import { DefinitionsModal } from './Definitions'
-import { PresetFuncs, PresetState } from '/web/store/preset-context'
+import { PresetFuncs, ContextPreset } from '/web/store/preset-context'
 
 const PromptEditor: Component<
   {
-    service?: AIAdapter
     fieldName?: string
-    state?: PresetState
+    state?: ContextPreset
     disabled?: boolean
     value: string
     onChange: (update: { prompt?: string; templateId?: string }) => void
@@ -43,7 +41,7 @@ const PromptEditor: Component<
 > = (props) => {
   let ref: HTMLTextAreaElement = null as any
 
-  const presets = presetStore()
+  const presets = presetStore((s) => ({ templates: s.templates }))
 
   const [autoOpen, setAutoOpen] = createSignal(false)
   const [template, setTemplate] = createSignal('')
@@ -52,6 +50,19 @@ const PromptEditor: Component<
   const [templates, setTemplates] = createSignal(false)
   const [preview, setPreview] = createSignal(false)
   const [rendered, setRendered] = createSignal('')
+
+  const currentPrompt = createMemo(() => {
+    if (!props.state?.promptTemplateId) {
+      return props.value
+    }
+
+    const template = presets.templates.find((t) => props.state?.promptTemplateId)
+    if (template) {
+      return template.template
+    }
+
+    return props.value
+  })
 
   const openTemplate = () => {
     setTemplates(true)
@@ -73,9 +84,24 @@ const PromptEditor: Component<
     return template?.name || ''
   })
 
+  const suggestions = createMemo(() => {
+    if (!props.state) return []
+
+    const schema = getJsonSchema({ preset: props.state })
+    if (!schema?.schema) return []
+
+    const names = schema.schema.schema.reduce((prev, curr) => {
+      prev.push(curr.name)
+      if (curr.alias) prev.push(curr.alias)
+      return prev
+    }, [] as string[])
+
+    return names
+  })
+
   const togglePreview = async () => {
     const opts = await getExampleOpts(props.state)
-    const template = props.noDummyPreview ? props.value : ensureValidTemplate(props.value)
+    const template = currentPrompt()
     let { parsed } = await parseTemplate(template, opts)
 
     if (props.state?.modelFormat) {
@@ -234,7 +260,7 @@ const PromptEditor: Component<
         onComplete={(opt) => onPromptAutoComplete(ref, opt)}
         open={autoOpen()}
         close={() => setAutoOpen(false)}
-        jsonValues={{ example: '', 'example with spaces': '', response: '' }}
+        jsonValues={suggestions()}
       />
       <textarea
         class="form-field focusable-field text-900 min-h-[4rem] w-full rounded-xl border border-[var(--bg-600)] px-4 py-2 font-mono !text-xs"
@@ -244,6 +270,7 @@ const PromptEditor: Component<
         disabled={props.disabled || !!props.state?.promptTemplateId}
         placeholder={props.placeholder?.replace(/\n/g, '\u000A')}
         onKeyDown={onTemplateKeyDown}
+        onPaste={onChange}
       />
 
       <div class="flex flex-wrap gap-2" classList={{ hidden: !!props.state?.promptTemplateId }}>
@@ -265,11 +292,11 @@ const PromptEditor: Component<
           show={templates()}
           close={() => setTemplates(false)}
           select={(id, template) => {
-            props.onChange({ templateId: id, prompt: props.value })
+            props.onChange({ templateId: id, prompt: template })
           }}
           currentTemplateId={props.state?.promptTemplateId}
           currentTemplate={template()}
-          presetId={props.state?._id}
+          preset={props.state}
         />
       </Show>
     </div>
@@ -295,7 +322,7 @@ const SORTED_LABELS = Object.entries(BASIC_LABELS)
   .sort((l, r) => l.id - r.id)
 
 export const BasicPromptTemplate: Component<{
-  state: PresetState
+  state: ContextPreset
   setters: PresetFuncs
   hide?: boolean
 }> = (props) => {
@@ -375,7 +402,7 @@ const PlaceholderPill: Component<
   )
 }
 
-async function getExampleOpts(inherit?: PresetState) {
+async function getExampleOpts(inherit?: ContextPreset) {
   const char = toChar('Rory', {
     scenario: 'Rory is strolling in the park',
     persona: toPersona('Rory is very talkative.'),

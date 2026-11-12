@@ -2,12 +2,15 @@ import { v4 } from 'uuid'
 import { AppSchema } from '../../../common/types/schema'
 import { api, isLoggedIn } from '../api'
 import { loadItem, localApi } from './storage'
-import { now, replace } from '/common/util'
+import { deepClone, now, replace } from '/common/util'
 import { joinUrl } from '/common/requests/util'
 import { toastStore } from '../toasts'
 import { storage } from '/web/shared/util'
 import { getStore } from '../create'
 import { getSafeProviderDetail } from '/common/providers'
+import { defaultPresets, getFallbackPreset } from '/common/presets'
+import { isDefaultPreset } from '/common/default-preset'
+import { debug } from '/common/debug'
 
 export type PresetUpdate = Omit<AppSchema.UserGenPreset, '_id' | 'kind' | 'userId'>
 export type PresetCreate = PresetUpdate & { chatId?: string }
@@ -16,6 +19,7 @@ export type SubscriptionUpdate = Omit<AppSchema.SubscriptionModel, 'kind' | '_id
 export const presetApi = {
   getPresets,
   getPreset,
+  getChatPreset,
   createPreset,
   editPreset,
   deletePreset,
@@ -25,16 +29,21 @@ export const presetApi = {
   deleteTemplate,
   deleteUserPresetKey,
   getModelListByPreset,
+  testLocalUrl,
 }
 
 export async function getPresets() {
   if (isLoggedIn()) {
-    const res = await api.get<{ presets: AppSchema.UserGenPreset[] }>('/user/presets')
+    const res = await api.get<{
+      presets: AppSchema.UserGenPreset[]
+      templates: AppSchema.PromptTemplate[]
+    }>('/user/presets')
     return res
   }
 
   const presets = await loadItem('presets')
-  return localApi.result({ presets })
+  const templates = await loadItem('templates')
+  return localApi.result({ presets, templates })
 }
 
 export async function getPreset(id: string) {
@@ -48,6 +57,41 @@ export async function getPreset(id: string) {
 
   if (!preset) {
     return localApi.error('Preset not found')
+  }
+
+  return localApi.result(preset)
+}
+
+async function getChatPreset(chatId: string) {
+  if (isLoggedIn()) {
+    const res = await api.get<AppSchema.UserGenPreset>(`/user/presets/${chatId}/chat`)
+    return res
+  }
+
+  const chats = await loadItem('chats')
+  const chat = chats.find((ch) => ch._id === chatId)
+  if (!chat) {
+    return localApi.error(`Preset not found: Invalid chat`)
+  }
+
+  const presets = await loadItem('presets')
+
+  if (!chat.genPreset) {
+    const fallback = getFallbackPreset('agnaistic')
+    return localApi.result(fallback)
+  }
+
+  if (isDefaultPreset(chat.genPreset)) {
+    const fallback = { _id: chat.genPreset, ...deepClone(defaultPresets[chat.genPreset]) }
+    return localApi.result(fallback)
+  }
+
+  const preset = presets.find((p) => p._id === chat.genPreset)
+
+  if (!preset) {
+    toastStore.warn(`Preset not found: Using built-in`)
+    const fallback = getFallbackPreset('agnaistic')
+    return localApi.result(fallback)
   }
 
   return localApi.result(preset)
@@ -124,6 +168,7 @@ async function getLocalModelList(opts: {
     }
 
     const res = await fetch(joinUrl(opts.url, '/models'), { headers }).then((res) => res.json())
+
     const list = Array.isArray(res.data) ? res.data : Array.isArray(res) ? res : []
     const models: string[] = []
 
@@ -146,7 +191,28 @@ async function getLocalModelList(opts: {
   }
 }
 
-async function getModelListByPreset(preset: Partial<AppSchema.UserGenPreset>, refresh = false) {
+async function testLocalUrl(opts: { url: string; key?: string }) {
+  const headers: any = {}
+
+  if (opts.key) {
+    headers.Authorization = `Bearer ${opts.key}`
+    headers['x-api-key'] = opts.key
+  }
+
+  try {
+    const res = await fetch(joinUrl(opts.url, '/models'), { headers }).then((res) => res.json())
+    return localApi.result({ url: opts.url, success: true, json: res })
+  } catch (ex) {}
+
+  try {
+    const res = await fetch(joinUrl(opts.url, '/v1/models'), { headers }).then((res) => res.json())
+    return localApi.result({ url: joinUrl(opts.url, '/v1'), success: true, json: res })
+  } catch (ex) {}
+
+  return localApi.result({ success: false, url: opts.url })
+}
+
+async function getModelListByPreset(preset: Partial<AppSchema.UserGenPreset>, force = false) {
   if (preset.providerId === 'agnaistic') return
   if (!preset.providerId && preset.service === 'agnaistic') return
 
@@ -175,15 +241,17 @@ async function getModelListByPreset(preset: Partial<AppSchema.UserGenPreset>, re
       return { list: [], url: '', data: [] }
     }
 
-    const result =
-      detail.category === 'self'
-        ? await getLocalModelList({ url, key: provider.userKey || provider.key })
-        : await getPresetModelList({
-            id: preset._id || '',
-            providerId: preset.providerId,
-            url,
-            key: '',
-          })
+    const useLocal = detail.category === 'self' || provider.provider === 'known-openrouter'
+
+    const result = useLocal
+      ? await getLocalModelList({ url, key: provider.userKey || provider.key })
+      : await getPresetModelList({
+          id: preset._id || '',
+          providerId: preset.providerId,
+          url,
+          key: isLoggedIn() ? '' : provider.key,
+          useCache: !force,
+        })
 
     return { list: result.models, url, data: result.data }
   }
@@ -207,7 +275,7 @@ async function getModelListByPreset(preset: Partial<AppSchema.UserGenPreset>, re
         url,
         // We pass this for presets that are un-saved
         key,
-        useCache: !refresh,
+        useCache: !force,
       })
 
   return { list: result.models, data: result.data, url }
@@ -222,12 +290,11 @@ async function getPresetModelList(opts: {
   key?: string
   useCache?: boolean
 }): Promise<{ models: string[]; data?: any[] }> {
-  const alreadySeen = MODELS_LOADED.has(opts.url)
   const isGuest = !isLoggedIn()
 
   if (opts.useCache) {
-    const cache = await getCachedModelList(opts.url, alreadySeen)
-    if (cache) return cache
+    const cache = await getCachedModelList(opts.url)
+    if (cache?.models.length && cache.models.length > 1) return cache
   }
 
   const res = await api.post<{ data: any[] }>(`/user/preset-models`, {
@@ -240,6 +307,9 @@ async function getPresetModelList(opts: {
 
   if (res.error) {
     toastStore.error(`Could not get models: ${res.error}`)
+    const cached = await getCachedModelList(opts.url, true)
+    if (cached) return cached
+
     return { models: [] }
   }
 
@@ -252,7 +322,7 @@ async function getPresetModelList(opts: {
 
   models.sort((l, r) => l.localeCompare(r))
 
-  const ttl = Date.now() + 60000 * 30 // 30 minutes
+  const ttl = Date.now() + 60000 * 60 // 1 hour
 
   MODELS_LOADED.add(opts.url)
   await storage.setItem(
@@ -266,13 +336,30 @@ async function getPresetModelList(opts: {
 async function getCachedModelList(url: string, ignoreTtl: boolean = false) {
   const key = `model-list-${url}`
   const cached = await storage.getItem(key)
-  if (!cached) return
+  debug('models')('cache attempt: %s', url)
+  if (!cached) {
+    debug('models')('cache miss: %s', url)
+    return
+  }
 
   try {
     const json = JSON.parse(cached) as { models: string[]; data: any[]; ttl: number }
-    if (json && ignoreTtl) return json
-    if (json.ttl > Date.now()) return json
-  } catch (ex) {}
+    if (!json?.models?.length) {
+      debug('models')('cache hit-empty: %s', url)
+      return
+    }
+    if (json && ignoreTtl) {
+      debug('models')('cache hit-ttl-ignored: %s', url)
+      return json
+    }
+    if (json.ttl > Date.now()) {
+      debug('models')('cache hit-within-ttl: %s', url)
+      return json
+    }
+    debug('models')('cache hit-expired: %s', url)
+  } catch (ex: any) {
+    debug('models')('cache error: %s', ex.message)
+  }
 }
 
 async function getTemplates() {

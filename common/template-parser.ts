@@ -5,10 +5,10 @@ import { AppSchema, Memory, TokenCounter } from '/common/types'
 import peggy from 'peggy'
 import { elapsedSince } from './util'
 import { v4 } from 'uuid'
-import { ChatRole, HistoryLine } from '/srv/adapter/type'
+import { ChatRole, GenerateRequestV2, HistoryLine } from '/srv/adapter/type'
 import { replaceTags } from './presets/templates'
 
-type Section = 'pre_system' | 'system' | 'post_system' | 'history' | 'post'
+export type ParsedSection = 'pre_system' | 'system' | 'post_system' | 'history' | 'post'
 
 let DEBUG = false
 const SAMPLE_CHAT_LP = `__lp_sample_chat__`
@@ -20,11 +20,14 @@ type InternalState = {
   messages: Array<{ role: ChatRole; content: string }>
   hint_seen?: boolean
   iterate_char?: AppSchema.Character
+
+  jsonAliases: Record<string, string>
 }
 
 export type TemplateOpts = {
   continue?: boolean
   parts?: Partial<PromptPlaceholders>
+  settings?: Partial<AppSchema.GenSettings>
   chat?: AppSchema.Chat
 
   isPart?: boolean
@@ -43,6 +46,8 @@ export type TemplateOpts = {
   chatEmbed?: Memory.UserEmbed<{ name: string }>[]
   userEmbed?: Memory.UserEmbed[]
 
+  schema?: GenerateRequestV2['jsonSchema']
+
   /** If present, history will be rendered last */
   limit?: {
     context: number
@@ -51,8 +56,8 @@ export type TemplateOpts = {
   }
 
   sections?: {
-    flags: { [key in Section]?: boolean }
-    sections: { [key in Section]: string[] }
+    flags: { [key in ParsedSection]?: boolean }
+    sections: { [key in ParsedSection]: string[] }
     strictSystem: string[]
     done: boolean
     warnings: {
@@ -122,9 +127,9 @@ type LowPriorityNode = { kind: 'lowpriority'; children: PNode[] }
 type CNode =
   | Exclude<PNode, { kind: 'each' }>
   | { kind: 'bot-prop'; prop: BotsProp }
-  | { kind: 'history-prop'; prop: HistoryProp }
+  | { kind: 'history-prop'; prop: HistoryProp; values?: any }
   | { kind: 'chat-embed-prop'; prop: ChatEmbedProp }
-  | { kind: 'history-if'; prop: HistoryProp; children: CNode[] }
+  | { kind: 'history-if'; prop: HistoryProp; children: CNode[]; values?: any }
   | { kind: 'bot-if'; prop: BotsProp; children: CNode[] }
 
 type DiceExpr = { values: string; amt?: number; adjust?: number; keep?: number }
@@ -155,6 +160,7 @@ const FINAL_IGNORE_HOLDERS: { [key in Holder | 'roll']?: boolean } = {
 }
 
 type Holder =
+  | 'main-char'
   | 'char'
   | 'user'
   | 'scenario'
@@ -193,8 +199,10 @@ const repeatableHolders = new Set<RepeatableHolder | 'roll'>([
 type IterableHolder = 'history' | 'bots' | 'chat_embed'
 
 type ChatEmbedProp = 'i' | 'name' | 'text'
-type HistoryProp = 'i' | 'message' | 'dialogue' | 'name' | 'isuser' | 'isbot'
+type HistoryProp = 'i' | 'message' | 'dialogue' | 'name' | 'isuser' | 'isbot' | 'json'
 type BotsProp = 'i' | 'personality' | 'name'
+
+export type ParsedTemplate = Awaited<ReturnType<typeof parseTemplate>>
 
 /**
  * This function also returns inserts because Chat and Claude discard the
@@ -214,13 +222,21 @@ export async function parseTemplate(
   addedLines: string[]
   sections: NonNullable<TemplateOpts['sections']>
   blocks: Array<{ role: ChatRole; content: string }>
+  blockPrompt: string
   flags: InternalState
 }> {
   if (opts.limit) {
     opts.limit.output = {}
   }
 
-  const flags: InternalState = { pre_render: true, messages: [] }
+  const flags: InternalState = { pre_render: true, messages: [], jsonAliases: {} }
+
+  if (opts.schema) {
+    for (const field of opts.schema.fields) {
+      if (!field.alias) continue
+      flags.jsonAliases[field.alias] = field.name
+    }
+  }
 
   const sections: TemplateOpts['sections'] = {
     flags: {},
@@ -399,6 +415,15 @@ export async function parseTemplate(
     flags.messages = nextMsgs
   }
 
+  const blockPrompt = flags.messages
+    .map((msg, i, list) => {
+      const isLast = i === list.length - 1
+      const tag = msg.role === 'system' ? 'system' : msg.role === 'user' ? 'user' : 'bot'
+      const text = isLast ? `<${tag}>${msg.content}` : `<${tag}>${msg.content}</${tag}>`
+      return text
+    })
+    .join('\n\n')
+
   return {
     parsed: output,
     inserts: opts.inserts ?? new Map(),
@@ -408,6 +433,9 @@ export async function parseTemplate(
     history: historyLines,
     addedLines,
     blocks: flags.messages,
+    blockPrompt: opts.settings?.modelFormat
+      ? replaceTags(blockPrompt, opts.settings.modelFormat)
+      : blockPrompt,
     flags,
   }
 }
@@ -469,7 +497,7 @@ function render(template: string, opts: TemplateOpts, flags: InternalState, exis
     }
 
     const output: string[] = []
-    let prevMarker: Section = 'pre_system'
+    let prevMarker: ParsedSection = 'pre_system'
 
     for (let i = 0; i < ast.length; i++) {
       const parent = ast[i]
@@ -654,6 +682,7 @@ function renderProp(
 
     case 'history-if':
     case 'history-prop': {
+      const msg = opts.history?.[idx]
       const line = entity as string
       switch (node.prop) {
         case 'i': {
@@ -682,6 +711,16 @@ function renderProp(
           const sender = opts.impersonate?.name ?? opts.sender?.handle
           const match = name === sender
           return node.prop === 'isuser' ? match : !match
+        }
+
+        case 'json': {
+          if (!msg) return ''
+
+          const fieldName = flags.jsonAliases[node.values] || node.values || 'not_available'
+
+          const values = msg?.json || {}
+          const value = values[fieldName]
+          return value || ''
         }
       }
     }
@@ -880,7 +919,7 @@ function replaceSections(
   }
 
   for (const key in sections.sections) {
-    const list = sections.sections[key as Section]
+    const list = sections.sections[key as ParsedSection]
     for (let i = 0; i < list.length; i++) {
       list[i] = list[i].replace(searchValue, replaceValue)
     }
@@ -913,8 +952,12 @@ function getPlaceholder(
   if (opts.repeatable && !repeatableHolders.has(node.value as any)) return ''
 
   if (node.value.startsWith('json.')) {
-    const name = node.value.replace('json.', '')
-    return opts.jsonValues?.[name] || ''
+    const target = node.value.replace('json.', '')
+
+    const jsonValues = opts.jsonValues || opts.history?.slice(-1)[0]?.json || {}
+    const fieldName = flags.jsonAliases[target] || target || 'not_available'
+    const value = jsonValues?.[fieldName] || ''
+    return value
   }
 
   if (node.value.startsWith('var.') || node.value.startsWith('vars.')) {
@@ -934,10 +977,14 @@ function getPlaceholder(
     case 'value':
       return conditionText || ''
 
+    case 'main-char':
+      return (opts.char?.name || '').trim()
+
     case 'char':
       return ((flags.iterate_char || opts.replyAs || opts.char)?.name || '').trim()
 
     case 'user':
+      if (!opts.impersonate && !opts.sender) return '{{user}}'
       return (opts.impersonate?.name || opts.sender?.handle || 'You').trim()
 
     case 'example_dialogue': {
@@ -973,8 +1020,14 @@ function getPlaceholder(
       return opts.parts?.props?.[node.values] || ''
     }
 
-    case 'json':
-      return opts.jsonValues?.[node.values] || ''
+    case 'json': {
+      const target = node.values || 'not_availble'
+
+      const jsonValues = opts.jsonValues || opts.history?.slice(-1)[0]?.json || {}
+      const fieldName = flags.jsonAliases[target] || target || 'not_available'
+      const value = jsonValues?.[fieldName] || ''
+      return value
+    }
 
     case 'post': {
       if (opts.sections) {
@@ -1075,7 +1128,7 @@ function handleDice(node: DiceExpr) {
 
 function fillSection(
   opts: TemplateOpts,
-  marker: Section | undefined,
+  marker: ParsedSection | undefined,
   interal: InternalState,
   result: string | undefined
 ) {
@@ -1121,7 +1174,11 @@ function fillSection(
   sections.post.push(cleaned)
 }
 
-function getMarker(opts: TemplateOpts, node: PNode, previous: Section): Section | 'fallback' {
+function getMarker(
+  opts: TemplateOpts,
+  node: PNode,
+  previous: ParsedSection
+): ParsedSection | 'fallback' {
   if (!opts.sections) return 'fallback'
   if (opts.sections.flags.history) return 'post'
 

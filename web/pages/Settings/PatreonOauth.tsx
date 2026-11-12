@@ -64,12 +64,12 @@ const PatreonOauth: Component = () => {
 }
 
 export const PatreonControls: Component = () => {
-  const config = settingStore((s) => s.config)
-  const state = userStore()
-  const admin = adminStore()
+  const config = settingStore((s) => ({ config: s.config }))
+  const state = userStore((s) => ({ user: s.user }))
+  const admin = adminStore((s) => ({ impersonating: s.impersonating }))
 
   return (
-    <Show when={config.patreonAuth}>
+    <Show when={config.config.patreonAuth}>
       <div class="flex w-full justify-center">
         <Show when={!state.user?.patreon}>
           <div class="flex flex-col items-center gap-1">

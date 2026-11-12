@@ -1,8 +1,32 @@
 export const BG_THEME = ['truegray', 'coolgray', 'bluegray'] as const
 
-export const UI_FONT = ['default', 'lato'] as const
+export type FontSetting = keyof typeof FONT_FACES
 
-export const AVATAR_SIZES = ['hide', 'xs', 'sm', 'md', 'lg', 'xl', '2xl', '3xl', 'max3xl'] as const
+export const FONT_FACES = {
+  default: { face: 'unset', label: 'Default', style: 'normal' },
+  lato: { face: 'Lato, sans-serif', label: 'Lato (Roko)', style: 'normal' },
+  jersey: { face: '"Jersey 10", sans-serif', label: 'Jersey', style: 'normal' },
+  shadows: {
+    face: '"Annie Use Your Telescope", cursive',
+    label: 'Shadows Into Light',
+    style: 'normal',
+  },
+} satisfies Record<string, { face: string; label: string; style?: string }>
+
+export const UI_FONT = Object.keys(FONT_FACES) as FontSetting[]
+
+export const AVATAR_SIZES = [
+  'hide',
+  'xs',
+  'sm',
+  'md',
+  'lg',
+  'xl',
+  '2xl',
+  '3xl',
+  'max3xl',
+  'custom',
+] as const
 export const AVATAR_CORNERS = ['sm', 'md', 'lg', 'circle', 'none'] as const
 
 export const CHAT_WIDTHS = ['full', 'narrow', 'xl', '2xl', '3xl', 'fill'] as const
@@ -30,7 +54,6 @@ export type ThemeBGColor = (typeof BG_THEME)[number]
 export type ThemeMode = (typeof UI_MODE)[number]
 export type AvatarSize = (typeof AVATAR_SIZES)[number]
 export type AvatarCornerRadius = (typeof AVATAR_CORNERS)[number]
-export type FontSetting = (typeof UI_FONT)[number]
 export type ChatWidth = (typeof CHAT_WIDTHS)[number]
 
 export type CustomUI = {
@@ -52,10 +75,10 @@ export type MessageOption =
   | 'trash'
   | 'fork'
   | 'prompt'
-  | 'schema-regen'
   | 'attach'
   | 'visible'
   | 'gen-image'
+  | 'gen-json'
 
 export type UISettings = {
   theme: string
@@ -68,6 +91,8 @@ export type UISettings = {
   chatAvatarMode?: boolean
   avatarSize: AvatarSize
   avatarCorners: AvatarCornerRadius
+  customAvatarWidth?: number
+  customAvatarHeight?: number
   font: FontSetting
   imageWrap: boolean
   textSpeed?: number
@@ -93,6 +118,8 @@ export type UISettings = {
 
   dark: CustomUI
   light: CustomUI
+
+  fontSize?: number
 }
 
 const customUiGuard = {
@@ -117,7 +144,6 @@ export const uiGuard = {
   chatAvatarMode: 'boolean?',
   avatarSize: AVATAR_SIZES,
   avatarCorners: AVATAR_CORNERS,
-  font: UI_FONT,
   imageWrap: 'boolean',
   msgOpacity: 'number',
   mobileSendOnEnter: 'boolean',
@@ -179,8 +205,8 @@ export const defaultUIsettings: UISettings = {
     regen: { outer: true, pos: 1 },
     attach: { outer: false, pos: 6 },
     trash: { outer: false, pos: 4 },
-    'schema-regen': { outer: false, pos: 5 },
     visible: { outer: false, pos: 3.9 },
     'gen-image': { outer: false, pos: 3.8 },
+    'gen-json': { outer: false, pos: 3.81 },
   },
 }

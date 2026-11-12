@@ -2,31 +2,43 @@ import { presetStore, settingStore, userStore } from '../../store'
 import { Component, Show, createMemo, createSignal } from 'solid-js'
 import { AutoPreset, getPresetOptions } from '../../shared/adapter'
 import { A } from '@solidjs/router'
-import { SolidCard } from '/web/shared/Card'
+import { Card, SolidCard } from '/web/shared/Card'
 import { PresetSelect } from '/web/shared/PresetSelect'
 import TextInput from '/web/shared/TextInput'
 import Button from '/web/shared/Button'
 import { neat } from '/common/util'
-import { HelpModal } from '/web/shared/Modal'
+import Modal, { HelpModal } from '/web/shared/Modal'
 import { SetStoreFunction } from 'solid-js/store'
 import { UserSettings } from './util'
 import { FormLabel } from '/web/shared/FormLabel'
 import Select from '/web/shared/Select'
 import { EMBED_MODELS_OPTS } from '/web/store/embeddings'
 import { Copy } from '/web/shared/Copy'
+import { usePresetContext } from '/web/store/preset-context'
+import { ModeGenSettings } from '/web/shared/Mode/ModeGenSettings'
+import { Pencil } from 'lucide-solid'
 
 const AISettings: Component<{
   state: UserSettings
   setter: SetStoreFunction<UserSettings>
 }> = (props) => {
-  const state = userStore()
+  const state = userStore((s) => ({ user: s.user, sub: s.sub, ui: s.ui }))
   const cfg = settingStore((s) => ({
-    config: s.config,
+    all: s.config,
     server: s.config.serverConfig,
-    flags: s.flags,
   }))
+
   const presets = presetStore((s) => s.presets.filter((pre) => !!pre.service))
+  const [summaryPreset, presetSetters] = usePresetContext({ anonymous: true })
   const [apiKey, setApiKey] = createSignal(state.user?.apiKey || '')
+  const [editPreset, setEditPreset] = createSignal('')
+  const [presetFooter, setPresetFooter] = createSignal<any>()
+
+  const embeddingOpts = createMemo(() => {
+    if (!!cfg.all.embeddingsAccess && !!cfg.all.serverEmbeddings) return EMBED_MODELS_OPTS
+
+    return EMBED_MODELS_OPTS.filter((opt) => opt.value !== 'server')
+  })
 
   const revealKey = async () => {
     const prev = apiKey()
@@ -63,6 +75,11 @@ const AISettings: Component<{
     return true
   })
 
+  const openPreset = (id: string) => {
+    setEditPreset(id)
+    presetSetters.load(id)
+  }
+
   return (
     <>
       <FormLabel
@@ -71,7 +88,7 @@ const AISettings: Component<{
             <div>Embeddings/Long-Term Memory</div>
             <Select
               parentClass="text-sm py-1 px-2"
-              items={EMBED_MODELS_OPTS}
+              items={embeddingOpts()}
               value={state.ui.embeddingModel || ''}
               onChange={(ev) => userStore.updateEmbeddingModel(ev.value)}
             />
@@ -96,6 +113,56 @@ const AISettings: Component<{
             helperMarkdown={`Improves site performance when disabled. Disable long-term memory if your chat is _laggy_ and unresponsive.`}
           />
         </Show> */}
+
+      <Card>
+        <div class="font-bold">Presets</div>
+
+        <div class="flex flex-col gap-2">
+          <div class="flex items-end gap-2">
+            <PresetSelect
+              helperText="Character Field Generation"
+              options={presetOptions()}
+              selected={props.state.chargenPreset}
+              setPresetId={(ev) => props.setter('chargenPreset', ev)}
+              noneOption={{ label: 'Use Server Default', value: '' }}
+            />
+            <Button disabled={!props.state.chargenPreset}>
+              <Pencil size={20} onClick={() => openPreset(props.state.chargenPreset || '')} />
+            </Button>
+          </div>
+
+          <div class="flex items-end gap-2">
+            <PresetSelect
+              helperText="Chat Summary"
+              options={presetOptions()}
+              selected={props.state.summaryPreset || state.user?.images?.summaryPresetId}
+              setPresetId={(ev) => props.setter('summaryPreset', ev)}
+              noneOption={{ label: 'Use Active Chat Preset', value: '' }}
+            />
+            <Button disabled={!props.state.summaryPreset && !state.user?.images?.summaryPresetId}>
+              <Pencil
+                size={20}
+                onClick={() =>
+                  openPreset(props.state.summaryPreset || state.user?.images?.summaryPresetId || '')
+                }
+              />
+            </Button>
+          </div>
+
+          <div class="flex items-end gap-2">
+            <PresetSelect
+              helperText="JSON Schemas/Output"
+              options={presetOptions()}
+              selected={props.state.jsonPreset}
+              setPresetId={(ev) => props.setter('jsonPreset', ev)}
+              noneOption={{ label: 'Use Active Chat Preset', value: '' }}
+            />
+            <Button disabled={!props.state.jsonPreset}>
+              <Pencil size={20} onClick={() => openPreset(props.state.jsonPreset || '')} />
+            </Button>
+          </div>
+        </div>
+      </Card>
 
       <Show when={!canUseApi()}>
         <PresetSelect
@@ -168,6 +235,24 @@ const AISettings: Component<{
           page
         </SolidCard>
       </div>
+
+      <Modal
+        title="Edit Summary Preset"
+        show={!!editPreset()}
+        close={() => setEditPreset('')}
+        maxWidth="half"
+        footer={presetFooter()}
+      >
+        <ModeGenSettings
+          page="image-settings"
+          preset={summaryPreset.current}
+          setters={presetSetters}
+          close={() => setEditPreset('')}
+          presetId={editPreset()}
+          onPresetChanged={() => setEditPreset('')}
+          footer={setPresetFooter}
+        />
+      </Modal>
     </>
   )
 }

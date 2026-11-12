@@ -1,4 +1,4 @@
-import { Component, createEffect, createSignal } from 'solid-js'
+import { Component, createEffect, createSignal, on } from 'solid-js'
 import { EmbeddedDocument } from '/web/store/embeddings/types'
 import { embedApi } from '/web/store/embeddings'
 import { toastStore } from '/web/store'
@@ -14,27 +14,32 @@ export const EditEmbedModal: Component<{ show: boolean; embedId?: string; close:
   const [name, setName] = createSignal('')
   const [text, setText] = createSignal('')
 
-  createEffect(async () => {
-    if (!props.show || !props.embedId) return
+  createEffect(
+    on(
+      () => [props.show, props.embedId],
+      async () => {
+        if (!props.show || !props.embedId) return
 
-    setLoading(true)
-    let doc: EmbeddedDocument | undefined
-    try {
-      doc = await embedApi.cache.getDoc(props.embedId)
-    } finally {
-      setLoading(false)
-    }
+        setLoading(true)
+        let doc: EmbeddedDocument | undefined
+        try {
+          doc = await embedApi.cache.getDoc(props.embedId)
+        } finally {
+          setLoading(false)
+        }
 
-    if (doc) {
-      // get the content of the document by combining all the lines
-      const lines = doc.documents.map((d) => d.msg).join('\n')
-      setName(doc.name)
-      setText(lines)
-    } else {
-      toastStore.error(`Failed to load embedding ${props.embedId}`)
-      props.close()
-    }
-  })
+        if (doc) {
+          // get the content of the document by combining all the lines
+          const lines = doc.documents.map((d) => d.msg).join('\n')
+          setName(doc.name)
+          setText(lines)
+        } else {
+          toastStore.error(`Failed to load embedding ${props.embedId}`)
+          props.close()
+        }
+      }
+    )
+  )
 
   const cancel = () => {
     setText('')

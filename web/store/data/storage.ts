@@ -3,7 +3,7 @@ import { defaultChars } from '../../../common/characters'
 import { AppSchema } from '../../../common/types/schema'
 import { api } from '../api'
 import { toastStore } from '../toasts'
-import { storage } from '/web/shared/util'
+import { prepareJsonHref, storage } from '/web/shared/util'
 import { replace } from '/common/util'
 import { NOVEL_MODELS } from '/common/presets/novel'
 
@@ -169,6 +169,10 @@ async function migrateToJson() {
   return entities
 }
 
+type GuestEntities = Awaited<ReturnType<typeof getGuestInitEntities>> & {
+  messages: AppSchema.ChatMessage[]
+}
+
 async function getGuestInitEntities(config?: AppSchema.AppConfig) {
   await migrateLegacyItems()
   /**
@@ -182,11 +186,13 @@ async function getGuestInitEntities(config?: AppSchema.AppConfig) {
   const characters = await localApi.loadItem('characters', true)
   const chats = await localApi.loadItem('chats', true)
 
+  /** Create a default preset for guests on initialization */
   if (!presets.length && config?.subs.length) {
     const model = config.subs.find((s) => s.preset.isDefaultSub)
     if (model) {
       const preset: AppSchema.UserGenPreset = {
         ...model?.preset,
+        modelFormat: 'None',
         service: model?.service,
         _id: v4(),
         name: 'My Preset',
@@ -214,7 +220,14 @@ async function getGuestInitEntities(config?: AppSchema.AppConfig) {
   }
 
   let fixed = false
+
+  const defaultPresetId = presets[0]?._id
+
   for (const chat of chats) {
+    if (!chat.genPreset && defaultPresetId) {
+      chat.genPreset = defaultPresetId
+    }
+
     if (!chat.tempCharacters) continue
     const chars = Object.entries(chat.tempCharacters)
     for (const [key, char] of chars) {
@@ -236,6 +249,78 @@ async function getGuestInitEntities(config?: AppSchema.AppConfig) {
   user._id = 'anon'
 
   return { user, presets, profile, books, scenario, characters, chats, templates }
+}
+
+async function getGuestData() {
+  const data = await getGuestInitEntities()
+  const messages: Record<string, AppSchema.ChatMessage[]> = {}
+
+  for (const chat of data.chats) {
+    const list = await storage.getItem(`messages-${chat._id}`)
+
+    if (list) {
+      const json = JSON.parse(list)
+      if (!Array.isArray(json)) continue
+      messages[chat._id] = json
+    }
+  }
+
+  return { date: new Date().toISOString(), ...data, messages }
+}
+
+async function downloadGuestData() {
+  const data = await getGuestInitEntities()
+  const messages: Record<string, AppSchema.ChatMessage[]> = {}
+
+  for (const chat of data.chats) {
+    const list = await storage.getItem(`messages-${chat._id}`)
+
+    if (list) {
+      const json = JSON.parse(list)
+      if (!Array.isArray(json)) continue
+      messages[chat._id] = json
+    }
+  }
+
+  const content = encodeURIComponent(JSON.stringify({ ...data, messages }, null, 2))
+  const anchor = document.createElement('a')
+  anchor.href = `data:text/json:charset=utf-8,${content}`
+  anchor.download = `guest-data-${Date.now()}.json`
+  anchor.click()
+  URL.revokeObjectURL(anchor.href)
+}
+
+async function importGuestData(data: GuestEntities) {
+  if (
+    !data.books ||
+    !data.characters ||
+    !data.chats ||
+    !data.presets ||
+    !data.profile ||
+    !data.scenario ||
+    !data.templates ||
+    !data.user
+  ) {
+    toastStore.error(`Missing data in import`)
+    return
+  }
+
+  await saveBooks(data.books)
+  await saveChars(data.characters)
+  await saveChats(data.chats)
+  await savePresets(data.presets)
+  await saveProfile(data.profile)
+  await saveScenarios(data.scenario)
+  await saveTemplates(data.templates)
+  await saveConfig(data.user)
+
+  if (data.messages) {
+    for (const [chatId, messages] of Object.entries(data.messages)) {
+      await storage.setItem(`messages-${chatId}`, JSON.stringify(messages))
+    }
+  }
+
+  window.location.reload()
 }
 
 async function migrateLegacyItems() {
@@ -364,6 +449,7 @@ export async function loadItem<TKey extends keyof typeof KEYS>(
     }
 
     const fallback = fallbacks[key]
+
     await storage.setItem(key, JSON.stringify(fallback))
 
     return fallback
@@ -394,6 +480,8 @@ export function result<T>(result: T) {
   return Promise.resolve({ result, status: 200, error: undefined })
 }
 
+export type ApiResult<T> = { result?: T; status: number; error?: any }
+
 export const localApi = {
   saveChars,
   saveChat,
@@ -413,4 +501,8 @@ export const localApi = {
   error,
   result,
   handleGuestInit,
+  downloadGuestData,
+  importGuestData,
+  getGuestData,
+  prepareJsonHref,
 }

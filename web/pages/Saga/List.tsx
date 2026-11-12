@@ -16,7 +16,11 @@ import { Page } from '/web/Layout'
 
 export const SagaList: Component = (props) => {
   const nav = useNavigate()
-  const state = sagaStore()
+  const state = sagaStore((s) => ({
+    templates: s.templates,
+    sessions: s.sessions,
+    inited: s.inited,
+  }))
 
   onMount(() => sagaStore.init())
 
@@ -91,7 +95,7 @@ export const SagaList: Component = (props) => {
 export const SessionList: Component<{
   onSession?: () => void
 }> = (props) => {
-  const state = sagaStore()
+  const state = sagaStore((s) => ({ templates: s.templates, sessions: s.sessions, state: s.state }))
 
   const templates = createMemo(() => {
     const list = state.templates

@@ -7,6 +7,10 @@ export type ViewProps = {
   setDelete: (char: ListCharacter) => void
   setDownload: (char: ListCharacter) => void
   setEdit: (char: ListCharacter) => void
+
+  selecting: boolean
+  select: (charId: string) => void
+  selected: Record<string, boolean>
 }
 
 export type CardProps = {

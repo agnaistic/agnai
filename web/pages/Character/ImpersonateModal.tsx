@@ -6,10 +6,10 @@ import { AppSchema } from '/common/types'
 import Button from '/web/shared/Button'
 import PageHeader from '/web/shared/PageHeader'
 import { HeartPlus, X } from 'lucide-solid'
-import { isChatPage } from '/web/shared/hooks'
+import { isChatPageMemo } from '/web/shared/hooks'
 
 const ImpersonateModal: Component<{ show: boolean; close: () => void }> = (props) => {
-  const isChat = isChatPage()
+  const isChat = isChatPageMemo()
 
   const state = characterStore((s) => ({
     chars: s.characters,
@@ -17,7 +17,7 @@ const ImpersonateModal: Component<{ show: boolean; close: () => void }> = (props
     defaultId: s.defaultImpersonateId,
     impersonating: s.impersonating,
   }))
-  const user = userStore()
+  const user = userStore((s) => ({ user: s.user }))
 
   const onSelect = (char?: AppSchema.Character) => {
     const match = char ? state.chars.list.find((c) => c._id === char?._id) : undefined

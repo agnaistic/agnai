@@ -1,6 +1,13 @@
 import { A, useNavigate, useParams } from '@solidjs/router'
 import { Component, createEffect, createMemo, createSignal, For, onMount, Show } from 'solid-js'
-import { AllChat, characterStore, chatStore } from '../../store'
+import {
+  AllChat,
+  characterStore,
+  chatStore,
+  pageStore,
+  presetStore,
+  quickCreateChat,
+} from '../../store'
 import PageHeader from '../../shared/PageHeader'
 import { Edit, Import, Plus, Trash, SortAsc, SortDesc } from 'lucide-solid'
 import ImportChatModal from './ImportChat'
@@ -25,6 +32,8 @@ import {
 import Loading from '/web/shared/Loading'
 import { ManualPaginate, usePagination } from '/web/shared/Paginate'
 import { Page } from '/web/Layout'
+import { on } from 'solid-js'
+import { toMap } from '/common/util'
 
 const baseSortOptions = [
   { value: 'chat-updated', label: 'Chat Activity', kind: 'chat' },
@@ -54,10 +63,10 @@ const CharacterChats: Component = () => {
       createdAt: chat.createdAt,
       updatedAt: chat.updatedAt,
       characterId: chat.characterId,
-      characters: toChatListState(s.allChars.map, chat),
+      characters: toChatListState(chars.map, chat),
       messageCount: chat.messageCount,
+      genPreset: chat.genPreset,
     })),
-    chars: s.allChars.map,
   }))
 
   const sortOptions = createMemo(() => {
@@ -99,12 +108,17 @@ const CharacterChats: Component = () => {
     saveListCache(next)
   })
 
-  createEffect(() => {
-    if (!charId()) return
-    if (sortField() === 'character-name' || sortField() === 'character-created') {
-      setSortField('chat-updated')
-    }
-  })
+  createEffect(
+    on(
+      () => charId(),
+      () => {
+        if (!charId()) return
+        if (sortField() === 'character-name' || sortField() === 'character-created') {
+          setSortField('chat-updated')
+        }
+      }
+    )
+  )
 
   const chats = createMemo(() => {
     const filterCharId = charId()
@@ -127,34 +141,37 @@ const CharacterChats: Component = () => {
   })
 
   onMount(() => {
-    if (!chars.loaded) {
-      characterStore.getCharacters()
-    }
-
-    chatStore.getAllChats()
+    characterStore.getAllChats()
   })
 
   const Options = () => (
     <>
       <button
         class={`btn-primary w-full items-center justify-start py-2 sm:w-fit sm:justify-center`}
-        onClick={() => setImport(true)}
+        onClick={(ev) => {
+          ev.preventDefault()
+          setImport(true)
+        }}
       >
         <Import /> <span class="hidden sm:inline">Import</span>
       </button>
       <Show when={!!params.id}>
         <button
           class={`btn-primary w-full items-center justify-start py-2 sm:w-fit sm:justify-center`}
-          onClick={() => nav(`/character/${params.id}/edit`)}
+          onClick={(ev) => {
+            ev.preventDefault()
+            nav(`/character/${params.id}/edit`)
+          }}
         >
           <Edit /> <span class="hidden sm:inline">Edit</span>
         </button>
       </Show>
       <button
         class={`btn-primary w-full items-center justify-start py-2 sm:w-fit sm:justify-center`}
-        onClick={() => {
+        onClick={(ev) => {
+          ev.preventDefault()
           if (params.id) {
-            chatStore.quickCreateChat(params.id, (id) => nav(`/chat/${id}`))
+            quickCreateChat(params.id, nav)
             return
           }
 
@@ -230,7 +247,7 @@ const CharacterChats: Component = () => {
         fallback={<NoChats character={chars.list.find((c) => c._id === params.id)?.name} />}
       >
         <Chats
-          allChars={state.chars}
+          allChars={chars.map}
           chats={pager.items()}
           chars={chars.list}
           sortField={sortField()}
@@ -261,6 +278,9 @@ const Chats: Component<{
   charId?: string
 }> = (props) => {
   const [showDelete, setDelete] = createSignal('')
+
+  const pages = pageStore((s) => ({ flags: s.flags }))
+  const presets = presetStore((s) => ({ map: toMap(s.presets) }))
 
   const groups = createMemo(() => {
     const chars = props.charId ? props.chars.filter((ch) => ch._id === props.charId) : props.chars
@@ -328,6 +348,14 @@ const Chats: Component<{
                             <Show when={chat.messageCount !== undefined}>
                               &nbsp;({chat.messageCount})
                             </Show>
+                            <Show when={pages.flags.debug}>
+                              {' '}
+                              {chat.genPreset
+                                ? presets.map[chat.genPreset]
+                                  ? 'ok'
+                                  : 'bad'
+                                : 'n/a'}
+                            </Show>
                           </span>
                         </div>
                       </div>
@@ -354,7 +382,7 @@ const Chats: Component<{
 }
 
 const NoChats: Component<{ character?: string }> = (props) => {
-  const state = chatStore()
+  const state = characterStore((s) => ({ loaded: s.characters.loaded > 0 }))
   return (
     <Show
       when={state.loaded}

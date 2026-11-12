@@ -3,12 +3,18 @@ import { AppSchema } from '../../common/types/schema'
 import { AppLog } from '../middleware'
 import { SubscriptionPreset } from './agnaistic'
 import { ThirdPartyFormat } from '/common/adapters'
+import { StructureEntities } from '/common/guidance/json-schema'
 import { PresetConnection } from '/common/providers'
 import { Memory, TokenCounter } from '/common/types'
 
 export type MsgAttachment = { type: 'image'; image: string }
 export type RequestAttachments = { [messageId: string]: MsgAttachment[] }
-export type HistoryLine = { _id: string; msg: string; role: 'user' | 'model' }
+export type HistoryLine = {
+  _id: string
+  msg: string
+  role: 'user' | 'model'
+  json: Record<string, string>
+}
 
 export type ChatRole = 'user' | 'assistant' | 'system'
 
@@ -25,6 +31,7 @@ export type CompletionTick =
   | { token: string }
   | { tokens: string; gens?: string[] }
   | { tokens: string }
+  | { thoughts: string }
   | void
 
 export type CompletionGenerator<T = Completion> = (opts: {
@@ -37,11 +44,15 @@ export type CompletionGenerator<T = Completion> = (opts: {
   log: AppLog | undefined
   format?: ThirdPartyFormat | 'openrouter' | 'raw'
 }) => AsyncGenerator<
-  { error?: string; tokens?: string; token?: string; index?: any } | T,
+  { error?: string; tokens?: string; token?: string; index?: any; thoughts?: string } | T,
   T | undefined
 >
 
-export type CompletionItem = { role: ChatRole; content: string; name?: string }
+export type CompletionItem<T extends string = ChatRole> = {
+  role: T
+  content: string
+  name?: string
+}
 
 export type CompletionContent<T> = Array<
   { finish_reason: string; index: number } & ({ text: string } | T)
@@ -51,12 +62,14 @@ export type AsyncDelta = { delta: Partial<Inference['message']> }
 
 export type GenerateRequestV2 = {
   requestId: string
+  v?: number
   kind:
     | 'send'
     | 'send-event:world'
     | 'send-event:character'
     | 'send-event:hidden'
     | 'send-event:ooc'
+    | 'send-noreply'
     | 'ooc'
     | 'retry'
     | 'continue'
@@ -65,6 +78,9 @@ export type GenerateRequestV2 = {
     | 'request'
     | 'plain'
     | 'chat-query'
+
+  /** For chat-adjacent tasks such as captioning, summarizing, etc */
+  systemPrompt?: string
 
   chat: AppSchema.Chat
   char: AppSchema.Character
@@ -87,7 +103,7 @@ export type GenerateRequestV2 = {
   book?: AppSchema.MemoryBook
   resolvedScenario?: string
 
-  jsonSchema?: JsonField[]
+  jsonSchema?: { fields: JsonField[]; entities: StructureEntities }
   jsonValues?: Record<string, any>
 
   /** Base64 attachments */
@@ -142,6 +158,7 @@ export type AdapterProps = {
   messages?: Array<{ role: string; content: string }>
 
   parts: PromptPlaceholders
+
   lines: string[]
   promptLines: PromptLine[]
 
@@ -187,4 +204,5 @@ export type ModelAdapter = (
   | { meta: any }
   | { prompt: any }
   | { warning: string }
+  | { thoughts: string }
 >

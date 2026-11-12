@@ -8,14 +8,17 @@ import {
   createEffect,
   createMemo,
   createSignal,
+  on,
   onCleanup,
   onMount,
 } from 'solid-js'
 import { FormLabel } from './FormLabel'
 import Button, { ButtonSchema } from './Button'
 import { RootModal } from './Modal'
-import { ComponentSubscriber, PartialListener } from './util'
+import { ComponentSubscriber, createDebounce, PartialListener } from './util'
 import TextInput from './TextInput'
+
+export type OptionAction = { comp: (props: { optionValue: string }) => JSX.Element }
 
 export type CustomOption = {
   label: string | JSX.Element
@@ -28,8 +31,10 @@ export const CustomSelect: Component<{
   onSelect: (opt: CustomOption) => void
   options?: CustomOption[]
   categories?: Array<{ name: string; options: CustomOption[] }>
+  displayMax?: number
   // value: any
   maxHeight?: boolean
+  maxWidth?: 'full' | 'half'
 
   header?: JSX.Element
 
@@ -45,6 +50,7 @@ export const CustomSelect: Component<{
   buttonClass?: string
   classList?: Record<string, boolean>
   search?: (value: string, search: string) => boolean
+  autoSearch?: boolean
   disabled?: boolean
   footer?: any
 
@@ -55,10 +61,15 @@ export const CustomSelect: Component<{
   listener?: PartialListener<'close' | 'open'>
   closeSub?: ComponentSubscriber<'close'>
   openSub?: ComponentSubscriber<'open'>
+  actions?: OptionAction[]
+  searchInit?: string
+  searchText?: (input: string) => void
 }> = (props) => {
   const [open, setOpen] = createSignal(false)
-  const [filter, setFilter] = createSignal('')
+  const [filter, setFilter] = createSignal(props.searchInit ?? '')
   const [unsubs, setUnsubs] = createSignal<Function[]>([])
+  const [options, setOptions] = createSignal<CustomOption[]>([])
+  const [cats, setCats] = createSignal<Array<{ name: string; options: CustomOption[] }>>([])
 
   onMount(() => {
     if (props.closeSub) {
@@ -82,12 +93,17 @@ export const CustomSelect: Component<{
     props.listener?.close?.()
   })
 
-  createEffect(() => {
-    const isOpening = open()
-    if (isOpening) {
-      setFilter('')
-    }
-  })
+  createEffect(
+    on(
+      () => open(),
+      () => {
+        const isOpening = open()
+        if (isOpening) {
+          setFilter(props.searchInit ?? '')
+        }
+      }
+    )
+  )
 
   const onSelect = (opt: CustomOption) => {
     props.onSelect(opt)
@@ -104,36 +120,91 @@ export const CustomSelect: Component<{
     return props.buttonLabel(opt)
   })
 
-  const filteredOpts = createMemo(() => {
-    if (!props.options) return
-
+  const [updateFiltering, unsub] = createDebounce(() => {
+    if (!props.options && !props.categories) return
     const input = filter().trim().toLowerCase()
-    if (!input) return props.options
+    const searchFunc = props.search || fallbackSearch
 
-    return props.options.filter((opt) =>
-      typeof opt.label === 'string'
-        ? props.search?.(opt.label.toLowerCase(), input) ||
-          props.search?.(typeof opt.value === 'string' ? opt.value.toLowerCase() : opt.value, input)
-        : props.search?.(typeof opt.value === 'string' ? opt.value.toLowerCase() : opt.value, input)
-    )
-  })
+    if (props.categories) {
+      if (!input) {
+        if (!props.displayMax) {
+          setCats(props.categories)
+          return
+        }
 
-  const filteredCats = createMemo(() => {
-    if (!props.categories) return
+        let count = 0
+        const displayMax = props.displayMax ?? Infinity
+        const categories = props.categories.map((cat) => {
+          const options = cat.options.filter((opt) => {
+            if (count >= displayMax) return false
+            count++
+            return true
+          })
 
-    const input = filter().trim()
-    if (!input) return props.categories
+          return { name: cat.name, options }
+        })
+        setCats(categories)
+        return
+      }
 
-    return props.categories.map((cat) => {
-      const options = cat.options.filter((opt) =>
+      let count = 0
+      const displayMax = props.displayMax ?? Infinity
+      const categories = props.categories.map((cat) => {
+        const options = cat.options.filter((opt) => {
+          if (count >= displayMax) return false
+
+          const match =
+            typeof opt.label === 'string'
+              ? searchFunc(opt.label, input) || props.search?.(opt.value, input)
+              : searchFunc(opt.value, input)
+
+          if (match) count++
+          return match
+        })
+
+        return { name: cat.name, options }
+      })
+
+      setCats(categories)
+      return
+    }
+
+    if (props.options) {
+      if (!input) {
+        if (props.displayMax) {
+          setOptions(props.options.slice(0, props.displayMax))
+          return
+        }
+
+        setOptions(props.options)
+        return
+      }
+
+      const filtered = props.options.filter((opt) =>
         typeof opt.label === 'string'
-          ? props.search?.(opt.label, input) || props.search?.(opt.value, input)
-          : props.search?.(opt.value, input)
+          ? searchFunc(opt.label.toLowerCase(), input) ||
+            searchFunc(typeof opt.value === 'string' ? opt.value.toLowerCase() : opt.value, input)
+          : searchFunc(typeof opt.value === 'string' ? opt.value.toLowerCase() : opt.value, input)
       )
 
-      return { name: cat.name, options }
-    })
-  })
+      if (props.displayMax && props.displayMax > 0) {
+        setOptions(filtered.slice(0, props.displayMax))
+        return
+      }
+
+      setOptions(filtered)
+      return
+    }
+  }, 250)
+
+  onCleanup(() => unsub())
+
+  createEffect(
+    on(
+      () => [filter(), props.options, props.categories],
+      () => updateFiltering()
+    )
+  )
 
   return (
     <div
@@ -150,7 +221,6 @@ export const CustomSelect: Component<{
               size={props.size}
               alignLeft
               onClick={() => setOpen(true)}
-              class={props.buttonClass || ''}
               // class="w-fit max-w-fit"
               disabled={props.disabled}
             >
@@ -166,14 +236,18 @@ export const CustomSelect: Component<{
         title={props.modalTitle}
         maxHeight={props.maxHeight}
         footer={props.footer}
+        maxWidth={props.maxWidth}
       >
         <div class="flex flex-col gap-4">
-          <Show when={props.search}>
+          <Show when={props.search || props.autoSearch === true}>
             <TextInput
               parentClass="text-sm"
               fieldName="options-filter"
               placeholder="Filter..."
-              onChange={(ev) => setFilter(ev.currentTarget.value)}
+              onChange={(ev) => {
+                setFilter(ev.currentTarget.value)
+                props.searchText?.(ev.currentTarget.value)
+              }}
               value={filter()}
             />
           </Show>
@@ -183,7 +257,7 @@ export const CustomSelect: Component<{
           <Show when={!!props.categories && !!props.header}>{props.header}</Show>
 
           <Show when={props.categories}>
-            <For each={filteredCats()}>
+            <For each={cats()}>
               {(category) => (
                 <div
                   class="flex flex-wrap gap-2 pr-3"
@@ -194,18 +268,20 @@ export const CustomSelect: Component<{
                     options={category.options}
                     onSelect={onSelect}
                     selected={props.selected}
+                    actions={props.actions}
                   />
                 </div>
               )}
             </For>
           </Show>
-          <Show when={filteredOpts()}>
+          <Show when={options()}>
             <div class="flex flex-wrap gap-2 pr-3">
               <OptionList
                 header={props.header}
-                options={filteredOpts()!}
+                options={options()!}
                 onSelect={onSelect}
                 selected={props.selected}
+                actions={props.actions}
               />
             </div>
           </Show>
@@ -221,6 +297,7 @@ const OptionList: Component<{
   title?: string
   selected?: string
   header?: JSX.Element
+  actions?: OptionAction[]
 }> = (props) => {
   return (
     <Switch>
@@ -236,23 +313,28 @@ const OptionList: Component<{
           <div class={`flex flex-col gap-2 p-2`}>
             <For each={props.options}>
               {(option) => (
-                <div
-                  classList={{
-                    'bg-[var(--hl-800)]': props.selected === option.value,
-                    'bg-700': !option.disabled && props.selected !== option.value,
-                    'bg-[var(--error-900)] text-700':
-                      option.disabled && props.selected !== option.value,
-                    'cursor-not-allowed': option.disabled,
-                    'cursor-pointer': !option.disabled,
-                  }}
-                  class={`w-full gap-4 rounded-md px-2 py-1 text-sm`}
-                  onClick={() => {
-                    if (!option.disabled) {
-                      props.onSelect(option)
-                    }
-                  }}
-                >
-                  <div class="font-bold">{option.label}</div>
+                <div class="flex w-full gap-1">
+                  <div
+                    classList={{
+                      'bg-[var(--hl-800)]': props.selected === option.value,
+                      'bg-700': !option.disabled && props.selected !== option.value,
+                      'bg-[var(--error-900)] text-700':
+                        option.disabled && props.selected !== option.value,
+                      'cursor-not-allowed': option.disabled,
+                      'cursor-pointer': !option.disabled,
+                    }}
+                    class={`flex w-full gap-4 rounded-md px-2 py-1 text-sm`}
+                    onClick={() => {
+                      if (!option.disabled) {
+                        props.onSelect(option)
+                      }
+                    }}
+                  >
+                    <div class="font-bold">{option.label}</div>
+                  </div>
+                  <For each={props.actions || []}>
+                    {(action) => action.comp({ optionValue: option.value })}
+                  </For>
                 </div>
               )}
             </For>
@@ -261,4 +343,16 @@ const OptionList: Component<{
       </Match>
     </Switch>
   )
+}
+
+function fallbackSearch(value: string, search: string) {
+  const lower = value.toLowerCase()
+  if (lower.includes(search.toLowerCase())) return true
+
+  const splits = search.trim().split(' ')
+  for (const split of splits) {
+    if (!lower.includes(split)) return false
+  }
+
+  return true
 }

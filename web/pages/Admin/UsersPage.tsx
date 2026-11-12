@@ -1,4 +1,4 @@
-import { X } from 'lucide-solid'
+import { HatGlasses, X } from 'lucide-solid'
 import { Component, createMemo, createSignal, For, onMount, Show } from 'solid-js'
 import Button, { ToggleButton } from '../../shared/Button'
 import Modal from '../../shared/Modal'
@@ -14,24 +14,28 @@ import { Page } from '/web/Layout'
 import { createStore } from 'solid-js/store'
 import { Copy } from '/web/shared/Copy'
 import { AppSchema } from '/common/types'
+import { RelativeSpinner } from '/web/shared/Loading'
 
 const UsersPage: Component = () => {
   let ref: any
   setComponentPageTitle('Users')
-  const state = adminStore()
-  const config = userStore()
+  const state = adminStore((s) => ({ users: s.users }))
+  const config = userStore((s) => ({ tiers: s.tiers }))
 
   const [code, setCode] = createSignal<AppSchema.User>()
   const [info, setInfo] = createSignal<{ name: string; id: string }>()
   const [store, setStore] = createStore({ username: '', subscribed: false, customerId: '' })
+  const [loading, setLoading] = createSignal(false)
 
   const loadInfo = (id: string, name: string) => {
     setInfo({ id, name })
     adminStore.getInfo(id)
   }
 
-  const search = () => {
-    adminStore.getUsers(store)
+  const search = async () => {
+    setLoading(true)
+    await adminStore.getUsers(store)
+    setLoading(false)
   }
 
   onMount(() => {
@@ -64,12 +68,14 @@ const UsersPage: Component = () => {
               class="text-xs"
               placeholder="Username"
               onChange={(ev) => setStore('username', ev.currentTarget.value)}
+              onKeyUp={(ev) => (ev.key === 'Enter' ? search() : null)}
             />
             <TextInput
               class="text-xs"
               fieldName="customerId"
               placeholder="Customer ID"
               onChange={(ev) => setStore('customerId', ev.currentTarget.value)}
+              onKeyUp={(ev) => (ev.key === 'Enter' ? search() : null)}
             />
             <ToggleButton
               size="sm"
@@ -79,8 +85,10 @@ const UsersPage: Component = () => {
               Subscribed
             </ToggleButton>
           </div>
-          <Button size="sm" onClick={search}>
-            Search
+          <Button size="sm" onClick={search} disabled={loading()}>
+            <Show when={!loading()} fallback={<RelativeSpinner size={20} />}>
+              Search
+            </Show>
           </Button>
         </form>
         <For each={state.users}>
@@ -109,6 +117,9 @@ const UsersPage: Component = () => {
                 <Button size="sm" onClick={() => loadInfo(user._id, user.username)}>
                   Info
                 </Button>
+                <Button size="sm" onClick={() => adminStore.impersonate(user._id)}>
+                  <HatGlasses size={20} />
+                </Button>
               </div>
             </div>
           )}
@@ -131,7 +142,7 @@ const InfoModel: Component<{ show: boolean; close: () => void; userId: string; n
   props
 ) => {
   let subId: any
-  const state = adminStore()
+  const state = adminStore((s) => ({ info: s.info }))
   const tiers = userStore((s) => ({ list: s.tiers }))
   const [session, setSession] = createSignal<Stripe.Checkout.Session>()
   const [manualId, setManualId] = createSignal(state.info?.manualSub?.tierId || '')
@@ -245,6 +256,8 @@ const InfoModel: Component<{ show: boolean; close: () => void; userId: string; n
                     />
                     <Button
                       onClick={() => adminStore.assignGift(props.userId, manualId(), expiry())}
+                      size="sm"
+                      class="h-[36px]"
                     >
                       Apply
                     </Button>
@@ -268,7 +281,7 @@ const InfoModel: Component<{ show: boolean; close: () => void; userId: string; n
               <Show when={state.info?.stripeSessions?.length}>
                 <tr>
                   <th>Session IDs</th>
-                  <td>
+                  <td class="flex flex-wrap items-center gap-1">
                     <For each={state.info?.stripeSessions}>
                       {(id) => (
                         <Button size="pill" onClick={() => adminStore.viewSession(id, setSession)}>
@@ -330,11 +343,11 @@ const InfoModel: Component<{ show: boolean; close: () => void; userId: string; n
                       : undefined
                     return (
                       <tr>
-                        <th>
-                          {new Date(item.time).toLocaleString()}{' '}
-                          <span class="text-500 text-xs">
+                        <th class="flex flex-col">
+                          <div>{new Date(item.time).toLocaleString()} </div>
+                          <div class="text-500 text-xs">
                             {elapsedSince(new Date(item.time!))} ago
-                          </span>
+                          </div>
                         </th>
                         <td>
                           {item.type}{' '}

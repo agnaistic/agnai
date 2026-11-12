@@ -14,6 +14,7 @@ import { updateRegisteredSubs } from '../adapter/agnaistic'
 import { getFeatherModels } from '../adapter/featherless'
 import { filterImageModels } from '/common/image-util'
 import { getArliModels } from '../adapter/arli'
+import { canUseFeature, getUserFeatureAccess } from '/common/util'
 
 const router = Router()
 
@@ -89,12 +90,17 @@ export async function getAppConfig(user?: AppSchema.User) {
     configuration.ttsHost = ''
     configuration.ttsApiKey = ''
 
+    // @ts-ignore
+    configuration.embedding = undefined
+    // @ts-ignore
+    configuration.embeddings = undefined
+
     if (configuration.imagesModels) {
       configuration.imagesModels = filterImageModels(
         user!,
         configuration.imagesModels,
         userTier?.tier
-      )
+      ).map((model) => ({ ...model, name: '' }))
     }
   }
 
@@ -126,8 +132,11 @@ export async function getAppConfig(user?: AppSchema.User) {
       openRouter: { models: openRouter },
       subs,
       serverConfig: configuration,
+      serverEmbeddings: !!configuration?.embedding,
     }
   }
+
+  const userLevel = getUserFeatureAccess(user, userTier)
 
   if (user && configuration) {
     switch (configuration.apiAccess) {
@@ -156,11 +165,13 @@ export async function getAppConfig(user?: AppSchema.User) {
     config.patreon.access_token
   )
 
+  appConfig.embeddingsAccess = canUseFeature(configuration?.embeddingsAccess || 'off', userLevel)
   appConfig.guidanceAccess = !!userTier?.tier.guidanceAccess
   appConfig.tier = userTier?.tier
   appConfig.patreonAuth = patreonEnabled ? { clientId: config.patreon.client_id } : undefined
   appConfig.serverConfig = configuration
   appConfig.subs = subs
+  appConfig.serverEmbeddings = !!configuration?.embedding
   appConfig.registered = getRegisteredAdapters(user).map(toRegisteredAdapter)
   appConfig.openRouter.models = openRouter
   appConfig.horde = {

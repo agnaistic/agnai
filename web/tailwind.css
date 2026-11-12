@@ -7,6 +7,12 @@
   @apply outline-none;
 }
 
+*:focus-visible {
+  outline: 2px solid var(--hl-800);
+  outline-offset: -2px;
+  border-radius: 8px;
+}
+
 * > code {
   @apply rounded-md bg-[var(--bg-600)] p-1 text-[var(--text-900)];
 }
@@ -14,6 +20,8 @@
 body {
   color: var(--text-100);
   font-family: var(--sitewide-font);
+  font-style: var(--sitewide-fontstyle);
+  font-weight: 400;
 }
 
 .w-10 {
@@ -229,7 +237,7 @@ body {
    */
 
   ::-webkit-scrollbar {
-    @apply h-1 w-1;
+    @apply h-1.5 w-1.5;
   }
   ::-webkit-scrollbar-track {
     @apply bg-[var(--bg-700)];
@@ -245,14 +253,14 @@ body {
    * Focus/accessibility-related utilities.
    */
   ._focusable-base {
-    @apply transition-all duration-100;
+    @apply transition-all duration-150;
   }
 
   .focusable-field {
     @apply _focusable-base;
     @apply bg-[var(--bg-800)] hover:bg-[var(--bg-700)];
     @apply placeholder:text-[var(--text-600)];
-    @apply border-[var(--bg-700)];
+    @apply border border-[var(--bg-700)] focus:border-[var(--hl-600)];
   }
 
   .focusable-icon-button,
@@ -261,14 +269,25 @@ body {
     @apply text-500 hover:text-[var(--text-900)] focus:text-[var(--text-900)];
   }
 
+  .green-icon-button {
+    @apply _focusable-base cursor-pointer;
+    @apply text-[var(--green-500)] hover:text-[var(--green-900)] focus:text-[var(--green-900)];
+  }
+
+  .red-icon-button {
+    @apply _focusable-base cursor-pointer;
+    @apply text-[var(--red-500)] hover:text-[var(--red-900)] focus:text-[var(--red-900)];
+  }
+
   /** Integrates with solid-router - highlights current selection. */
   .focusable-icon-button.active,
   .icon-button.active {
     @apply text-100;
   }
 
-  .icon-button.disabled {
-    @apply cursor-not-allowed;
+  .icon-button.disabled,
+  .icon-button:disabled {
+    @apply text-300 hover:text-300 focus:text-300 cursor-not-allowed;
   }
 
   /**
@@ -276,8 +295,8 @@ body {
    */
   .btn-base {
     @apply flex h-fit gap-1;
-    @apply transition-colors duration-100;
-    @apply rounded-md px-3;
+    @apply transition-colors duration-150;
+    @apply rounded-lg px-3;
     @apply disabled:cursor-not-allowed;
   }
 

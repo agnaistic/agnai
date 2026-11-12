@@ -1,22 +1,26 @@
 import { ArrowLeft, Trash, ArrowRight, ImagePlus, Settings } from 'lucide-solid'
-import { Component, createEffect, createMemo, on, onMount, Show } from 'solid-js'
+import { Component } from 'solid-js'
 import { v4 } from 'uuid'
 import { CharEditor } from '../editor'
 import Button from '/web/shared/Button'
-import { settingStore, UserState, userStore } from '/web/store'
-import Select from '/web/shared/Select'
+import { imageStore } from '/web/store'
 
-export const ReelControl: Component<{ editor: CharEditor; loading: boolean; user: UserState }> = (
-  props
-) => {
+export const ReelControl: Component<{ editor: CharEditor; loading: boolean }> = (props) => {
   const createAvatar = async () => {
-    settingStore.openImageGen({
+    imageStore.openImageGen({
       prompt: props.editor.state.appearance || '',
       handler: {
         text: 'Send to Editor',
-        handler: async (image) => {
-          await props.editor.imageCache.addImage(image, { id: `${v4()}.png` })
-          settingStore.closeImageGen()
+        schema: 'primary',
+
+        onClick: async (image) => {
+          if (!image) return
+          props.editor.update('appearance', image?.prompt)
+
+          if (image.reel.state.image) {
+            await props.editor.imageCache.addImage(image.reel.state.image, { id: `${v4()}.png` })
+          }
+          imageStore.closeImageGen()
         },
       },
     })
@@ -53,59 +57,12 @@ export const ReelControl: Component<{ editor: CharEditor; loading: boolean; user
         >
           <ArrowRight size={size} />
         </Button>
-        <Button size="sm" onClick={() => settingStore.imageSettings(true)}>
+        <Button size="sm" onClick={() => imageStore.imageSettings(true)}>
           <Settings size={16} />
         </Button>
       </div>
-      <ModelOverride
-        state={props.editor.state.imageOverride}
-        setter={(override) => props.editor.update('imageOverride', override)}
-      />
+
       {/* <div class="flex w-fit gap-2"></div> */}
     </div>
-  )
-}
-
-const ModelOverride: Component<{ state: string; setter: (override: string) => void }> = (props) => {
-  const state = settingStore((s) => ({ models: s.config.serverConfig?.imagesModels || [] }))
-  const user = userStore()
-
-  const options = createMemo(() => {
-    const list = state.models.map((m) => ({ label: m.desc, value: m.id || m.name }))
-    return list
-  })
-
-  onMount(() => {
-    if (state.models.length) return
-    settingStore.getServerConfig()
-  })
-
-  createEffect(
-    on(
-      () => [{ models: state.models }, user.user?.images?.agnai?.model + props.state],
-      () => {
-        const id = user.user?.images?.agnai?.model
-        if (props.state || !id || !state.models.length) return
-        props.setter(id)
-      }
-    )
-  )
-
-  return (
-    <Show
-      when={
-        (user.sub?.tier.imagesAccess || user.user?.admin) &&
-        state.models.length > 0 &&
-        user.user?.images?.type === 'agnai'
-      }
-    >
-      <Select
-        class="!p-1"
-        parentClass="text-sm"
-        value={props.state}
-        items={options()}
-        onChange={(ev) => props.setter(ev.value)}
-      />
-    </Show>
   )
 }

@@ -1,7 +1,7 @@
 import { Component, createEffect, createMemo, createSignal, on, Show } from 'solid-js'
 import { getStore } from '/web/store/create'
 import Button from '/web/shared/Button'
-import { Info, PlusIcon, WifiPen } from 'lucide-solid'
+import { Info, Pencil, PlusIcon, WifiPen } from 'lucide-solid'
 import Select from '/web/shared/Select'
 import { HelpModal, RootModal } from '/web/shared/Modal'
 import TextInput from '/web/shared/TextInput'
@@ -12,11 +12,11 @@ import { ADAPTER_LABELS, FORMAT_LABEL, ThirdPartyFormat } from '/common/adapters
 import { ManageProvider } from './Manage'
 import { markdown } from '/web/shared/markdown'
 import { CustomSelect } from '/web/shared/CustomSelect'
-import { PresetFuncs, PresetState } from '/web/store/preset-context'
+import { PresetFuncs, ContextPreset } from '/web/store/preset-context'
 import { useProviderList } from './hooks'
 
 export const PresetProvider: Component<{
-  state: PresetState
+  state: ContextPreset
   setters: PresetFuncs
   page?: string
   openSub?: ComponentSubscriber<'open'>
@@ -50,7 +50,8 @@ export const PresetProvider: Component<{
       .filter((v) => !!v)
       .join('/')
 
-    if (props.state.service !== 'agnaistic') {
+    const containsLegacy = list.some((l) => l.value === '')
+    if (props.state.service !== 'agnaistic' && !containsLegacy) {
       list.push({ label: 'Legacy: ' + label, value: '' })
     }
 
@@ -86,22 +87,16 @@ export const PresetProvider: Component<{
     setOpen(true)
   }
 
+  const editProviderById = (value: string) => {
+    const match = state.providers.find((p) => p._id === value)
+    if (!match) return
+    setEditing(match)
+    setOpen(true)
+  }
+
   const changeProvider = (id: string) => {
-    props.setters.setState('providerId', id)
-
-    if (props.page !== 'mode' && props.page !== 'menu') {
-      return
-    }
-
-    props.setters.update(
-      { providerId: id },
-      {
-        quiet: true,
-        onSuccess: () => {
-          getStore('toasts').success('Provider changed')
-        },
-      }
-    )
+    const save = props.page === 'mode' || props.page === 'menu'
+    props.setters.provider(id, save)
   }
 
   const editLegacy = (ev: any) => {
@@ -175,11 +170,22 @@ export const PresetProvider: Component<{
           buttonClass="break-all"
           buttonLabel={label()}
           options={services()}
+          actions={[
+            {
+              comp: (props) => (
+                <Show when={!!props.optionValue && props.optionValue !== 'agnaistic'}>
+                  <Button schema="clear" onClick={() => editProviderById(props.optionValue)}>
+                    <Pencil size={12} />
+                  </Button>
+                </Show>
+              ),
+            },
+          ]}
           onSelect={(ev) => changeProvider(ev.value)}
           openSub={props.openSub}
           closeSub={emitter.on}
           preoptions={
-            <div class="flex justify-end">
+            <div class="flex justify-end gap-2">
               <Button size="sm" onClick={newProvider}>
                 <PlusIcon size={16} />
                 New
@@ -189,7 +195,7 @@ export const PresetProvider: Component<{
           footer={
             <>
               <Button schema="secondary" onClick={emitter.emit.close}>
-                Cancel
+                Close
               </Button>
             </>
           }
@@ -200,7 +206,7 @@ export const PresetProvider: Component<{
           }
         >
           <Show when={props.page === 'mode'}>
-            <Show when={props.state.providerId === '' && props.state.service !== 'agnaistic'}>
+            <Show when={!showEdit()}>
               <Button size="sm" onClick={editLegacy}>
                 <WifiPen size={16} />
                 Edit
@@ -226,7 +232,7 @@ export const PresetProvider: Component<{
         show={open()}
         close={(reason, provider) => {
           setOpen(false)
-          emitter.emit.close()
+          // emitter.emit.close()
           if (provider) {
             changeProvider(provider._id)
           }
@@ -370,7 +376,7 @@ const ThirdPartyUrl: Field = (props) => {
       value={props.state.thirdPartyUrl || ''}
       disabled={props.state.disabled}
       hide={
-        props.setters.hides.thirdPartyUrl ||
+        props.setters.context.hides.thirdPartyUrl ||
         props.state.thirdPartyFormat === 'featherless' ||
         props.state.thirdPartyFormat === 'mistral' ||
         props.state.thirdPartyFormat === 'gemini' ||

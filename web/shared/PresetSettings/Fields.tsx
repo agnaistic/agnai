@@ -59,7 +59,7 @@ export const ContextSize: Field<{ subMax: Partial<SubscriptionModelLevel> }> = (
     const ctx = props.subMax.maxContextLength
     if (!ctx) return
 
-    const max = Math.floor(ctx / 1000)
+    const max = Math.round(ctx / 1000)
     return `${max}K`
   })
 
@@ -151,7 +151,7 @@ export const ReasoningTags: Field = (props) => {
 
 export const SystemPrompt: Field = (props) => {
   return (
-    <Card classList={{ hidden: props.setters.hides.systemPrompt ?? false }}>
+    <Card classList={{ hidden: props.setters.context.hides.systemPrompt ?? false }}>
       <FormLabel
         label="System Prompt"
         helperText={<>The task the AI is performing. Leave blank if uncertain.</>}
@@ -170,13 +170,13 @@ export const SystemPrompt: Field = (props) => {
 
 export const Jailbreak: Field = (props) => {
   return (
-    <Card classList={{ hidden: props.setters.hides.ultimeJailbreak ?? false }}>
+    <Card classList={{ hidden: props.setters.context.hides.ultimeJailbreak ?? false }}>
       <FormLabel
         label="Jailbreak (UJB)"
         helperText={
           <>
             <p>
-              <b>Uncensored Models</b>: Typically stylstic instructions. E.g. "Respond succinctly
+              <b>Uncensored Models</b>: Typically stylistic instructions. E.g. "Respond succinctly
               using slang"
             </p>
             <p>

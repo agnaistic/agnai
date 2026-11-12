@@ -14,7 +14,7 @@ export const MemoryBookPicker: Component<{
   setBundledBook: (newVal: AppSchema.MemoryBook | undefined) => void
   characterId: string | undefined
 }> = (props) => {
-  const memory = memoryStore()
+  const memory = memoryStore((s) => ({ books: s.books }))
   const [isModalShown, setIsModalShown] = createSignal(false)
   const [entrySort, setEntrySort] = createSignal<EntrySort>('creationDate')
   const updateEntrySort = (item: Option<string>) => {

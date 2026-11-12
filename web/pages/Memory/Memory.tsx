@@ -111,7 +111,7 @@ type STExportedBook = {
 }
 
 export const EmbedsTab: Component = (props) => {
-  const state = memoryStore()
+  const state = memoryStore((s) => ({ embeds: s.embeds }))
   const [editing, setEditing] = createSignal<string>()
   const [deleting, setDeleting] = createSignal<string>()
 
@@ -157,7 +157,7 @@ export const EmbedsTab: Component = (props) => {
 }
 
 export const BooksTab: Component = (props) => {
-  const state = memoryStore()
+  const state = memoryStore((s) => ({ books: s.books }))
   const [showImport, setImport] = createSignal(false)
   const [deleting, setDeleting] = createSignal<AppSchema.MemoryBook>()
 
@@ -191,12 +191,11 @@ export const BooksTab: Component = (props) => {
         <Button onClick={() => setImport(true)}>
           <Upload /> Import Book
         </Button>
-        <A href="/memory/new">
-          <Button>
-            <Plus />
-            Create Book
-          </Button>
-        </A>
+
+        <Button href="/memory/new">
+          <Plus />
+          Create Book
+        </Button>
       </div>
 
       <Show when={!state.books.list.length}>

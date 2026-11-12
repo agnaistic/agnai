@@ -228,7 +228,7 @@ export const InlineRangeInput: Component<{
       classList={{ hidden: props.hide ?? false }}
     >
       <Show when={props.label}>
-        <div class="bold min-w-fit pl-1">{props.label}</div>
+        <div class="bold min-w-fit pl-2">{props.label}</div>
       </Show>
       <input
         ref={range}

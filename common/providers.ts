@@ -1,5 +1,6 @@
 import { AIAdapter, ThirdPartyFormat } from './adapters'
 import { AppSchema } from './types'
+import { Provider } from './types/presets'
 
 export const KNOWN_PROVIDERS: Record<string, ProviderDefinition> = {
   claude: {
@@ -14,7 +15,14 @@ export const KNOWN_PROVIDERS: Record<string, ProviderDefinition> = {
     name: 'OpenRouter',
     url: 'https://openrouter.ai/api/v1',
     formats: [
-      { type: 'service', value: 'openrouter' },
+      {
+        type: 'service',
+        value: 'openrouter',
+        subs: [
+          { value: '', name: 'Standard' },
+          { value: 'mistral', name: 'Mistral' },
+        ],
+      },
       { type: 'service', value: 'openrouter-completion' },
     ],
   },
@@ -31,12 +39,23 @@ export const KNOWN_PROVIDERS: Record<string, ProviderDefinition> = {
   openai: {
     name: 'OpenAI',
     url: 'https://api.openai.com/v1',
-    formats: [{ type: 'service', value: 'openai' }],
+    formats: [
+      {
+        type: 'service',
+        value: 'openai',
+        subs: [
+          { value: '', name: 'Standard' },
+          { value: 'reasoning', name: 'Reasoning' },
+        ],
+      },
+    ],
   },
   mistral: {
     name: 'Mistral',
     url: 'https://api.mistral.ai/v1',
-    formats: [{ type: 'format', value: 'openai-chatv2' }],
+    formats: [
+      { type: 'format', value: 'openai-chatv2', subs: [{ value: 'mistral', name: 'Mistral' }] },
+    ],
   },
   deepseek: {
     name: 'DeepSeek',
@@ -66,13 +85,43 @@ export const KNOWN_PROVIDERS: Record<string, ProviderDefinition> = {
       { type: 'format', value: 'openai' },
     ],
   },
+  zai: {
+    name: 'Z.ai',
+    url: `https://api.z.ai/api/paas/v4`,
+    formats: [
+      {
+        type: 'format',
+        value: 'openai-chatv2',
+        subs: [
+          { name: 'Standard', value: '' },
+          { name: 'Reasoning', value: 'reasoning' },
+        ],
+      },
+    ],
+  },
+  deepinfra: {
+    name: 'DeepInfra',
+    url: `https://api.deepinfra.com/v1/openai`,
+    formats: [{ type: 'format', value: 'openai-chatv2' }],
+  },
+  xai: {
+    name: 'x.AI',
+    url: `https://api.x.ai/v1`,
+    formats: [{ type: 'format', value: 'openai-chatv2' }],
+  },
+  nvidia: {
+    name: 'Nvidia NIM',
+    url: `https://integrate.api.nvidia.com/v1`,
+    formats: [{ type: 'format', value: 'openai-chatv2' }],
+  },
 }
 
 export const KNOWN_SELF_HOST: Record<string, ProviderDefinition> = {
   local: {
-    name: 'Locally Hosted',
+    name: 'Self-Host / OpenAI Compatible',
     url: '',
     formats: [
+      { type: 'format', name: 'OpenAI Compat', url: '', value: 'openai-chatv2' },
       { type: 'format', value: 'tabby', url: 'http://localhost:5000/v1' },
       { type: 'format', value: 'aphrodite', url: 'http://localhost:2242/v1' },
       { type: 'format', value: 'vllm', url: 'http://localhost:8000/v1' },
@@ -87,17 +136,30 @@ export const KNOWN_SELF_HOST: Record<string, ProviderDefinition> = {
       },
       { type: 'format', name: 'LocalAI', value: 'openai-chatv2', url: 'http://localhost:8080/v1' },
       { type: 'format', value: 'ooba', url: 'http://localhost:7860/v1' },
-      { type: 'format', name: 'Other (OpenAI Compatible)', url: '', value: 'openai-chatv2' },
     ],
   },
 }
 
 export const CUSTOM_PROVIDERS: Record<string, ProviderDefinition> = {
   'openai-chatv2': {
-    name: 'OpenAI Compatible',
+    name: 'OpenAI Compat',
     formats: [
-      { type: 'format', value: 'openai-chatv2' },
-      { type: 'format', value: 'openai-chat' },
+      {
+        type: 'format',
+        value: 'openai-chatv2',
+        subs: [
+          { value: '', name: 'Standard' },
+          { value: 'reasoning', name: 'GPT-5/Reasoning' },
+        ],
+      },
+      {
+        type: 'format',
+        value: 'openai-chat',
+        subs: [
+          { value: '', name: 'Standard' },
+          { value: 'reasoning', name: 'GPT-5/Reasoning' },
+        ],
+      },
       { type: 'format', value: 'openai' },
     ],
   },
@@ -116,7 +178,7 @@ export const CUSTOM_PROVIDERS: Record<string, ProviderDefinition> = {
       {
         type: 'format',
         name: 'LM Studio',
-        value: 'openai-chatv2',
+        value: 'lm-studio',
       },
       { type: 'format', value: 'ooba' },
       { type: 'format', name: 'Other (Generic OpenAI)', value: 'openai-chatv2' },
@@ -125,8 +187,16 @@ export const CUSTOM_PROVIDERS: Record<string, ProviderDefinition> = {
 }
 
 export type ProviderFormat =
-  | { type: 'service'; name?: string; value: AIAdapter; url?: string }
-  | { type: 'format'; name?: string; value: ThirdPartyFormat; url?: string }
+  | { type: 'service'; name?: string; value: AIAdapter; url?: string; subs?: ProviderSubFormat[] }
+  | {
+      type: 'format'
+      name?: string
+      value: ThirdPartyFormat
+      url?: string
+      subs?: ProviderSubFormat[]
+    }
+
+export type ProviderSubFormat = { value: string; name: string }
 
 export type ProviderDefinition = {
   name: string
@@ -138,13 +208,22 @@ export type ProviderDefinition = {
 
 type ProviderCategory = 'custom' | 'known' | 'self' | 'agnai'
 
-export type PresetConnection = ReturnType<typeof getPresetConnection>
+export type PresetConnection = {
+  provider?: Provider
+  detail?: ProviderDefinition
+  category?: ProviderCategory
+  preset: AppSchema.UserGenPreset
+  service: AppSchema.UserGenPreset['service']
+  format?: ThirdPartyFormat
+  url?: string
+  key?: string
+}
 
 export function getPresetConnection(
   preset: Partial<AppSchema.GenSettings>,
   providers: AppSchema.Provider[] | undefined
-) {
-  const copy = { ...preset }
+): PresetConnection {
+  const copy = { ...preset } as AppSchema.UserGenPreset
   const provider = providers?.find((p) => p._id === preset.providerId)
   const validProviderId = preset.providerId && preset.providerId !== 'agnaistic' ? !!provider : true
 
@@ -158,8 +237,8 @@ export function getPresetConnection(
     copy.thirdPartyFormat = undefined
 
     return {
-      provider: undefined,
-      detail: undefined,
+      provider: undefined as Provider | undefined,
+      detail: undefined as ProviderDefinition | undefined,
       category: 'agnai' as ProviderCategory,
       preset: copy,
       service: 'agnaistic' as const,
@@ -257,7 +336,7 @@ export function getSafeProviderDetail(provider: string) {
       return { category, type, detail: KNOWN_SELF_HOST[type] }
 
     case 'agnai':
-      return { category, type: category, defail: undefined }
+      return { category, type: category, detail: undefined }
   }
 }
 

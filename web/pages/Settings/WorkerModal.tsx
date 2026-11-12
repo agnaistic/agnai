@@ -16,7 +16,7 @@ const WorkerModal: Component<{
     workers: s.workers.slice().sort(sortWorkers).map(toWorkerItem),
   }))
 
-  const state = userStore()
+  const state = userStore((s) => ({ user: s.user }))
 
   const [selected, setSelected] = createSignal<Option[]>()
 

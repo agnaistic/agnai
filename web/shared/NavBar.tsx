@@ -1,18 +1,18 @@
 import { Menu } from 'lucide-solid'
 import { Component, Show } from 'solid-js'
 import { A } from '@solidjs/router'
-import { chatStore, settingStore } from '../store'
-import { isChatPage } from './hooks'
+import { chatStore, pageStore } from '../store'
+import { isChatPageMemo } from './hooks'
 
 const NavBar: Component = () => {
   const chats = chatStore((s) => ({
-    chat: s.active?.chat,
-    char: s.active?.char,
-    loaded: s.loaded,
+    chat: s.details[s.lastChatId]?.chat,
+    char: s.details[s.lastChatId]?.char,
+    loaded: s.detailLoaded,
     opts: s.opts,
   }))
 
-  const isChat = isChatPage()
+  const isChat = isChatPageMemo()
 
   const Title = (
     <A href="/">
@@ -29,7 +29,7 @@ const NavBar: Component = () => {
         class={`bg-900 sm:none flex h-[48px] justify-between gap-4 border-b-2 border-[var(--bg-800)] px-4 py-3 max-sm:p-1 sm:hidden`}
       >
         <div class="flex w-full max-w-5xl items-center justify-between gap-2 font-semibold sm:justify-start">
-          <div class={`w-8 sm:hidden`} onClick={() => settingStore.menu()}>
+          <div class={`w-8 sm:hidden`} onClick={() => pageStore.menu()}>
             <Menu class="focusable-icon-button cursor-pointer" size={32} />
           </div>
           <div class="ellipsis flex w-full flex-col">

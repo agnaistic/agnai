@@ -1,14 +1,14 @@
-import { Component, For, createMemo, onMount } from 'solid-js'
+import { Component, For, Show, createMemo, onMount } from 'solid-js'
 import { chubStore } from '../../store/chub'
 import TextInput from '../../shared/TextInput'
 import Button from '../../shared/Button'
-import { ArrowLeft, ArrowRight, Search } from 'lucide-solid'
+import { ArrowLeft, ArrowRight, Search, X } from 'lucide-solid'
 import { Pill } from '/web/shared/Card'
 import { Combobox } from '/web/shared/Combobox'
 import { useSearchParams } from '@solidjs/router'
 
 const ChubNavigation: Component<{ page: 'books' | 'chars' }> = (props) => {
-  const state = chubStore()
+  const state = chubStore((s) => ({ search: s.search, page: s.page }))
 
   const update = (page?: number) => {
     if (page !== undefined) {
@@ -47,46 +47,6 @@ const ChubNavigation: Component<{ page: 'books' | 'chars' }> = (props) => {
           <Button onClick={() => update(1)}>
             <Search size={16} />
           </Button>
-
-          <Button
-            schema="secondary"
-            class="rounded-xl"
-            onClick={() => {
-              if (state.page > 1) {
-                chubStore.setPage(state.page - 1)
-                update()
-              }
-            }}
-          >
-            <ArrowLeft size={16} />
-          </Button>
-
-          <div class="w-12">
-            <TextInput
-              class="py-1"
-              fieldName="number"
-              value={state.page}
-              onChange={(ev) => {
-                const n = +ev.currentTarget.value
-                if (!isNaN(n) && n !== 0) {
-                  chubStore.setPage(n)
-                  update()
-                }
-              }}
-            />
-          </div>
-          <Button
-            schema="secondary"
-            class="rounded-xl"
-            onClick={() => {
-              // if (state.chars.length % 48 == 0) {
-              // }
-              chubStore.setPage(state.page + 1)
-              update()
-            }}
-          >
-            <ArrowRight size={16} />
-          </Button>
         </div>
 
         <Tags />
@@ -95,10 +55,66 @@ const ChubNavigation: Component<{ page: 'books' | 'chars' }> = (props) => {
   )
 }
 
+export const ChubPager: Component<{ page: 'books' | 'chars' }> = (props) => {
+  const state = chubStore((s) => ({ search: s.search, page: s.page }))
+
+  const update = (page?: number) => {
+    if (page !== undefined) {
+      chubStore.setPage(page)
+    }
+
+    chubStore.getEntities(props.page)
+  }
+
+  return (
+    <div class="flex justify-center gap-2">
+      <Button
+        schema="secondary"
+        class="rounded-xl"
+        onClick={() => {
+          if (state.page > 1) {
+            chubStore.setPage(state.page - 1)
+            update()
+          }
+        }}
+      >
+        <ArrowLeft size={16} />
+      </Button>
+
+      <div class="w-12">
+        <TextInput
+          class="py-1"
+          fieldName="number"
+          value={state.page}
+          onChange={(ev) => {
+            const n = +ev.currentTarget.value
+            if (!isNaN(n) && n !== 0) {
+              chubStore.setPage(n)
+              update()
+            }
+          }}
+        />
+      </div>
+      <Button
+        schema="secondary"
+        class="rounded-xl"
+        onClick={() => {
+          // if (state.chars.length % 48 == 0) {
+          // }
+          chubStore.setPage(state.page + 1)
+          update()
+        }}
+      >
+        <ArrowRight size={16} />
+      </Button>
+    </div>
+  )
+}
+
 export default ChubNavigation
 
-const Tags: Component = () => {
-  const state = chubStore()
+const Tags = () => {
+  const state = chubStore((s) => ({ tags: s.tags, officialTags: s.officialTags }))
   const [search, setSearch] = useSearchParams()
 
   const addTag = (tag: string) => {
@@ -162,6 +178,7 @@ const Tags: Component = () => {
         onClick={(item) => addTag(item.value)}
         onClearClicked={() => chubStore.setTags('')}
         autoClose
+        onEnter={(text) => (text ? addTag(text) : null)}
         placeholder="Tags..."
       />
 
@@ -179,6 +196,11 @@ const Tags: Component = () => {
             </Pill>
           )}
         </For>
+        <Show when={tags().length > 0}>
+          <Pill small type="hl" inverse onClick={() => chubStore.setTags('')}>
+            <X size={16} />
+          </Pill>
+        </Show>
       </div>
     </div>
   )

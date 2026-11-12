@@ -6,7 +6,7 @@ import Modal, { ConfirmModal } from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
 import { presetValidator } from '../../../common/presets'
 import { exportPreset, presetStore, toastStore, userStore } from '../../store'
-import { capitalize, setComponentPageTitle } from '../../shared/util'
+import { capitalize, setComponentPageTitle, tryParseImport } from '../../shared/util'
 import { getPresetLabel, getServiceName, sortByLabel } from '/web/shared/adapter'
 import FileInput, { FileInputResult, getFileAsString } from '/web/shared/FileInput'
 import { validateBody } from '/common/valid'
@@ -93,12 +93,11 @@ const PresetList: Component = () => {
             />
           </div>
           <div class="flex w-full justify-end gap-2">
-            <A href="/presets/new">
-              <Button>
-                <Plus />
-                New
-              </Button>
-            </A>
+            <Button href="/presets/new">
+              <Plus />
+              New
+            </Button>
+
             <Button onClick={() => setImporting(true)}>
               <Import size={20} /> Import
             </Button>
@@ -192,7 +191,7 @@ const ImportPreset: Component<{ close: () => void; success: () => void }> = (pro
 
     try {
       const content = await getFileAsString(files[0])
-      const parsed = JSON.parse(content)
+      const parsed = tryParseImport(content)
 
       const { errors, original } = validateBody(importValid, parsed, { notThrow: true })
       if (errors.length) {
@@ -204,7 +203,7 @@ const ImportPreset: Component<{ close: () => void; success: () => void }> = (pro
       presetStore.setImportPreset(original as any)
       props.success()
     } catch (ex: any) {
-      toastStore.error(`Could not parse preset: ${ex.message}`)
+      toastStore.error(ex, { prefix: `Could not parse preset` })
       return
     }
   }

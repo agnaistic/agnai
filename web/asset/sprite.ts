@@ -1,4 +1,5 @@
 import { EmoteType, FullSprite, SpriteAttr, SpriteBody, emotions } from '/common/types/sprite'
+import { randomElement } from '/common/util'
 
 export const manifest = require('./sprites/manifest.json') as Manifest
 
@@ -94,9 +95,4 @@ function randomHex() {
     .map((v) => v.toString(16))
     .join('')
   return '#' + values
-}
-
-function randomElement<T>(elems: T[]) {
-  const rand = Math.floor(Math.random() * elems.length)
-  return elems[rand]
 }

@@ -14,7 +14,7 @@ const MetricsPage: Component = () => {
   let refForm: any
 
   setComponentPageTitle('Metrics')
-  const admin = adminStore()
+  const admin = adminStore((s) => ({ metrics: s.metrics }))
   const [refMsg, setRefMsg] = createSignal<any>()
   const [confirm, setConfirm] = createSignal(false)
 

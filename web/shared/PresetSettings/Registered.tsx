@@ -10,7 +10,7 @@ export const RegisteredSettings: Component<{
   state: Partial<AppSchema.GenSettings>
   setters: PresetFuncs
 }> = (props) => {
-  const state = settingStore()
+  const state = settingStore((s) => ({ config: s.config }))
 
   const options = createMemo(() => {
     if (!props.service) return []

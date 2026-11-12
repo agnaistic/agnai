@@ -7,12 +7,19 @@ import { getCachedTiers } from '/srv/db/subscriptions'
 import { domain } from '/srv/domains'
 import { subsCmd } from '/srv/domains/subs/cmd'
 
+// export const stripe = new Stripe(config.billing.private, { apiVersion: '2025-11-17.clover' })
 export const stripe = new Stripe(config.billing.private, { apiVersion: '2023-08-16' })
 
 const ONE_HOUR_MS = 60000 * 60
 
 export async function resyncSubscription(user: AppSchema.User) {
   const subscription = await findValidSubscription(user)
+
+  if (subscription instanceof Error) {
+    return new Error(
+      `Could not retrieve subscription information - Please try again or contact support`
+    )
+  }
 
   if (!subscription) {
     if (!user.billing) return
@@ -120,47 +127,32 @@ export async function resyncSubscription(user: AppSchema.User) {
 }
 
 export async function findValidSubscription(user: AppSchema.User) {
-  const subs: Stripe.Subscription[] = []
+  const customerIds = new Set<string>()
+  if (user.billing?.customerId) {
+    customerIds.add(user.billing.customerId)
+  }
 
-  const sessions = user.billing?.customerId
-    ? await stripe.checkout.sessions
-        .list({
-          customer: user.billing.customerId,
-          expand: ['data.subscription', 'data.subscription.plan'],
-        })
-        .then((res) => res.data)
-        .catch((err) => [])
-    : []
-
-  const sessionIds = (user.stripeSessions || [])
-    .slice()
-    .reverse()
-    .filter((id) => !sessions.some((s) => s.id === id))
-
+  const sessionIds = (user.stripeSessions || []).slice().reverse()
   for (const sessionId of sessionIds) {
-    const session = await stripe.checkout.sessions
-      .retrieve(sessionId, { expand: ['subscription', 'subscription.plan'] })
-      .catch((err) => ({ err }))
+    const agg = await domain.billing.getAggregate(sessionId)
 
-    if (!session || 'err' in session || !session.subscription) continue
-    sessions.push(session)
-  }
-
-  for (const session of sessions) {
-    if (session.payment_status !== 'paid') continue
-    if (!session.subscription) continue
-
-    const sub = session.subscription as Stripe.Subscription
-    if (sub.status !== 'active') {
-      continue
+    // Likelyu failed to complete, skip it
+    if (!agg.session?.subscription) continue
+    if (agg.session.customer) {
+      customerIds.add(agg.session.customer as string)
     }
 
-    if (isActive(sub.current_period_end)) {
-      subs.push(sub)
-    }
+    continue
   }
 
-  if (!subs.length) return
+  const subs = await getActiveCustomerSubscriptions(Array.from(customerIds.values()))
+
+  let errored = false
+
+  if (!subs.length && !errored) return
+  if (!subs.length && errored) {
+    return new Error('Failed to retrieve a subscription')
+  }
 
   const allTiers = getCachedTiers()
   const state = await domain.subscription.getAggregate(user._id)
@@ -225,4 +217,24 @@ export function isActive(until: Date | number | string, hours = 2) {
   const now = Date.now() - ONE_HOUR_MS * hours
 
   return now < valid.valueOf()
+}
+
+async function getActiveCustomerSubscriptions(customerIds: string[]) {
+  const subs: Stripe.Subscription[] = []
+
+  for (const customerId of customerIds) {
+    const customer = await stripe.customers.retrieve(customerId, {
+      expand: ['subscriptions'],
+    })
+
+    if (customer.deleted) continue
+    if (!customer?.subscriptions?.data?.length) continue
+
+    for (const sub of customer.subscriptions.data) {
+      if (sub.status !== 'active') continue
+      subs.push(sub)
+    }
+  }
+
+  return subs
 }

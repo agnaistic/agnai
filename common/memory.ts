@@ -97,7 +97,7 @@ function getMemoryPromptContext(
   opts: MemoryOpts,
   encoder: TokenCounter
 ): MemoryPromptContext | undefined {
-  const depth = opts.settings?.memoryDepth || presetDefaults.memoryDepth || Infinity
+  const depth = +(opts.settings?.memoryDepth || presetDefaults.memoryDepth || Infinity)
   if (isNaN(depth) || depth <= 0) return
 
   const budget = opts.settings?.memoryContextLimit || 500
@@ -117,7 +117,7 @@ function getMemoryPromptContext(
   }
 }
 
-function getEnabledEntriesFromBooks(books: (AppSchema.MemoryBook | undefined)[] | undefined) {
+function getEnabledEntriesFromBooks(books: Array<AppSchema.MemoryBook | undefined> | undefined) {
   if (!books) return []
 
   const entries = []

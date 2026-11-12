@@ -1,6 +1,6 @@
 import { Bot, VenetianMask } from 'lucide-solid'
 import { Component, createEffect, createSignal, JSX, Match, Show, Switch } from 'solid-js'
-import { settingStore } from '../store'
+import { imageStore } from '../store'
 import { getAssetUrl } from './util'
 import './avatar.css'
 import { LucideProps } from 'lucide-solid/dist/types/types'
@@ -124,7 +124,7 @@ const AvatarIcon: Component<Props> = (props) => {
     if (!props.openable) return
     const img = avatar()
     if (!img) return
-    settingStore.showImage({ src: { type: 'url', id: img } })
+    imageStore.showImage({ src: { type: 'url', id: img } })
   }
 
   return (

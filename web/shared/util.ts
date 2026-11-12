@@ -10,8 +10,12 @@ import { deepClone } from '/common/util'
 import { getRootRgb } from './colors'
 import { getStore } from '../store/create'
 import { ADAPTER_SETTINGS } from './PresetSettings/settings'
-import { PresetState } from '../store/preset-context'
+import { ContextPreset } from '../store/preset-context'
 import { v4 } from 'uuid'
+import { getChatPreset } from '../pages/Chat/util'
+import { extractReasoning } from '/common/reasoning'
+import { getUserId, isLoggedIn } from '../store/api'
+import { debug } from '/common/debug'
 
 const [css, hooks] = createHooks(recommended)
 
@@ -38,18 +42,26 @@ export async function random<T extends keyof Chance.Chance>(kind: T, opts: Chanc
 
 export type InvokeEmitter = (...args: any[]) => void
 
-export type PartialEmitter<T extends string> = {
-  emit: { [key in T]?: InvokeEmitter }
+export type PartialEventEmitter<T extends string> = {
+  emit: PartialEmit<T>
   on: ComponentSubscriber<any>
   off: (id: string | Function) => boolean
 }
 
-export type PartialListener<T extends string> = PartialEmitter<T>['emit']
+export type PartialListener<T extends string> = PartialEventEmitter<T>['emit']
 
-export type ComponentEmitter<T extends string> = {
-  emit: { [key in T]: InvokeEmitter }
+export type ComponentEventEmitter<T extends string> = {
+  emit: ComponentEmit<T>
   on: ComponentSubscriber<T>
   off: (id: string | Function) => boolean
+}
+
+export type ComponentEmit<T extends string> = {
+  [key in T]: InvokeEmitter
+}
+
+export type PartialEmit<T extends string> = {
+  [key in T]?: InvokeEmitter
 }
 
 type UnsubFunc = () => void
@@ -123,19 +135,96 @@ export function createEmitter<T extends string>(...events: T[]) {
     emit = undefined
   })
 
-  return { emit, on, off } as ComponentEmitter<T>
+  return { emit, on, off } as ComponentEventEmitter<T>
+}
+
+async function userCacheGet<T = any>(key: string) {
+  const prop = getUserCacheKey(key)
+  if (!prop) return
+
+  const data = await getItem(prop)
+  if (!data) {
+    debug('cache')(`[${key}] miss`)
+    return
+  }
+
+  const json = JSON.parse(data)
+  debug('cache')(`[${key}] hit`)
+  return json as T
+}
+
+async function userCacheSet(key: string, data: any) {
+  if (!isLoggedIn()) return
+
+  const prop = getUserCacheKey(key)
+  if (!prop) return
+
+  debug('cache')(`[${key}] modified`)
+  await setItem(prop, JSON.stringify(data))
+}
+
+function getUserCacheKey(key: string) {
+  if (!isLoggedIn()) return
+  const userId = getUserId()
+  if (!userId) return
+  return `user-${userId}_${key}`
+}
+
+export function tryParseImport(content: string) {
+  try {
+    const json = JSON.parse(content)
+    return json
+  } catch (ex) {}
+
+  try {
+    const data = decodeURIComponent(content)
+    const json = JSON.parse(data)
+    return json
+  } catch (ex) {}
+
+  if (content.startsWith('data:')) {
+    try {
+      const index = content.indexOf(',')
+      const data = decodeURIComponent(content.slice(index + 1))
+      const json = JSON.parse(data)
+      return json
+    } catch (ex) {}
+  }
+
+  throw new Error(`Could not parse imported content`)
+}
+
+export function getUtterableText(msg: string) {
+  const { details, lastChatId } = getStore('chat').getState()
+  const { ui, user } = getStore('user').getState()
+  const { presets } = getStore('presets').getState()
+  const active = details[lastChatId]
+
+  if (!active?.chat || !user) return
+
+  const preset = getChatPreset(active.chat, user, presets)
+  const extract = extractReasoning(msg, { tags: preset.reasoning, display: ui.displayReasoning })
+  return extract
 }
 
 export function downloadJson(content: string | object, filename: string = 'agnai_export') {
-  const output = encodeURIComponent(
-    typeof content === 'string' ? content : JSON.stringify(content, null, 2)
-  )
+  const output = typeof content === 'string' ? content : JSON.stringify(content, null, 2)
 
+  const encode: boolean = false
   const anchor = document.createElement('a')
-  anchor.href = `data:text/json:charset=utf-8,${output}`
+  const href = `data:text/json:charset=utf-8,${encodeURIComponent(output)}`
+  anchor.href = encode ? URL.createObjectURL(new Blob([href])) : href
   anchor.download = `${filename}.json`
   anchor.click()
   URL.revokeObjectURL(anchor.href)
+}
+
+export async function prepareJsonHref(content: string | object) {
+  const output = encodeURIComponent(
+    typeof content === 'string' ? content : JSON.stringify(content, null, 2)
+  )
+  const href = `data:application/json:charset=utf-8,${output}`
+  return href
 }
 
 export function getHeaderBg(mode: UI.UISettings['mode']) {
@@ -180,6 +269,9 @@ export const storage = {
   localRemoveItem,
   localClear,
   test,
+
+  userCacheGet,
+  userCacheSet,
 }
 
 export function isExpired(date?: string | Date) {
@@ -351,6 +443,16 @@ export function formatDate(value: string | number | Date) {
   return `${month} ${day} ${time}`
 }
 
+export function isToday(time: Date | string) {
+  const date = typeof time === 'string' || typeof time === 'number' ? new Date(time) : time
+
+  const now = new Date()
+  if (now.getFullYear() !== date.getFullYear()) return false
+  if (now.getMonth() !== date.getMonth()) return false
+  if (now.getDate() !== date.getDate()) return false
+  return true
+}
+
 export function toShortDuration(valueSecs: number | Date | string, parts?: number) {
   if (valueSecs instanceof Date) {
     valueSecs = Math.round((Date.now() - valueSecs.valueOf()) / 1000)
@@ -498,8 +600,15 @@ export function capitalize(input: string) {
   return input.slice(0, 1).toUpperCase() + input.slice(1)
 }
 
-export function toDropdownItems(values: string[] | readonly string[]): Option[] {
-  return values.map((value) => ({ label: capitalize(value), value }))
+export function toDropdownItems(
+  values: string[] | readonly string[] | Record<string, string>
+): Option[] {
+  if (Array.isArray(values)) {
+    return values.map((value) => ({ label: capitalize(value), value }))
+  }
+
+  const options = Object.entries(values).map(([value, label]) => ({ label, value }))
+  return options
 }
 
 export function createDebounce<T extends (...args: any[]) => void>(
@@ -595,7 +704,7 @@ export function isDirty<T extends {}>(original: T, compare: T): boolean {
 }
 
 export function serviceHasSetting(
-  state: Pick<PresetState, 'service' | 'thirdPartyFormat'>,
+  state: Pick<ContextPreset, 'service' | 'thirdPartyFormat'>,
   ...props: Array<keyof PresetAISettings>
 ) {
   if (!state.service) {
@@ -630,7 +739,7 @@ function isPresetSetting(key: string): key is keyof PresetAISettings {
 }
 
 export function isValidServiceSetting(
-  state: Pick<PresetState, 'service' | 'thirdPartyFormat'>,
+  state: Pick<ContextPreset, 'service' | 'thirdPartyFormat'>,
   prop?: keyof PresetAISettings
 ) {
   const services = getAISettingServices(prop)
@@ -767,8 +876,8 @@ export function asyncFrame() {
 }
 
 export function useUsableServices() {
-  const users = getStore('user')()
-  const cfg = getStore('settings')()
+  const users = getStore('user')((s) => ({ user: s.user }))
+  const cfg = getStore('settings')((s) => ({ config: s.config }))
 
   const services = createMemo(() => {
     const list: AIAdapter[] = []
@@ -861,6 +970,38 @@ export function isUsableService(
   return false
 }
 
+export function getJsonSchema(opts: {
+  characterId?: string
+  preset: Pick<AppSchema.GenSettings, 'json' | 'jsonSource'>
+}) {
+  const { chatChars } = getStore('character').getState()
+  const { user } = getStore('user').getState()
+  const { presets } = getStore('presets').getState()
+
+  const source = opts.preset.jsonSource
+
+  switch (source) {
+    case 'character': {
+      if (!opts.characterId) return
+      const char = chatChars.map[opts.characterId]
+      return { source: 'character' as const, schema: char?.json }
+    }
+
+    case 'json-preset': {
+      if (!user?.jsonPreset) return
+      const preset = presets.find((p) => p._id === user.jsonPreset)
+
+      return { source: 'json-preset' as const, schema: preset?.json }
+    }
+
+    case 'preset':
+    case undefined:
+    default: {
+      return { source: 'preset' as const, schema: opts.preset.json }
+    }
+  }
+}
+
 export function toLocalTime(date: string) {
   const d = new Date(date)
   const Y = d.getFullYear()
@@ -882,25 +1023,23 @@ export type FieldUpdater = (index: number, path: string) => (ev: any) => void
  * @returns
  */
 export function useRowHelper<T extends object>(opts: {
-  signal: [() => T[], (v: T[]) => void]
+  getter: () => T[]
+  setter: (next: T[]) => void
   empty: () => T
 }) {
-  const items = opts.signal[0]
-  const setItems = opts.signal[1]
-
   const add = () => {
-    const next = items().concat(deepClone(opts.empty()))
-    setItems(next)
+    const next = opts.getter().concat(deepClone(opts.empty()))
+    opts.setter(next)
   }
 
   const remove = (index: number) => {
-    const prev = items()
+    const prev = opts.getter()
     const next = prev.slice(0, index).concat(prev.slice(index + 1))
-    setItems(next)
+    opts.setter(next)
   }
 
   const updateItem = (index: number, field: string, value: any) => {
-    const prev = items()
+    const prev = opts.getter()
     const base = getProperty(opts.empty(), field)
     const parsed = typeof base === 'number' ? +value : value
     const item = setProperty(prev[index], field, parsed)
@@ -909,7 +1048,7 @@ export function useRowHelper<T extends object>(opts: {
       .slice(0, index)
       .concat(item)
       .concat(prev.slice(index + 1))
-    setItems(next)
+    opts.setter(next)
   }
 
   const updater = (index: number, field: string) => {
@@ -941,7 +1080,7 @@ export function useRowHelper<T extends object>(opts: {
     }
   }
 
-  return { add, remove, updateItem, items, updater }
+  return { add, remove, updateItem, updater }
 }
 
 function setProperty(obj: any, path: string, value: any): any {
@@ -968,7 +1107,7 @@ function getProperty(obj: any, path: string) {
 }
 
 export const sticky = {
-  interval: null as any as NodeJS.Timer,
+  interval: null as any as NodeJS.Timeout,
   monitor: (ref: HTMLElement) => {
     let bottom = true
 
@@ -980,6 +1119,10 @@ export const sticky = {
       } else {
         bottom = false
       }
+    }
+
+    if (sticky.interval) {
+      clearInterval(sticky.interval)
     }
 
     sticky.interval = setInterval(() => {

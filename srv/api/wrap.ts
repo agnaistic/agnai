@@ -10,14 +10,43 @@ export function handle(handler: Handler): express.RequestHandler {
       next(err)
     }
 
+    const isEventStream = req.headers.accept === 'text/event-stream'
     try {
+      // We want to ensure that all requests are terminated
       const result = await handler(req as any, res, wrappedNext)
-      if (!res.headersSent && !nextCalled && !!result && res.writable) {
-        res.json(result)
+
+      if (nextCalled) {
+        // Should we error here?
+        return
       }
-    } catch (ex) {
+
+      if (!nextCalled && !res.writableEnded && isEventStream) {
+        res.end()
+        return
+      }
+
+      if (result && !res.headersSent) {
+        res.json(result)
+        return
+      }
+
+      if (res.writableEnded) return
+
+      const err = new StatusError('Server API failed handle the request', 500)
+      req.log.error({ err }, 'Unexpected handler fall-through')
+      next(err)
+      return
+    } catch (ex: any) {
       req.log.error({ err: ex }, 'Error occurred handling request')
-      if (!res.headersSent) next(ex)
+
+      if (!res.writableEnded && isEventStream) {
+        res.write('data: ' + JSON.stringify({ error: ex?.message || ex }) + '\n\n')
+        res.status(500)
+        res.end()
+        return
+      }
+
+      if (!res.writableEnded) next(ex)
     }
   }
   return wrapped as any as express.RequestHandler

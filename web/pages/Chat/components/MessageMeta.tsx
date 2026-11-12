@@ -1,5 +1,14 @@
-import { Component, createMemo, createSignal, For, Show } from 'solid-js'
-import { msgStore, settingStore, toastStore } from '../../../store'
+import {
+  Component,
+  createEffect,
+  createMemo,
+  createSignal,
+  For,
+  on,
+  onCleanup,
+  Show,
+} from 'solid-js'
+import { imageStore, msgStore, promptStore, responseStore, toastStore } from '../../../store'
 import Button from '/web/shared/Button'
 import { useAppContext } from '/web/store/context'
 import TextInput from '/web/shared/TextInput'
@@ -8,7 +17,10 @@ import { LogProbs } from './LogProbs'
 import Modal from '/web/shared/Modal'
 import { cleanPrompt } from '/common/util'
 import { AppSchema } from '/common/types'
-import { SquareArrowOutUpRight } from 'lucide-solid'
+import { SquareArrowOutUpRight, WandSparkles } from 'lucide-solid'
+import { RelativeSpinner } from '/web/shared/Loading'
+import { getMessageImagePrompt } from '/web/shared/hooks'
+import { getMessageDepth } from '/common/chat'
 
 export const MessageMeta: Component = () => {
   const [ctx] = useAppContext()
@@ -23,13 +35,35 @@ export const MessageMeta: Component = () => {
     const self = state.graph.tree[state.msg._id]
     if (!self) return []
 
-    return Array.from(self.children.values())
+    return Object.keys(self.children)
   })
 
   const depth = createMemo(() => {
     if (!state.msg) return -1
-    return state.graph.tree[state.msg._id]?.depth || -1
+
+    const result = getMessageDepth(state.graph.tree, state.msg._id)
+    return result
   })
+
+  const jsonValues = createMemo(() => {
+    if (!state.msg?.json?.values) return
+    const entries = Object.entries(state.msg.json.values)
+
+    if (!entries.length) return
+
+    const list = entries.map(([field, value]) => ({ field, value: value as string }))
+    return list
+  })
+
+  createEffect(
+    on(
+      () => state.msg,
+      (msg) => {
+        if (!msg || !window.flags.debug) return
+        console.log(JSON.stringify(msg, null, 2))
+      }
+    )
+  )
 
   return (
     <Modal show={!!state.msg} close={close} title="Message Info" maxWidth="half">
@@ -37,44 +71,83 @@ export const MessageMeta: Component = () => {
         <Card>
           <LogProbs msg={state.msg!} />
           <table class="text-sm">
-            <Show when={state.msg!.adapter}>
+            <tbody>
               <tr>
                 <td class="pr-2">
-                  <b>Adapter</b>
+                  <b>id</b>
                 </td>
-                <td>{state.msg!.adapter}</td>
+                <td>{state.msg?._id}</td>
               </tr>
-            </Show>
-            <Show when={depth() >= 0}>
               <tr>
-                <td>
-                  <b>depth</b>
+                <td class="pr-2">
+                  <b>chat</b>
                 </td>
-                <td>#{depth() + 1}</td>
+                <td>{state.msg?.chatId}</td>
               </tr>
-            </Show>
-            <Show when={descendants().length > 0 && ctx.flags.debug}>
               <tr>
-                <td>
-                  <b>descendants</b>
+                <td class="pr-2">
+                  <b>created</b>
                 </td>
-                <td>
-                  {descendants()
-                    .map((d) => d.slice(0, 4))
-                    .join(', ')}
-                </td>
+                <td>{new Date(state.msg!.createdAt).toLocaleString()}</td>
               </tr>
-            </Show>
-            <For each={Object.entries(state.msg!.meta || {}).filter(([key]) => key !== 'probs')}>
-              {([key, value]) => (
+              <Show when={state.msg!.adapter}>
                 <tr>
                   <td class="pr-2">
-                    <b>{key}</b>
+                    <b>Adapter</b>
                   </td>
-                  <td>{value as string}</td>
+                  <td>{state.msg!.adapter}</td>
                 </tr>
-              )}
-            </For>
+              </Show>
+              <Show when={depth() >= 0}>
+                <tr>
+                  <td>
+                    <b>depth</b>
+                  </td>
+                  <td>#{depth() + 1}</td>
+                </tr>
+              </Show>
+              <Show when={descendants().length > 0 && ctx.flags.debug}>
+                <tr>
+                  <td>
+                    <b>descendants</b>
+                  </td>
+                  <td>
+                    {descendants()
+                      .map((d) => d.slice(0, 4))
+                      .join(', ')}
+                  </td>
+                </tr>
+              </Show>
+              <For each={Object.entries(state.msg!.meta || {}).filter(([key]) => key !== 'probs')}>
+                {([key, value]) => (
+                  <tr>
+                    <td class="pr-2">
+                      <b>{key}</b>
+                    </td>
+                    <td>{value as string}</td>
+                  </tr>
+                )}
+              </For>
+
+              <Show when={jsonValues()?.length}>
+                <tr>
+                  <td colspan={2}>
+                    <span class="font-bold">json output</span>
+                  </td>
+                </tr>
+
+                <For each={jsonValues()!}>
+                  {(item) => (
+                    <tr>
+                      <td colSpan={2}>
+                        <div class="font-bold">{item.field}</div>
+                        <div class="text-600 font-normal">{item.value}</div>
+                      </td>
+                    </tr>
+                  )}
+                </For>
+              </Show>
+            </tbody>
           </table>
         </Card>
 
@@ -101,10 +174,30 @@ export const MessageImagePrompt: Component<{
   msg: AppSchema.ChatMessage
   close: () => void
   children?: any
+  onPrompt?: (prompt: string) => void
+  onClose?: () => void
 }> = (props) => {
   const [ctx] = useAppContext()
+  const persist = promptStore((s) => ({ imageHint: s.imageHint }))
 
   const [prompt, setPrompt] = createSignal(props.msg?.imagePrompt || '')
+
+  onCleanup(() => {
+    props.onClose?.()
+  })
+
+  createEffect(
+    on(
+      () => props.msg.imagePrompt,
+      (next) => {
+        const imagePrompt = getMessageImagePrompt(props.msg._id)
+        if (imagePrompt?.trim()) {
+          receivePrompt(imagePrompt)
+          return
+        }
+      }
+    )
+  )
 
   const updateImagePrompt = () => {
     if (!props.msg) return
@@ -113,57 +206,101 @@ export const MessageImagePrompt: Component<{
     })
   }
 
+  const generatePrompt = () => {
+    if (ctx.imgPrompt?.signal) {
+      ctx.imgPrompt.signal.abort()
+      return
+    }
+
+    if (ctx.imgPrompt) return
+
+    responseStore.generateImagePrompt({
+      chatId: ctx.chat?._id!,
+      question: persist.imageHint,
+      onSummary: (summary) => receivePrompt(summary),
+      onTick: (res, state) => (state === 'partial' ? setPrompt(res) : null),
+    })
+  }
+
+  const receivePrompt = (prompt: string) => {
+    setPrompt(prompt)
+    props.onPrompt?.(prompt)
+  }
+
   return (
-    <TextInput
-      helperText={
-        <div class="mb-0.5 flex items-center gap-1.5">
-          Image Prompt -{' '}
-          <Button
-            size="pill"
-            schema="secondary"
-            onClick={updateImagePrompt}
-            disabled={prompt() === props.msg.imagePrompt}
-          >
-            Save
-          </Button>
-          <Button
-            size="pill"
-            schema="secondary"
-            onClick={() =>
-              msgStore.generateImagePrompt({
-                onSummary: (summary) => setPrompt(summary),
-                onTick: (res, state) => (state === 'partial' ? setPrompt(res) : null),
-              })
-            }
-            disabled={!!ctx.waiting}
-          >
-            Generate
-          </Button>
-          <Button
-            size="pill"
-            schema="secondary"
-            onClick={() => {
-              setPrompt(cleanPrompt(prompt()))
-            }}
-          >
-            Clean
-          </Button>
-          <div
-            class="icon-button"
-            onClick={() => {
-              settingStore.showMessageImages({ id: props.msg._id, position: 0 })
-              props.close()
-            }}
-          >
-            <SquareArrowOutUpRight size={20} />
+    <div class="flex flex-col gap-3">
+      <TextInput
+        helperText="Caption Hint: What to focus on when generating the caption?"
+        placeholder="Caption Hint: What to focus on?"
+        class="!text-sm"
+        onChange={(ev) =>
+          promptStore.imageHint({ chatId: props.msg.chatId, text: ev.currentTarget.value })
+        }
+        value={persist.imageHint}
+      />
+
+      <TextInput
+        class="max-h-[160px]"
+        helperText={
+          <div class="mb-0.5 flex flex-col gap-0.5">
+            <div>Image Prompt</div>
+
+            <div class="flex items-center gap-1.5">
+              <Button
+                size="pill"
+                schema="secondary"
+                onClick={updateImagePrompt}
+                disabled={prompt() === props.msg.imagePrompt}
+              >
+                Save
+              </Button>
+
+              <Button
+                size="pill"
+                schema="secondary"
+                onClick={generatePrompt}
+                disabled={ctx.imgPrompt && !ctx.imgPrompt.signal}
+              >
+                <Show
+                  when={ctx.imgPrompt}
+                  fallback={
+                    <>
+                      <WandSparkles size={16} /> Prompt
+                    </>
+                  }
+                >
+                  <RelativeSpinner size={8} />
+                  Interrupt
+                </Show>
+              </Button>
+              <Button
+                size="pill"
+                schema="secondary"
+                onClick={() => {
+                  setPrompt(cleanPrompt(prompt()))
+                }}
+              >
+                Clean
+              </Button>
+              <div
+                class="icon-button flex items-center gap-0.5"
+                onClick={() => {
+                  imageStore.showMessageImages({ id: props.msg._id, position: 0 })
+                  props.close()
+                }}
+              >
+                Editor
+                <SquareArrowOutUpRight size={16} />
+              </div>
+              {props.children}
+            </div>
           </div>
-          {props.children}
-        </div>
-      }
-      parentClass="text-sm"
-      isMultiline
-      value={prompt()}
-      onChange={(ev) => setPrompt(ev.currentTarget.value)}
-    />
+        }
+        parentClass="text-sm"
+        isMultiline
+        value={prompt()}
+        onChange={(ev) => receivePrompt(ev.currentTarget.value)}
+      />
+    </div>
   )
 }

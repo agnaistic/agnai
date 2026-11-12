@@ -4,7 +4,7 @@ import { registerAdapter } from './register'
 import { ModelAdapter } from './type'
 import { GOOSE_ENGINES } from '/common/adapters'
 import { logger } from '../middleware'
-import { sanitise, trimResponseV2 } from '/common/requests/util'
+import { sanitise } from '/common/requests/util'
 
 const baseUrl = 'https://api.goose.ai/v1'
 
@@ -74,8 +74,7 @@ export const handleGooseAI: ModelAdapter = async function* (opts) {
       return
     }
     const parsed = sanitise(text.replace(opts.prompt, ''))
-    const trimmed = trimResponseV2(parsed, opts.replyAs, opts.members, opts.gen, ['END_OF_DIALOG'])
-    yield trimmed || parsed
+    yield parsed
   } catch (ex: any) {
     log.error({ err: ex }, 'GooseAI failed to parse')
     yield { error: `GooseAI request failed: ${ex.message}` }

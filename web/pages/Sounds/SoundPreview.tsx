@@ -7,7 +7,7 @@ import { audioStore } from '/web/store'
 export const SoundPreview: Component<{
   sound?: Sound | undefined
 }> = (props) => {
-  const audioSettings = audioStore()
+  const audioSettings = audioStore((s) => ({ tracks: s.tracks }))
   let audioElem: HTMLAudioElement | undefined
   let [playing, setPlaying] = createSignal(false)
 

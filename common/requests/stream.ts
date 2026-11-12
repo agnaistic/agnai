@@ -1,6 +1,7 @@
 import { ThirdPartyFormat } from '../adapters'
 import type { AppLog } from '../logger'
-import { inline, round } from '../util'
+import { round } from '../util'
+import { getChoiceProp, getNextThoughts, getNextTokens } from './util'
 import type { CompletionGenerator } from '/srv/adapter/type'
 
 export type ServerSentEvent = {
@@ -46,11 +47,19 @@ export const streamGenerator: CompletionGenerator = async function* (opts) {
     }
   }
 
+  // We need to be able to cancel a request without triggering the 'user aborted' listeners
+  const doneSignal = new AbortController()
+  if (signal) {
+    signal.signal.addEventListener('abort', () => {
+      doneSignal.abort()
+    })
+  }
+
   const response = await fetch(url, {
     method: 'POST',
     headers: headers as any,
     body: JSON.stringify(body),
-    signal: signal.signal,
+    signal: doneSignal.signal,
   }).catch((err) => ({ err }))
 
   if ('err' in response) {
@@ -98,9 +107,14 @@ export const streamGenerator: CompletionGenerator = async function* (opts) {
       yield { token }
     }
 
+    if (data.thoughts) {
+      yield { thoughts: data.thoughts }
+    }
+
     if (data.meta) {
       if (data.meta.finish_reason) meta.stop = data.meta.finish_reason
       if (data.meta.model) meta.model = meta.model = data.meta.model
+      if (data.meta.provider) meta.ext = data.meta.provider
     }
 
     if (data.error) {
@@ -119,8 +133,14 @@ export const streamGenerator: CompletionGenerator = async function* (opts) {
     if (data.tokens) {
       sentTokens = true
       yield data
+      break
     }
   }
+
+  // Always terminate the request to ensure cleanup
+  try {
+    doneSignal.abort()
+  } catch (ex) {}
 
   if (errored && !sentError) {
     switch (response.status) {
@@ -204,7 +224,7 @@ export async function* fetchStream(
       if (done) {
         if (buffer.trim().length > 0) {
           yield { warn: 'End of request contained incomplete data' }
-          opts?.log?.warn({ buffer }, '[fetch] incomplete buffer')
+          opts?.log?.warn({ buffer: buffer?.slice(0, 500) }, '[fetch] incomplete buffer')
 
           // End of reader processing, if we have an error and we get here, we need to respond with a fallback error message
           if (flags.errored) {
@@ -224,20 +244,19 @@ export async function* fetchStream(
           yield { tokens: accum, gens: swipes }
         }
 
-        if (DEBUG) {
-          console.log(`[fetch] response: ${accum}`)
-        }
-        yield { tokens: thoughts + accum }
+        // if (DEBUG) {
+        //   console.log(`[fetch] response: ${accum}`)
+        // }
+
+        yield { tokens: accum }
         return
       }
 
       let chunk = decoder.decode(value)
 
-      if (DEBUG) {
-        console.log(
-          `[fetch] chunk - ${response.url}\n${JSON.stringify({ chunk, buffer }, null, 2)}`
-        )
-      }
+      // if (DEBUG) {
+      //   console.log(`[fetch] chunk - ${response.url}\n${JSON.stringify({ chunk: chunk }, null, 2)}`)
+      // }
 
       if (chunk.includes(': OPENROUTER PROCESSING\n')) {
         chunk = chunk.replace(/: OPENROUTER PROCESSING/g, '').trimStart()
@@ -268,7 +287,7 @@ export async function* fetchStream(
             opts?.log?.error(
               {
                 err: error,
-                chunk: error ? undefined : chunk,
+                chunk,
                 url: response.url,
                 msg: error.message,
               },
@@ -293,7 +312,7 @@ export async function* fetchStream(
             opts?.log?.error(
               {
                 err: error,
-                chunk: error ? undefined : chunk,
+                chunk,
                 url: response.url,
                 msg: error.message,
               },
@@ -328,89 +347,41 @@ export async function* fetchStream(
               return
             }
           } else {
-            const reasoning = getChoiceProp(json, 'reasoning') || getChoiceProp(json, 'thought')
-            const token: string =
-              getChoiceProp(json, 'content') || getChoiceProp(json, 'text') || json.response
+            const reasoning = getNextThoughts(json) || json.reasoning_content
+            const token: string = getNextTokens(json) || json.token || json.response
+
+            if (DEBUG && reasoning) console.log(`[fetch] thoughts: ${reasoning}`)
+            if (DEBUG && token) console.log(`[fetch] tokens: ${token}`)
 
             const index = +(getChoiceProp<string>(json, 'index') || '0')
 
-            /**
-             * Reasoning can come before and after the response
-             * We need to make sure that we concatenate properly in both circumstances
-             * When yielding, only yield the new tokens
-             */
-            const isMultigen = index && index > 0
+            if (reasoning) {
+              thoughts += reasoning
+              yield { thoughts: reasoning }
+            }
 
-            if (isMultigen) {
+            const isMultigen = index && index > 0
+            if (isMultigen && token) {
               if (!gens[index]) gens[index] = ''
               gens[index] += token || ''
             }
 
-            const hasReason = reasoning !== undefined
-            const hasTokens = token !== undefined && !isMultigen
-            let type = ''
-
-            if (hasReason) flags.reason_started = true
-
-            // Main case 1.
-            if (hasReason && hasTokens) {
-              let prefix = thoughts ? '' : '<think>'
-              let suffix = thoughts ? '</think>' : ''
-
-              if (suffix) {
-                flags.reason_ended = true
-              }
-
-              thoughts += prefix + reasoning + suffix
-
-              // Case: Reasoning after the response
-              // Having a prefix means it's the first reasoning tokens
-              if (prefix) {
-                type = '1.1'
-                accum += token
-                yield { token: token + prefix + reasoning + suffix }
-              }
-
-              // Case: Reasoning before response
-              else {
-                type = '1.2'
-                accum += token
-                yield { token: prefix + reasoning + suffix + token }
-              }
+            if (token) {
+              accum += token
+              yield { token }
             }
 
-            // Main case 2.
-            if (hasReason && !hasTokens) {
-              type = '2'
-              let prefix = thoughts ? '' : '<think>'
-              thoughts += prefix + reasoning
-              yield { token: prefix + reasoning }
-            }
-
-            // Main case 3.
-            if (!hasReason && hasTokens) {
-              type = '3'
-              let suffix = flags.reason_started && !flags.reason_ended ? '</think>' : ''
-              if (suffix) {
-                flags.reason_ended = true
-              }
-
-              accum += suffix + token
-              yield { token: suffix + token }
-            }
-
-            if (DEBUG) {
-              const choice = json.choices?.[0]
-              if (choice) console.log(`#${type} `, inline(choice))
-              else console.log(`#${type} `, inline(json))
-              // if (token) console.log(`[token:${type}] ${token.trim()}`)
-              // if (reasoning) console.log(`[think:${type}] ${reasoning.trim()}`)
-            }
+            // if (DEBUG) {
+            // const choice = json.choices?.[0]
+            // if (choice) console.log(inline(choice))
+            // else console.log(inline(json))
+            // }
 
             const meta: any = {}
 
             getChoiceProp(json, 'model', meta)
             getChoiceProp(json, 'finish_reason', meta)
+            getChoiceProp(json, 'provider', meta)
 
             yield { meta }
           }
@@ -469,7 +440,15 @@ function processError(json: any) {
   // OpenRouter provider errors
   const suberror = tryParse(json?.error?.metadata?.raw)
   const providerError =
-    suberror?.detail || suberror?.message || suberror?.error?.message || json?.error?.metadata?.raw
+    suberror?.detail ||
+    suberror?.message?.detail?.[0]?.msg ||
+    suberror?.message?.detail?.msg ||
+    suberror?.message ||
+    suberror?.error?.message ||
+    json?.message?.detail?.[0]?.msg ||
+    json?.message?.detail?.msg ||
+    json?.message ||
+    json?.error?.metadata?.raw
 
   // Generic errors
   const msg = json?.error?.message || json?.message
@@ -481,17 +460,6 @@ function processError(json: any) {
   const finalMsg = [msg, providerError].filter((m) => !!m).join(' - ')
 
   return { message: finalMsg }
-}
-
-function getChoiceProp<T = any>(json: any, prop: string, assign?: any) {
-  const choice = json?.choices?.[0]
-  const value = choice?.delta?.[prop] || choice?.[prop] || json?.[prop]
-
-  if (assign && value) {
-    assign[prop] = value
-  }
-
-  return value as T
 }
 
 function tryParse(value: any) {

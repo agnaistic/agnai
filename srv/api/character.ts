@@ -8,11 +8,11 @@ import { PERSONA_FORMATS } from '../../common/adapters'
 import { AppSchema } from '../../common/types/schema'
 import { CharacterUpdate } from '../db/characters'
 import { getVoiceService } from '../voice'
-import { generateImage } from '../image'
 import { v4 } from 'uuid'
 import { validBook } from './memory'
 import { isObject, tryParse } from '/common/util'
 import { assertStrict } from '/common/valid/validate'
+import { generateAppImage } from './image-api'
 
 const router = Router()
 
@@ -35,6 +35,7 @@ const characterForm = {
   voiceDisabled: 'string?',
   tags: 'string?',
   json: 'any?',
+  prefill: 'string?',
 
   imageSettings: 'string?',
 
@@ -208,18 +209,39 @@ const editPartCharacter = handle(async ({ body, params, userId }) => {
 
 export const bulkUpdate = handle(async (req) => {
   assertValid(
-    { characterIds: ['string'], folder: 'string?', addTag: 'string?', removeTag: 'string?' },
+    {
+      characterIds: ['string'],
+      folder: 'string?',
+      addTag: 'string?',
+      removeTag: 'string?',
+      archive: 'boolean?',
+      delete: 'boolean?',
+    },
     req.body
   )
 
   const modified = await store.characters.bulkUpdate(req.userId, req.body.characterIds, req.body)
 
-  return { success: true, modified }
+  if (req.body.delete) {
+    return { success: true, modified, characters: [] }
+  }
+
+  const characters = await store.characters.getCharacters(req.userId, {
+    ids: req.body.characterIds,
+    detailed: false,
+  })
+
+  return { success: true, modified, characters }
 })
 
 const editFullCharacter = handle(async (req) => {
   const id = req.params.id
   const body = handleForm(req, characterForm)
+
+  const existing = await store.characters.getCharacter(req.userId, id)
+  if (!existing) {
+    throw new StatusError(`Character with ID "${id}" not found`, 404)
+  }
 
   const alternateGreetings = body.alternateGreetings ? toArray(body.alternateGreetings) : undefined
   const characterBook = body.characterBook ? JSON.parse(body.characterBook) : undefined
@@ -252,6 +274,7 @@ const editFullCharacter = handle(async (req) => {
     systemPrompt: body.systemPrompt,
     postHistoryInstructions: body.postHistoryInstructions,
     creator: body.creator,
+    prefill: body.prefill,
     characterVersion: body.characterVersion,
     voiceDisabled: body.voiceDisabled === 'true',
     imageSettings,
@@ -303,6 +326,15 @@ const getCharacter = handle(async ({ userId, params }) => {
   return char
 })
 
+const getDetailCharacters = handle(async ({ userId, body }) => {
+  assertValid({ characterIds: ['string'] }, body)
+  const characters = await store.characters.getCharacters(userId, {
+    ids: body.characterIds,
+    detailed: true,
+  })
+  return { characters }
+})
+
 const deleteCharacter = handle(async ({ userId, params }) => {
   const id = params.id
   await store.characters.deleteCharacter({ userId: userId!, charId: id })
@@ -333,56 +365,20 @@ function parseAndValidateVoice(json?: string) {
   return obj as unknown as AppSchema.Character['voice']
 }
 
-export const createImage = handle(async ({ body, userId, socketId, log }) => {
-  assertValid(
-    {
-      user: 'any?',
-      prompt: 'string',
-      ephemeral: 'boolean?',
-      source: 'string?',
-      noAffix: 'boolean?',
-      characterId: 'string?',
-      chatId: 'string?',
-      requestId: 'string?',
-      parent: 'string?',
-      model: 'string?',
-    },
-    body
-  )
-  const user = userId ? await store.users.getUser(userId) : body.user
-
-  const guestId = userId ? undefined : socketId
-  const requestId = body.requestId || v4()
-  generateImage(
-    {
-      user,
-      prompt: body.prompt,
-      ephemeral: body.ephemeral,
-      source: body.source || 'unknown',
-      noAffix: body.noAffix,
-      chatId: body.chatId,
-      characterId: body.characterId,
-      requestId,
-      parentId: body.parent,
-      model: body.model,
-    },
-    log,
-    guestId
-  )
-  return { success: true, requestId }
-})
-
-router.post('/image', createImage)
+router.post('/image', generateAppImage)
 router.use(loggedIn)
-router.post('/', createCharacter)
+
 router.get('/', getCharacters)
+router.post('/multiple', getDetailCharacters)
+router.delete('/:id', deleteCharacter)
+router.post('/bulk-update', bulkUpdate)
+
+router.post('/', createCharacter)
 router.post('/:id/update', editPartCharacter)
 router.post('/:id', editFullCharacter)
 router.get('/:id', getCharacter)
-router.delete('/:id', deleteCharacter)
 router.post('/:id/favorite', editCharacterFavorite)
 router.delete('/:id/avatar', removeAvatar)
-router.post('/bulk-update', bulkUpdate)
 
 export default router
 

@@ -1,5 +1,5 @@
-import { Component, For, Show, createEffect, createMemo, on } from 'solid-js'
-import { chatStore, presetStore, settingStore, toastStore, userStore } from '/web/store'
+import { Component, For, Show, createMemo } from 'solid-js'
+import { settingStore, toastStore, userStore } from '/web/store'
 import { CustomSelect } from '../CustomSelect'
 import { getSubscriptionModelLimits } from '/common/util'
 import {
@@ -9,17 +9,16 @@ import {
 } from '/common/types/presets'
 import { SubCTA } from '/web/Navigation'
 import { createEmitter } from '../util'
-import { isDefaultPreset } from '/common/default-preset'
 import { useAppContext } from '/web/store/context'
 import { AppSchema } from '/common/types'
 import { Pill } from '../Card'
 import { RootModal } from '../Modal'
-import { PresetFuncs, PresetState } from '/web/store/preset-context'
+import { PresetFuncs, ContextPreset } from '/web/store/preset-context'
 
 const MODEL_NAMES = new Map<string, string>()
 
 export const AgnaisticSettings: Component<{
-  state: PresetState
+  state: ContextPreset
   setters: PresetFuncs
   noSave: boolean
   page?: string
@@ -44,45 +43,19 @@ export const AgnaisticSettings: Component<{
       return
     }
 
-    presetStore.updatePreset(props.state._id, { providerModels: next })
+    props.setters.upsert({
+      quiet: true,
+      onCreated: (preset) => {
+        toastStore.success('Preset created')
+
+        if (!appctx.chat?._id) return
+        props.setters.change({ chatId: appctx.chat._id, presetId: preset._id })
+      },
+      onUpdated: () => toastStore.success('Model updated'),
+    })
+
+    // presetStore.updatePreset(props.state._id, { providerModels: next })
   }
-
-  createEffect(
-    on(
-      () =>
-        props.state?.providerModels?.agnaistic ?? props.state.registered?.agnaistic?.subscriptionId,
-      (id) => {
-        if (!id) return
-
-        if (isDefaultPreset(props.state._id)) {
-          props.setters.upsert({
-            quiet: true,
-            onCreated: (preset) => {
-              if (!props.page) {
-                toastStore.success('Preset created')
-                return
-              }
-
-              const chatId = appctx.chat?._id
-              if (!chatId) return
-              chatStore.assignChatPreset(chatId, props.state._id)
-            },
-            onUpdated: () => {
-              toastStore.success('Preset updated')
-            },
-          })
-          return
-        }
-
-        if (!props.state?._id || !id) return
-        if (props.state._id !== props.state._id) return
-
-        const curr =
-          props.state.providerModels?.agnaistic ?? props.state.registered?.agnaistic?.subscriptionId
-        if (id === curr) return
-      }
-    )
-  )
 
   const emitter = createEmitter('close')
 
@@ -196,11 +169,17 @@ export const ModelList: Component<{ show: boolean; close: () => void }> = (props
   )
 }
 
-function isFoundModel(value: string, search: string) {
-  const name = MODEL_NAMES.get(value)?.toLowerCase()
+function isFoundModel(compare: string, input: string) {
+  const name = MODEL_NAMES.get(compare)?.toLowerCase()
   if (!name) return true
-  if (name.includes(search.toLowerCase())) return true
-  return false
+
+  const words = input.split(' ').map((w) => w.toLocaleLowerCase())
+
+  for (const word of words) {
+    if (!name.includes(word)) return false
+  }
+
+  return true
 }
 
 type ModelOption = {
@@ -222,7 +201,7 @@ function useModelCategories() {
     userLevel: s.userLevel,
   }))
 
-  const settings = settingStore()
+  const settings = settingStore((s) => ({ config: s.config }))
 
   const list = createMemo(() => {
     const tierLevel = state.user?.admin ? Infinity : state.userLevel
@@ -241,7 +220,9 @@ function useModelCategories() {
       if (sub.preset.subDisabled && !state.user?.admin) continue
 
       const limit = getSubscriptionModelLimits(sub.preset, level)
-      const disabled = !!sub.preset.allowGuestUsage ? false : sub.level > level
+      const disabled = !!sub.preset.allowGuestUsage
+        ? false
+        : (limit?.level ?? sub.preset.subLevel) > level
       const tier =
         sub.level <= 0
           ? 'Free'
@@ -361,7 +342,7 @@ const ModelLabel: Component<{
       if (!required && props.sub.preset.subLevel > -1) {
         pills.push(
           <Pill small class="text-xs" inverse>
-            All {Math.floor(level.maxContextLength / 1000)}K
+            All {Math.round(level.maxContextLength / 1000)}K
           </Pill>
         )
         continue
@@ -370,7 +351,7 @@ const ModelLabel: Component<{
 
       pills.push(
         <Pill small class="text-xs" inverse>
-          {name} {Math.floor(level.maxContextLength / 1000)}K
+          {name} {Math.round(level.maxContextLength / 1000)}K
         </Pill>
       )
     }
@@ -385,7 +366,7 @@ const ModelLabel: Component<{
         <div class="text-700 flex flex-wrap gap-1 text-xs">
           <Show
             when={maxes().length && !props.page}
-            fallback={<>{Math.floor(context() / 1000)}K</>}
+            fallback={<>{Math.round(context() / 1000)}K</>}
           >
             <For each={maxes()}>{(max) => <>{max}</>}</For>
           </Show>

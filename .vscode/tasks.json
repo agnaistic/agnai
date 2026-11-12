@@ -1,5 +1,5 @@
 {
-  "version": "2.0.0",
+  // "version": "2.0.0",
   "tasks": [
     // {
     //   "type": "typescript",
@@ -11,8 +11,13 @@
     //     "isDefault": true
     //   },
     //   "isBackground": true,
-    //   "label": "tsc: watch - tsconfig.json"
-    // },
+    //   "label": "tsc: watch - tsconfig.json",
+    //   "options": {
+    //     "shell": {
+    //       "executable": "bash"
+    //     }
+    //   }
+    // }
     // {
     //   "type": "typescript",
     //   "tsconfig": "tsconfig.json",
@@ -26,14 +31,19 @@
     // },
     {
       "type": "shell",
-      "command": "pnpm",
-      "args": ["tsc", "-p", "tsconfig.json", "--noEmit", "-w"],
+      "command": "echo $PATH",
+      // "command": "pnpm",
+      // "args": ["tsc", "-p", "tsconfig.json", "--noEmit", "-w"],
+
       "problemMatcher": "$tsc-watch",
       "label": "tsc: watch no-emit",
       "isBackground": true,
       "group": {
         "kind": "build",
         "isDefault": true
+      },
+      "options": {
+        // "shell": { "executable": "bash -c" },
       }
     }
   ]

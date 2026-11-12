@@ -7,7 +7,7 @@ import { Card } from '../Card'
 import Sortable, { SortItem } from '../Sortable'
 import { A } from '@solidjs/router'
 import { inverseSamplerServiceMap, samplerServiceMap } from '/common/sampler-order'
-import { PresetFuncs, PresetState, PresetTabProps } from '/web/store/preset-context'
+import { PresetFuncs, PresetTabProps, ContextPreset } from '/web/store/preset-context'
 
 export const ToggleSettings: Component<PresetTabProps> = (props) => {
   return (
@@ -18,6 +18,14 @@ export const ToggleSettings: Component<PresetTabProps> = (props) => {
           helperText="Chat completions: When enabled, do not collapse repeated roles into a single message"
           value={props.state.skipRoleMerging}
           onChange={(ev) => props.setters.setState('skipRoleMerging', ev)}
+        />
+
+        <Toggle
+          label="Ensure Last Role is User"
+          helperMarkdown={`Chat completions: When enabled, the \`{{post}}\` amble will be sent as a USER role, instead of ASSISTANT.
+          Fixes DeepSeek 3.1 issues.`}
+          value={props.state.postUserRole}
+          onChange={(ev) => props.setters.setState('postUserRole', ev)}
         />
 
         <TextInput
@@ -35,7 +43,7 @@ export const ToggleSettings: Component<PresetTabProps> = (props) => {
           }
           value={props.state.cfgOppose || ''}
           disabled={props.state.disabled}
-          hide={props.setters.hides.cfgScale}
+          hide={props.setters.context.hides.cfgScale}
           onChange={(ev) => props.setters.setState('cfgOppose', ev.currentTarget.value)}
         />
 
@@ -54,7 +62,7 @@ export const ToggleSettings: Component<PresetTabProps> = (props) => {
             { label: 'Off', value: 'off' },
           ]}
           value={props.state.phraseRepPenalty || 'aggressive'}
-          hide={props.setters.hides.phraseRepPenalty}
+          hide={props.setters.context.hides.phraseRepPenalty}
           onChange={(ev) => props.setters.setState('phraseRepPenalty', ev.value)}
         />
 
@@ -65,7 +73,7 @@ export const ToggleSettings: Component<PresetTabProps> = (props) => {
           value={props.state.tempLast ?? false}
           service={props.setters.context.service}
           format={props.setters.context.format}
-          hide={props.setters.hides.tempLast}
+          hide={props.setters.context.hides.tempLast}
           recommended={props.sub?.preset.tempLast}
           onChange={(ev) => props.setters.setState('tempLast', ev)}
         />
@@ -85,7 +93,7 @@ export const ToggleSettings: Component<PresetTabProps> = (props) => {
           value={props.state.mirostatToggle ?? false}
           disabled={props.state.disabled}
           service={props.setters.context.service}
-          hide={props.setters.hides.mirostatLR}
+          hide={props.setters.context.hides.mirostatLR}
           format={props.setters.context.format}
           recommended={props.sub?.preset.mirostatToggle}
           onChange={(ev) => props.setters.setState('mirostatToggle', ev)}
@@ -98,7 +106,7 @@ export const ToggleSettings: Component<PresetTabProps> = (props) => {
           value={props.state.tokenHealing ?? true}
           disabled={props.state.disabled}
           service={props.setters.context.service}
-          hide={props.setters.hides.tokenHealing}
+          hide={props.setters.context.hides.tokenHealing}
           format={props.setters.context.format}
           recommended={props.sub?.preset.tokenHealing}
           onChange={(ev) => props.setters.setState('tokenHealing', ev)}
@@ -110,7 +118,7 @@ export const ToggleSettings: Component<PresetTabProps> = (props) => {
           value={props.state.addBosToken ?? true}
           disabled={props.state.disabled}
           service={props.setters.context.service}
-          hide={props.setters.hides.addBosToken}
+          hide={props.setters.context.hides.addBosToken}
           format={props.setters.context.format}
           recommended={props.sub?.preset.addBosToken}
           onChange={(ev) => props.setters.setState('addBosToken', ev)}
@@ -122,7 +130,7 @@ export const ToggleSettings: Component<PresetTabProps> = (props) => {
           value={props.state.banEosToken ?? false}
           disabled={props.state.disabled}
           service={props.setters.context.service}
-          hide={props.setters.hides.banEosToken}
+          hide={props.setters.context.hides.banEosToken}
           format={props.setters.context.format}
           recommended={props.sub?.preset.banEosToken}
           onChange={(ev) => props.setters.setState('banEosToken', ev)}
@@ -135,7 +143,7 @@ export const ToggleSettings: Component<PresetTabProps> = (props) => {
           disabled={props.state.disabled}
           service={props.setters.context.service}
           format={props.setters.context.format}
-          hide={props.setters.hides.skipSpecialTokens}
+          hide={props.setters.context.hides.skipSpecialTokens}
           recommended={props.sub?.preset.skipSpecialTokens}
           onChange={(ev) => props.setters.setState('skipSpecialTokens', ev)}
         />
@@ -148,7 +156,7 @@ export const ToggleSettings: Component<PresetTabProps> = (props) => {
           disabled={props.state.disabled}
           service={props.setters.context.service}
           format={props.setters.context.format}
-          hide={props.setters.hides.doSample}
+          hide={props.setters.context.hides.doSample}
           onChange={(ev) => props.setters.setState('doSample', ev)}
         />
 
@@ -160,7 +168,7 @@ export const ToggleSettings: Component<PresetTabProps> = (props) => {
           disabled={props.state.disabled}
           service={props.setters.context.service}
           format={props.setters.context.format}
-          hide={props.setters.hides.earlyStopping}
+          hide={props.setters.context.hides.earlyStopping}
           onChange={(ev) => props.setters.setState('earlyStopping', ev)}
         />
 
@@ -171,7 +179,7 @@ export const ToggleSettings: Component<PresetTabProps> = (props) => {
 }
 
 const SamplerOrder: Component<{
-  state: PresetState
+  state: ContextPreset
   setters: PresetFuncs
 }> = (props) => {
   const updateValue = (next: SortItem[]) => {

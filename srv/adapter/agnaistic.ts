@@ -20,15 +20,15 @@ import { websocketStream } from './stream'
 import { ModelAdapter } from './type'
 import { AIAdapter, AdapterSetting } from '/common/adapters'
 import { AppSchema } from '/common/types'
-import { parseStops } from '/common/util'
+import { getSubscriptionModelLimits, parseStops } from '/common/util'
 import { handleVenus } from './venus'
-import { sanitise, sanitiseAndTrim, trimResponseV2 } from '/common/requests/util'
+import { sanitise } from '/common/requests/util'
 import { obtainLock, releaseLock } from '../api/chat/lock'
 import { getServerConfiguration } from '../db/admin'
 import { handleGemini } from './gemini'
 import { getPresetConnection, PresetConnection } from '/common/providers'
-import { stripImageContent } from './template-chat-payload'
 import { getServicePayload } from './payloads'
+import { stripImageContent } from '/common/template-messages'
 
 export type SubscriptionPreset = Awaited<NonNullable<ReturnType<typeof getSubscriptionPreset>>>
 
@@ -39,7 +39,7 @@ export async function getSubscriptionPreset(
 ) {
   if (!isConnected()) return
   if (!gen) return
-  if (gen.service !== 'agnaistic') return
+  if (gen.service !== 'agnaistic' && gen.providerId !== 'agnaistic') return
 
   const tier = store.users.getUserSubTier(user)
   const level = user.admin ? 999999 : tier?.level ?? -1
@@ -73,7 +73,7 @@ export async function getSubscriptionPreset(
 }
 
 export const handleAgnaistic: ModelAdapter = async function* (opts) {
-  const { char, members, prompt, log, gen } = opts
+  const { prompt, log, gen } = opts
 
   if ('subscription' in opts === false) {
     opts.subscription = await getSubscriptionPreset(opts.user, !!opts.guest, opts.gen)
@@ -106,7 +106,9 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
     return
   }
 
-  if (subPreset.subLevel > -1 && subPreset.subLevel > newLevel) {
+  const limit = getSubscriptionModelLimits(subPreset, newLevel)
+  const subLevel = limit?.level ?? subPreset.subLevel
+  if (subLevel > -1 && subLevel > newLevel) {
     opts.log.error(
       {
         preset: subPreset.name,
@@ -120,7 +122,6 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
     yield { error: 'Your account is ineligible for this model - Subscription tier insufficient' }
     return
   }
-
   if (!subPreset.allowGuestUsage && opts.guest) {
     yield { error: 'Please sign in to use this model' }
     return
@@ -159,6 +160,12 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
       ...recommended
     } = subPreset
     Object.assign(opts.gen, recommended)
+
+    // Add the recommended stop sequences when the user preset needs recommended settings
+    if (!opts.gen.stopSequences) opts.gen.stopSequences = []
+    if (stopSequences?.length) {
+      opts.gen.stopSequences.push(...stopSequences)
+    }
   }
 
   // Max tokens and max context limit are decided by the subscription preset
@@ -167,12 +174,13 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
   opts.gen.thirdPartyUrl = subPreset.thirdPartyUrl
   opts.gen.thirdPartyFormat = subPreset.thirdPartyFormat
 
+  // Typical requests are always `kind: 'plain'` so we don't automatically always inherit the subPreset stop sequences
   const stops =
     Array.isArray(subPreset.stopSequences) && opts.kind !== 'plain'
       ? new Set(subPreset.stopSequences)
       : new Set<string>()
 
-  if (Array.isArray(opts.gen.stopSequences) && opts.gen.stopSequences.length) {
+  if (Array.isArray(opts.gen.stopSequences)) {
     for (const stop of opts.gen.stopSequences) {
       stops.add(stop)
     }
@@ -327,15 +335,17 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
       else accumulated += generated.token
 
       if (gen.streamResponse) {
-        yield {
-          partial: sanitiseAndTrim({
-            text: accumulated,
-            char,
-            members,
-            gen: opts.gen,
-          }),
-        }
+        yield { partial: accumulated }
       }
+    }
+
+    if (generated.thoughts) {
+      yield { thoughts: generated.thoughts }
+    }
+
+    if (generated.tokens) {
+      result = generated.tokens
+      break
     }
 
     if (typeof generated === 'string') {
@@ -353,14 +363,7 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
   }
 
   const parsed = sanitise((result || accumulated).replace(prompt, ''))
-  const trimmed = trimResponseV2(
-    parsed,
-    opts.replyAs,
-    members,
-    opts.gen,
-    Array.from(stops.values())
-  )
-  yield trimmed || parsed
+  yield parsed
 }
 
 const settings: AdapterSetting[] = [
@@ -483,6 +486,7 @@ export function getHandlers(opts: {
 
     case 'openai-chat':
     case 'openai-chatv2':
+    case 'lm-studio':
       return handlers.openai
 
     case 'featherless':

@@ -1,17 +1,29 @@
-import { getOaiCompatibleUrl, joinUrl, sanitiseAndTrim } from '/common/requests/util'
-import { ChatRole, ModelAdapter } from './type'
+import { getOaiCompatibleUrl, joinUrl } from '/common/requests/util'
+import { AdapterProps, ChatRole, CompletionItem, ModelAdapter } from './type'
 import { defaultPresets } from '../../common/presets'
 import { AppLog } from '../middleware'
-import { requestFullCompletion, toChatCompletionPayload } from './chat-completion'
+import {
+  modelNeedsUserRoleLast,
+  requestFullCompletion,
+  toChatCompletionPayload,
+} from './chat-completion'
 import { decryptText } from '../db/util'
 import { getTokenCounter } from '../tokenize'
-import { ensureMessagesAlternate, stripImageContent } from './template-chat-payload'
+import { ensureMessagesAlternate, stripImageContent } from '/common/template-messages'
 import { OPENAI_MODELS } from '/common/presets/openai'
 import { streamGenerator } from '/common/requests/stream'
 import { getStoppingStrings, toImageJinjaTemplate } from '/common/requests/payloads'
 import { JsonField } from '/common/prompt'
+import { adjustMessageFormatting } from './util'
 
-type CompletionContent<T> = Array<{ finish_reason: string; index: number } & ({ text: string } | T)>
+type CompletionContent<T = {}> = Array<
+  {
+    finish_reason: string
+    index: number
+    text?: string
+    message?: { content: string; role: ChatRole }
+  } & ({ text: string } | T)
+>
 
 export type Inference = { message: { content: string; role: ChatRole } }
 
@@ -31,6 +43,7 @@ const REASONING_MODELS: Record<string, boolean> = {
   'gpt-5-mini-2025-08-07': true,
   'gpt-5-nano': true,
   'gpt-5-nano-2025-08-07': true,
+  'gpt-5.1-chat-latest': true,
   o1: true,
   'o1-2024-12-17': true,
   o3: true,
@@ -44,7 +57,7 @@ const REASONING_MODELS: Record<string, boolean> = {
 }
 
 export const handleOAI: ModelAdapter = async function* (opts) {
-  const { char, members, user, prompt, log, gen, guest, kind, isThirdParty } = opts
+  const { user, prompt, log, gen, guest, kind, isThirdParty } = opts
   const base = getOaiCompatibleUrl(gen, isThirdParty)
 
   let oaiKey = gen.providerId ? gen.thirdPartyKey : gen.thirdPartyKey || user.oaiKey
@@ -57,6 +70,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   const maxResponseLength = gen.maxTokens ?? defaultPresets.openai.maxTokens
 
   const stops = getStoppingStrings(opts, opts.gen)
+
   if (!base.changed) {
     stops.splice(4, stops.length - 4)
   }
@@ -67,11 +81,12 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     temperature: gen.temp ?? defaultPresets.openai.temp,
     max_tokens: maxResponseLength,
     // max_completion_tokens: maxResponseLength,
+    // max_response_tokens: maxResponseLength,
     top_p: gen.topP ?? 1,
     stop: stops,
   }
 
-  if (REASONING_MODELS[oaiModel]) {
+  if (REASONING_MODELS[oaiModel] || opts.conn.provider?.subFormat === 'reasoning') {
     body.max_completion_tokens = maxResponseLength
     delete body.max_tokens
     delete body.stop
@@ -87,23 +102,15 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   //   body.frequency_penalty = gen.frequencyPenalty ?? defaultPresets.openai.frequencyPenalty
   // }
 
-  if (gen.reasoning?.enabled) {
-    body.reasoning = {
-      exclude: !!gen.reasoning.exclude,
+  if (opts.jsonSchema) {
+    const base: any = {}
+
+    const responseName = opts.replyAs?.name || opts.char?.name
+    if (responseName) {
+      const field = `${responseName}'s response`
+      base[field] = { type: 'string' }
     }
 
-    if (gen.reasoning.effort === 'custom') {
-      body.reasoning.max_tokens = gen.reasoning.maxTokens
-    } else {
-      body.reasoning.effort = gen.reasoning.effort || 'low'
-    }
-  }
-
-  if (gen.jsonEnabled && opts.jsonSchema) {
-    const responseField = `${opts.replyAs?.name || opts.char?.name}'s response`
-    const base = {
-      [responseField]: { type: 'string' },
-    }
     const fields = opts.jsonSchema.reduce((prev: any, field: JsonField) => {
       const { disabled, name, type, ...rest } = field
       prev[field.name] = {
@@ -120,10 +127,11 @@ export const handleOAI: ModelAdapter = async function* (opts) {
       type: 'json_schema',
       json_schema: {
         name: 'response',
-        type: 'object',
-        strict: true,
+        // type: 'object',
+        // strict: true,
         schema: {
           strict: true,
+          type: 'object',
           properties: fields,
           required,
           additionalProperties: false,
@@ -137,7 +145,9 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   }
 
   const isChatFormat =
-    gen.thirdPartyFormat === 'openai-chat' || gen.thirdPartyFormat == 'openai-chatv2'
+    gen.thirdPartyFormat === 'openai-chat' ||
+    gen.thirdPartyFormat == 'openai-chatv2' ||
+    gen.thirdPartyFormat === 'lm-studio'
   const useChat = (isThirdParty && isChatFormat) || gen.service === 'openai'
 
   if (useChat) {
@@ -151,6 +161,12 @@ export const handleOAI: ModelAdapter = async function* (opts) {
           )
 
     body.messages = messages
+
+    /**
+     * @todo provide an option for this
+     * there are some provider/model combinations that need to be 'patched' before dispatching
+     */
+    patchPayload(opts, body, messages)
 
     yield { prompt: stripImageContent(messages) }
   } else {
@@ -193,6 +209,14 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     body.messages = merged
   }
 
+  if (body.messages) {
+    body.messages = adjustMessageFormatting(opts.conn, body.messages)
+  }
+
+  if (!body.stop?.length) {
+    delete body.stop
+  }
+
   const iter = body.stream
     ? streamGenerator({
         userId: opts.user._id,
@@ -213,7 +237,12 @@ export const handleOAI: ModelAdapter = async function* (opts) {
         signal: opts.signal,
       })
 
-  let accumulated = ''
+  const accum = {
+    tokens: '',
+    thoughts: '',
+  }
+
+  // let accumulated = ''
   let response: Completion<Inference> | undefined
 
   while (true) {
@@ -223,6 +252,11 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     if (generated.done) {
       response = generated.value
       break
+    }
+
+    if ('thoughts' in generated.value) {
+      accum.thoughts += generated.value.thoughts
+      yield { thoughts: generated.value.thoughts! }
     }
 
     if ('error' in generated.value) {
@@ -237,15 +271,8 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
     // Only the streaming generator yields individual tokens.
     if ('token' in generated.value) {
-      accumulated += generated.value.token
-      yield {
-        partial: sanitiseAndTrim({
-          text: accumulated,
-          char,
-          members,
-          gen: opts.gen,
-        }),
-      }
+      accum.tokens += generated.value.token
+      yield { partial: accum.tokens }
     }
 
     if ('meta' in generated.value) {
@@ -253,36 +280,31 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     }
 
     if ('tokens' in generated.value && typeof generated.value.tokens === 'string') {
-      accumulated = generated.value.tokens
+      accum.tokens = generated.value.tokens
     }
   }
 
   try {
-    let text = accumulated ? accumulated : getCompletionContent(response, log)
+    const text = accum.tokens ? accum.tokens : getCompletionContent(response, accum.tokens, log)
+
     if (text instanceof Error) {
       yield { error: `[Chat] Request returned an error: ${text.message}` }
       return
     }
 
-    if (!text?.length) {
+    if (!text?.length && !accum.thoughts.length) {
       log.error({ body: response }, '[Chat] Request failed: Empty response')
       yield { error: `[Chat] Request failed: Received empty response. Try again.` }
       return
     }
 
-    gen.swipesPerGeneration! > 1
-      ? yield sanitiseAndTrim({
-          text: accumulated,
-          char,
-          members,
-          gen: opts.gen,
-        })
-      : yield sanitiseAndTrim({
-          text,
-          char: opts.replyAs,
-          members,
-          gen: opts.gen,
-        })
+    if (gen.swipesPerGeneration! > 1) {
+      yield accum.tokens
+    } else if (text?.length) {
+      yield text
+    } else if (accum.thoughts) {
+      // ??? This was a function call with no side-effects?
+    }
   } catch (ex: any) {
     log.error({ err: ex }, 'OpenAI failed to parse')
     yield { error: `OpenAI request failed: ${ex.message}` }
@@ -296,9 +318,13 @@ export type OAIUsage = {
   total_usage: number
 }
 
-export function getCompletionContent(completion: Completion<Inference> | undefined, log: AppLog) {
+export function getCompletionContent(
+  completion: Completion<Inference> | undefined,
+  accumulated: string,
+  log: AppLog
+) {
   if (!completion) {
-    return ''
+    return accumulated
   }
 
   if (completion.error?.message) {
@@ -310,9 +336,79 @@ export function getCompletionContent(completion: Completion<Inference> | undefin
     return completion
   }
 
-  if ('text' in completion?.choices?.[0]) {
-    return completion.choices[0].text
+  const choice = completion?.choices?.[0]
+  if (choice && 'text' in choice) {
+    return choice.text
   } else {
-    return completion?.choices?.[0]?.message?.content || ''
+    return choice?.message?.content || ''
+  }
+}
+
+function patchPayload(opts: AdapterProps, body: any, messages: CompletionItem<string>[]) {
+  applyReasoningPayload(opts, body)
+
+  const { conn } = opts
+  if (!conn.provider) return
+
+  const model: string = (body.model || '').toLowerCase()
+  const lastMsg = messages[messages.length - 1]
+
+  switch (conn.provider.provider) {
+    case 'known-deepseek': {
+      // `.stop` has a limit of 16 for Official DeepSeek
+      if (Array.isArray(body.stop) && body.stop.length > 16) {
+        body.stop = body.stop.slice(0, 16)
+      }
+
+      if (!lastMsg) return
+      lastMsg.role = 'user'
+
+      return
+    }
+
+    case 'known-openrouter': {
+      if (!modelNeedsUserRoleLast(opts, body.model)) return
+      if (!lastMsg) return
+      lastMsg.role = 'user'
+      return
+    }
+
+    case 'known-xai': {
+      body.stop = undefined
+      return
+    }
+  }
+
+  if (modelNeedsUserRoleLast(opts, model)) {
+    lastMsg.role = 'user'
+  }
+}
+
+function applyReasoningPayload(opts: AdapterProps, body: any) {
+  const provider = opts.conn.provider?.provider
+
+  switch (provider) {
+    case 'known-zai':
+    case 'known-deepseek': {
+      body.thinking = { type: opts.gen.reasoning?.enabled ? 'enabled' : 'disabled' }
+      return
+    }
+
+    case 'known-nvidia': {
+      delete body.reasoning
+      return
+    }
+  }
+
+  if (!opts.gen.reasoning?.enabled) return
+
+  body.reasoning = {
+    exclude: !!opts.gen.reasoning?.exclude,
+  }
+
+  if (opts.gen.reasoning.effort === 'custom') {
+    body.reasoning.max_tokens = opts.gen.reasoning.maxTokens
+  } else {
+    body.reasoning.effort = opts.gen.reasoning.effort || 'low'
   }
 }

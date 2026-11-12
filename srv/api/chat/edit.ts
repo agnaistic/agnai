@@ -27,6 +27,7 @@ export const updateChat = handle(async ({ params, body, user, userId }) => {
       imageSource: 'string?',
       imageSettings: 'any?',
       invisible: 'any?',
+      invisibleChars: 'any?',
     },
     body,
     true
@@ -56,6 +57,7 @@ export const updateChat = handle(async ({ params, body, user, userId }) => {
     imageSource: (body.imageSource as any) ?? prev.imageSource,
     imageSettings: body.imageSettings,
     invisible: body.invisible ?? prev.invisible,
+    invisibleChars: body.invisibleChars ?? prev.invisibleChars,
   }
 
   if (body.useOverrides === false) {
@@ -149,6 +151,9 @@ export const updateMessageProps = handle(async ({ body, params, userId }) => {
       userId: 'string?',
       name: 'string?',
       invisible: 'any?',
+      parent: 'string?',
+      meta: 'any?',
+      assignTree: 'boolean?',
     },
     body
   )
@@ -158,30 +163,36 @@ export const updateMessageProps = handle(async ({ body, params, userId }) => {
   if (!prev || !prev.chat) throw errors.NotFound
   if (prev.chat?.userId !== userId) throw errors.Forbidden
 
-  const update: Partial<AppSchema.ChatMessage> = {
-    imagePrompt: body.imagePrompt ?? prev.msg.imagePrompt,
-    msg: body.msg ?? prev.msg.msg,
-    retries: body.retries,
-    extras: body.extras || prev.msg.extras,
-    json: body.json || prev.msg.json,
-    invisible: body.invisible ?? prev.msg.invisible,
-    characterId: body.characterId ?? prev.msg.characterId,
-    userId: body.userId ?? prev.msg.userId,
-    name: body.name ?? prev.msg.name,
-  }
+  const update: Partial<AppSchema.ChatMessage> = {}
+
+  if (body.imagePrompt) update.imagePrompt = body.imagePrompt
+  if (body.msg) update.msg = body.msg
+  if (body.extras) update.extras = body.extras
+  if (body.retries) update.retries = body.retries
+  if (body.json) update.json = body.json
+  if (body.characterId) update.characterId = body.characterId
+  if (body.userId) update.userId = body.userId
+  if (body.name) update.name = body.name
+  if (body.invisible) update.invisible = body.invisible
+  if (body.parent) update.parent = body.parent
+  if (body.meta) update.meta = body.meta
 
   const message = await store.msgs.editMessage(params.id, {
     ...update,
     state: body.msg === undefined ? prev.msg.state : 'edited',
   })
 
-  sendMany(prev.chat?.memberIds.concat(prev.chat.userId), {
+  if (message && body.assignTree) {
+    await store.chats.update(message.chatId, { treeLeafId: message._id })
+  }
+
+  const members = [prev.chat.userId].concat(prev.chat.memberIds || [])
+  sendMany(members, {
     type: 'message-edited',
+    ...update,
     chatId: prev.chat._id,
     messageId: params.id,
-    imagePrompt: body.imagePrompt ?? prev.msg.imagePrompt,
-    message: body.msg ?? prev.msg.msg,
-    extras: body.extras || prev.msg.extras,
+    message: body.msg ?? prev.msg.msg, // Backwards compatibility
   })
 
   return message

@@ -1,4 +1,4 @@
-import { AlertTriangle, Save, X } from 'lucide-solid'
+import { AlertTriangle, Download, Save, X } from 'lucide-solid'
 import {
   Component,
   Match,
@@ -12,11 +12,11 @@ import {
 } from 'solid-js'
 import AvatarIcon from '../../shared/AvatarIcon'
 import Button from '../../shared/Button'
-import FileInput, { FileInputResult } from '../../shared/FileInput'
+import FileInput, { FileInputResult, getFileAsString } from '../../shared/FileInput'
 import Modal, { RootModal } from '../../shared/Modal'
 import TextInput from '../../shared/TextInput'
-import { setComponentPageTitle } from '../../shared/util'
-import { adminStore, settingStore, toastStore, userStore } from '../../store'
+import { downloadJson, setComponentPageTitle } from '../../shared/util'
+import { adminStore, pageStore, settingStore, toastStore, userStore } from '../../store'
 import { Pill, TitleCard } from '/web/shared/Card'
 import { useNavigate, useSearchParams } from '@solidjs/router'
 import { SubscriptionPage } from './SubscriptionPage'
@@ -25,11 +25,14 @@ import { Page } from '/web/Layout'
 import { useGoogleReady } from '/web/shared/hooks'
 import { startTour } from '/web/tours'
 import { createStore } from 'solid-js/store'
+import { isLoggedIn } from '/web/store/api'
+import { localApi } from '/web/store/data/storage'
 
 export const ProfileModal: Component = () => {
-  const state = userStore()
+  const state = userStore((s) => ({ showProfile: s.showProfile }))
   const config = userStore((s) => ({ tiers: s.tiers.filter((t) => t.enabled) }))
   const tabs = useTabs(['Profile', 'Subscription'], 0)
+
   const [search, setSearch] = useSearchParams()
 
   createEffect(() => {
@@ -94,20 +97,23 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
 
   setComponentPageTitle('My profile')
   const nav = useNavigate()
-  const state = userStore()
-  const admin = adminStore()
-  const settings = settingStore()
+  const state = userStore((s) => ({ profile: s.profile, user: s.user }))
+  const admin = adminStore((s) => ({ impersonating: s.impersonating }))
+  const settings = settingStore((s) => ({ config: s.config }))
+  const page = pageStore((s) => ({ flags: s.flags }))
 
   const [handle, setHandle] = createSignal(state.profile?.handle || '')
   const [pass, setPass] = createSignal(false)
   const [del, setDel] = createSignal(false)
   const [avatar, setAvatar] = createSignal<File | undefined>()
+  const [importing, setImporting] = createSignal(false)
+  const [downloadData, setDownloadData] = createSignal<any>()
   const google = useGoogleReady()
 
   const canuseGoogle = createMemo(
     () =>
       !!settings.config.serverConfig?.googleClientId &&
-      (settings.config.serverConfig?.googleEnabled || settings.flags.google)
+      (settings.config.serverConfig?.googleEnabled || page.flags.google)
   )
 
   const onAvatar = (files: FileInputResult[]) => {
@@ -120,6 +126,45 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
     const payload = { handle: handle(), avatar: avatar() }
     userStore.updateProfile(payload)
     userStore.modal(false)
+  }
+
+  const [guestData, setGuestData] = createSignal<any>()
+
+  const importGuestData = () => {
+    setGuestData(undefined)
+    const warning = (
+      <div class="flex flex-col items-center gap-2">
+        <FileInput
+          fieldName="guest-data-import"
+          accept=".txt, text/json, application/json"
+          label="Guest Data"
+          onUpdate={async (data) => {
+            if (!data?.[0]) return
+            const str = await getFileAsString(data[0])
+            const json = JSON.parse(str)
+            setGuestData(json)
+          }}
+        />
+        <div class="font-bold">!! WARNING !!</div>
+        <div>This will REPLACE all of your existing guest data.</div>
+        <div>Are you sure?</div>
+      </div>
+    )
+
+    pageStore.openConfirm({
+      message: warning,
+      onConfirm: async () => {
+        if (!guestData()) return
+        try {
+          setImporting(true)
+          await localApi.importGuestData(guestData())
+          setImporting(false)
+        } catch (ex: any) {
+          toastStore.error(ex, { prefix: `Import failed` })
+          setImporting(false)
+        }
+      },
+    })
   }
 
   onMount(() => {
@@ -143,7 +188,7 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
 
     if (!api) return
 
-    const enabled = settings.config.serverConfig?.googleEnabled || settings.flags.google
+    const enabled = settings.config.serverConfig?.googleEnabled || page.flags.google
 
     if (settings.config.serverConfig?.googleClientId && enabled) {
       api.initialize({
@@ -204,7 +249,7 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
             <div class="flex flex-wrap items-center justify-center">
               You can{' '}
               <div class="inline">
-                <Button class="mx-1" size="sm" onClick={() => settingStore.toggleImpersonate(true)}>
+                <Button class="mx-1" size="sm" onClick={() => pageStore.toggleImpersonate(true)}>
                   Impersonate
                 </Button>{' '}
               </div>
@@ -299,9 +344,49 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
             onUpdate={onAvatar}
           />
 
-          <div>
-            <Button onClick={() => setPass(true)}>Change Password</Button>
-          </div>
+          <Show when={isLoggedIn()}>
+            <div>
+              <Button onClick={() => setPass(true)}>Change Password</Button>
+            </div>
+          </Show>
+
+          <Show when={state.user?._id === 'anon'}>
+            <TitleCard title="Guest Data" center>
+              <div class="flex flex-col items-center gap-3">
+                <div class="flex justify-center gap-4">
+                  <Button
+                    schema="success"
+                    onClick={async () => {
+                      const data = await localApi.getGuestData()
+                      setDownloadData(data)
+                    }}
+                  >
+                    Prepare Backup
+                  </Button>
+                  <Button disabled={importing()} schema="warning" onClick={importGuestData}>
+                    Import
+                  </Button>
+                </div>
+
+                <Show
+                  when={!!downloadData()}
+                  fallback={<span class="text-500">Backup Not Ready</span>}
+                >
+                  <div class="flex justify-center">
+                    <a
+                      class="link flex gap-1"
+                      onClick={() => {
+                        const data = downloadData()
+                        downloadJson(data, `guest-data-${Date.now()}.json`)
+                      }}
+                    >
+                      Download Guest Data <Download size={16} />
+                    </a>
+                  </div>
+                </Show>
+              </div>
+            </TitleCard>
+          </Show>
 
           <Show when={state.user?._id !== 'anon'}>
             <div class="flex justify-center gap-4">
@@ -401,7 +486,7 @@ const PasswordModal: Component<{ show: boolean; close: () => void }> = (props) =
 }
 
 const DeleteAccountModal: Component<{ show: boolean; close: () => void }> = (props) => {
-  const state = userStore()
+  const state = userStore((s) => ({ user: s.user }))
   const [username, setUsername] = createSignal('')
 
   const deleteAccount = () => {

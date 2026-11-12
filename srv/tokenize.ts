@@ -69,6 +69,7 @@ export type EncoderType =
   | 'yi'
   | 'cohere'
   | 'qwen2'
+  | 'qwen3'
   | 'gemma'
 
 const TURBO_MODELS = new Set<string>([

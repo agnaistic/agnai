@@ -43,7 +43,11 @@ export const voiceStore = createStore<VoiceState>(
         })
       }
 
-      if (user.novelVerified || user.novelApiKey) {
+      if (
+        user.novelVerified ||
+        user.novelApiKey ||
+        user.providers?.some((p) => p.provider === 'known-novel')
+      ) {
         services.push({
           type: 'novel',
           label: 'NovelAI Text To Speech',

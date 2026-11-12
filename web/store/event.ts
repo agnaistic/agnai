@@ -7,6 +7,7 @@ import { scenarioStore } from './scenario'
 import { toastStore } from './toasts'
 import { chatStore } from './chat'
 import { weightedRandom } from '../shared/util'
+import { responseStore } from './response'
 
 export type ChatEvent = {
   charId: string
@@ -120,7 +121,7 @@ export const eventStore = createStore<ChatEventState>('events', { events: [], pr
           prompt: prompt,
           event: selected.event.type,
         } as ChatEvent
-        msgStore.send({
+        responseStore.send({
           chatId: eventState.chatId,
           msg: eventState.prompt,
           mode: ('send-event:' + eventState.event) as any,
