@@ -50,10 +50,8 @@ eem {
   border-radius: 0.375rem;
   padding: 0.25rem;
   font-size: 0.875rem;
-  color: var(--text-900);
-  color: var(--text-code-color);
-  background-color: var(--bg-600);
-  background-color: var(--text-code-background);
+  color: var(--text-code-color, var(--text-900));
+  background-color: var(--text-code-background, var(--bg-600));
 }
 
 /* <p><code> is inline by default — force the same block box as <pre> */
@@ -65,16 +63,16 @@ eem {
   white-space: pre-wrap;
 }
 
+/* Plain code text uses Chat Code Color; <em>/<eem>/<q>/<qem> keep their own colors. */
+
 .rendered-markdown pre {
   margin-top: 0.5rem;
   overflow-x: auto;
   border-radius: 0.375rem;
   padding: 0.25rem;
   font-size: 0.875rem;
-  color: var(--text-900);
-  color: var(--text-code-color);
-  background-color: var(--bg-600);
-  background-color: var(--text-code-background);
+  color: var(--text-code-color, var(--text-900));
+  background-color: var(--text-code-background, var(--bg-600));
 }
 
 .rendered-markdown pre::-webkit-scrollbar-thumb {

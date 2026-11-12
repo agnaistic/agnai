@@ -1034,14 +1034,19 @@ async function updateTheme(ui: UI.UISettings) {
 
   setRootVariable('text-chatcolor', getSettingColor(mode.chatTextColor || 'text-800'))
   setRootVariable('text-emphasis-color', getSettingColor(mode.chatEmphasisColor || 'text-600'))
-  setRootVariable('text-quote-color', getSettingColor(mode.chatQuoteColor || 'text-800'))
+  setRootVariable(
+    'text-quote-color',
+    getSettingColor(mode.chatQuoteColor || (ui.mode === 'light' ? 'green-700' : 'green-400'))
+  )
   setRootVariable(
     'text-quote-emphasis-color',
-    getSettingColor(mode.chatQuoteEmphasisColor || 'text-800')
+    getSettingColor(
+      mode.chatQuoteEmphasisColor || (ui.mode === 'light' ? 'green-800' : 'green-500')
+    )
   )
   setRootVariable(
     'text-emphasis-emphasis-color',
-    getSettingColor(mode.chatEmphasisEmphasisColor || 'text-800')
+    getSettingColor(mode.chatEmphasisEmphasisColor || 'text-500')
   )
   setRootVariable('bot-background', getSettingColor(mode.botBackground || 'bg-800'))
 
