@@ -90,7 +90,6 @@ export type ImagePromptOpts = {
 }
 
 export function createCaptionInferenceSignal(opts: Omit<ImagePromptOpts, 'messageId'>) {
-  const imgEnts = getImagePromptEntities()
   const task = 'Image Caption'
 
   const onTick: TickHandler = (response, state) => {
@@ -114,10 +113,11 @@ export function createCaptionInferenceSignal(opts: Omit<ImagePromptOpts, 'messag
     }
   }
 
-  const helper = inferenceSignal({ preset: imgEnts.preset, onTick })
+  const helper = inferenceSignal({ onTick })
 
   const generate = async (messageId: string, signal?: AbortController) => {
     const ents = getImagePromptEntities(messageId)
+    helper.update({ preset: ents.preset })
 
     let focus = opts.question
     if (!focus) {

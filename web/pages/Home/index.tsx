@@ -157,25 +157,6 @@ const HomePage: Component = () => {
         <Show when={announcements().length === 0}>
           <Features />
         </Show>
-
-        <Card border ariaRole="region" ariaLabel="Getting started">
-          <div class="mb-2 flex justify-center text-xl font-bold" aria-hidden="true">
-            Getting Started
-          </div>
-          <div class="flex flex-col items-center gap-2 leading-6">
-            <p>
-              Looking for help with getting started? Check out the{' '}
-              <a class="link" href="https://agnai.guide" target="_blank">
-                Official Guide
-              </a>{' '}
-              or head to the{' '}
-              <a class="link" target="_blank" href="https://discord.agnai.chat">
-                Agnaistic Discord
-              </a>
-              .
-            </p>
-          </div>
-        </Card>
       </div>
 
       <Switch>

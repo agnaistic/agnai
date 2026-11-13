@@ -9,8 +9,8 @@ import { ContextSize, ModelFormat, ResponseLength, Temperature } from './Fields'
 import { PresetTabProps } from '/web/store/preset-context'
 
 export const MODEL_FORMATS = Object.keys(BUILTIN_FORMATS).map((label) => ({
-  label,
-  value: label === 'None' ? `None (Chat Completions)` : label,
+  label: label === 'None' ? `None (Chat Completions)` : label,
+  value: label,
 }))
 
 export const GeneralSettings: Component<PresetTabProps> = (props) => {

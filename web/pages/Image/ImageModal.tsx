@@ -15,7 +15,16 @@ import { getAssetUrl, getJsonSchema } from '../../shared/util'
 import Button from '/web/shared/Button'
 import { useDraft, useImageCache } from '/web/shared/hooks'
 import TextInput from '/web/shared/TextInput'
-import { ArrowLeft, ArrowRight, Download, SettingsIcon, Trash, WandSparkles } from 'lucide-solid'
+import {
+  ArrowLeft,
+  ArrowRight,
+  Download,
+  SettingsIcon,
+  SlidersVertical,
+  SquareSparkles,
+  Trash,
+  WandSparkles,
+} from 'lucide-solid'
 import { cleanPrompt, hydrateTemplate } from '/common/util'
 import { RelativeSpinner } from '/web/shared/Loading'
 import { createCaptionInferenceSignal, imageApi } from '/web/store/data/image'
@@ -28,7 +37,6 @@ import { debug } from '/common/debug'
 import { usePresetContext } from '/web/store/preset-context'
 import { useAppContext } from '/web/store/context'
 import { useImageContext } from '../Settings/Image/image-context'
-import { SelectImageProvider } from '../Settings/Image/ImageProvider'
 import { TickHandler } from '/common/prompt'
 import { ImageModel } from '../Settings/Image/ImageModel'
 import { ImagePreset } from '../Settings/Image/ImagePreset'
@@ -336,17 +344,24 @@ const ImageCollectionModal: Component<{}> = (props) => {
   )
 
   const GenerationActions = (
-    <div class="flex flex-col items-end gap-2">
-      <ImagePreset ctx={imgctx} />
-      <ImageModel ctx={imgctx} />
-      <div class="flex w-full items-end justify-end">
-        <SelectImageProvider ctx={imgctx} />
-      </div>
-      <div class="flex w-full items-end justify-end gap-2">
-        <Button size="sm" onClick={generateImage} disabled={state.loading}>
-          Generate Image
-        </Button>
+    <div class="flex flex-col items-start gap-2">
+      <div class="flex flex-col">
+        <div class="text-500 text-sm">Preset</div>
+        <div class="flex gap-1">
+          <ImagePreset ctx={imgctx} />
 
+          <Button size="sm" onClick={() => imageStore.imageSettings(true)}>
+            <SlidersVertical size={20} />
+          </Button>
+        </div>
+      </div>
+
+      <div class="flex flex-col">
+        <div class="text-500 text-sm">Model</div>
+        <ImageModel ctx={imgctx} />
+      </div>
+
+      <div class="flex w-full">
         <For each={store?.options || []}>
           {(action) => (
             <Button
@@ -390,6 +405,7 @@ const ImageCollectionModal: Component<{}> = (props) => {
         actions={GenerationActions}
         footer={ImageNavigate}
         settings={imageSettings()}
+        generate={generateImage}
       >
         <section class="relative flex max-h-[calc(100%-200px)] justify-center">
           <Show when={state.loading}>
@@ -414,6 +430,7 @@ const PromptSettings: Component<{
   children: JSX.Element
   actions: JSX.Element
   footer: JSX.Element
+  generate: () => void
 }> = (props) => {
   const persist = promptStore((s) => ({ imageHint: s.imageHint }))
   const msgs = msgStore((s) => ({ message: s.graph.tree[props.messageId || ''] }))
@@ -441,11 +458,6 @@ const PromptSettings: Component<{
     }
 
     await gen.generate(props.messageId)
-  }
-
-  const onCleanPrompt = () => {
-    const cleaned = cleanPrompt(props.state.prompt)
-    props.update('prompt', cleaned)
   }
 
   const saveMessagePrompt = () => {
@@ -494,13 +506,21 @@ const PromptSettings: Component<{
           textarea={{ rows: 3 }}
         />
 
-        <div class="flex w-full items-center justify-between">
+        <div class="flex w-full justify-end">
           <Copy text={fullImagePrompt()}>
             <span class="text-sm">Copy</span>
           </Copy>
+        </div>
 
+        <div class="flex w-full items-center justify-between">
           <div class="flex-end flex gap-2">
             <Show when={!!gen && props.messageId}>
+              <Show when={props.messageId}>
+                <Button size="sm" onClick={saveMessagePrompt} disabled={!canSave()}>
+                  Save
+                </Button>
+              </Show>
+
               <Button size="sm" onClick={generatePrompt}>
                 <Show
                   when={gen?.state.status !== 'loading'}
@@ -511,19 +531,14 @@ const PromptSettings: Component<{
                     </>
                   }
                 >
-                  <WandSparkles size={16} /> Prompt
+                  Prompt <WandSparkles size={16} />
                 </Show>
               </Button>
-              <Button size="sm" onClick={onCleanPrompt}>
-                Fix
-              </Button>
-
-              <Show when={props.messageId}>
-                <Button size="sm" onClick={saveMessagePrompt} disabled={!canSave()}>
-                  Save
-                </Button>
-              </Show>
             </Show>
+
+            <Button size="sm" onClick={props.generate} disabled={props.state.loading}>
+              Generate <SquareSparkles size={16} />
+            </Button>
           </div>
         </div>
 

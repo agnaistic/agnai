@@ -59,12 +59,28 @@ export const ImageSettingsModal = () => {
         close={() => imageStore.imageSettings(false)}
         footer={
           <>
+            <Show when={!ctx.edit.preset._id}>
+              <Button onClick={() => ctx.cancelNewPreset()} schema="grey">
+                Cancel Preset
+              </Button>
+            </Show>
+
             <Button onClick={() => imageStore.imageSettings(false)}>
               <X /> Close
             </Button>
-            <Button onClick={() => ctx.save()}>
-              <Save /> Save
-            </Button>
+
+            <Show
+              when={!!ctx.edit.preset._id}
+              fallback={
+                <Button schema="success" onClick={() => ctx.save()}>
+                  <Save /> Create
+                </Button>
+              }
+            >
+              <Button onClick={() => ctx.save()}>
+                <Save /> Save
+              </Button>
+            </Show>
           </>
         }
       >
@@ -124,8 +140,12 @@ export const ImageSettingsModal = () => {
               </Button>
             </div>
           </Show>
-
-          <ImagePreset ctx={ctx} />
+          <div class="flex gap-2">
+            <ImagePreset ctx={ctx} prefix="Preset" />
+            <Button size="sm" onClick={() => ctx.newPreset()}>
+              New +
+            </Button>
+          </div>
 
           <Accordian title="Image Caption Settings" titleClickOpen open={false}>
             <PresetSelect
@@ -166,7 +186,7 @@ export const ImageSettingsModal = () => {
             </div>
           </Accordian>
 
-          <SelectImageProvider ctx={ctx} editable />
+          <SelectImageProvider ctx={ctx} editable prefix="Provider" />
           <Divider />
           <ImageSamplers ctx={ctx} />
 

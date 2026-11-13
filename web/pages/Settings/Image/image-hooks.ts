@@ -4,7 +4,6 @@ import { settingStore } from 'web/store'
 import { NOVEL_IMAGE_MODEL } from 'common/image'
 import { createResource } from 'solid-js'
 import { imageApi } from 'web/store/data/image'
-import { debug } from 'common/debug'
 
 export function useModelList(ctx: ImageContext) {
   const res = createResource(ctx.current.provider, async (prv) => {
@@ -22,7 +21,6 @@ export async function retrieveImageModels(opts: {
   url: string
 }) {
   const type = opts.type
-  debug('img-models')(`fetching for ${type} %s`, opts._id, opts.url)
 
   switch (type) {
     case 'agnai': {

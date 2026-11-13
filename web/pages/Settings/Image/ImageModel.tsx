@@ -2,7 +2,7 @@ import { Component, createMemo } from 'solid-js'
 import { ImageContext } from './image-context'
 import { CustomSelect } from 'web/shared/CustomSelect'
 
-export const ImageModel: Component<{ ctx: ImageContext }> = (props) => {
+export const ImageModel: Component<{ ctx: ImageContext; prefix?: string }> = (props) => {
   const selectModel = (id: string) => {
     props.ctx.changeModel(id)
   }
@@ -36,7 +36,7 @@ export const ImageModel: Component<{ ctx: ImageContext }> = (props) => {
       options={options()}
       onSelect={(opt) => selectModel(opt.value)}
       selected={selected()}
-      buttonLabel={(opt) => `Model: ${opt.label || 'Unknown'}`}
+      buttonLabel={(opt) => `${props.prefix ? props.prefix + ': ' : ''}${opt.label || 'Unknown'}`}
     />
   )
 }

@@ -487,8 +487,7 @@ export const msgStore = createStore<MsgState>(
       if (imgWaiting) return
 
       const messageId = opts.sourceMsgId || msgs.slice(-1)[0]._id
-      const messageImagePromt =
-        messageId && !opts.prompt ? getMessageImagePrompt(messageId) : undefined
+      const summaryPrompt = messageId && !opts.prompt ? getMessageImagePrompt(messageId) : undefined
 
       yield {
         hordeStatus: undefined,
@@ -505,7 +504,7 @@ export const msgStore = createStore<MsgState>(
         {
           messageId,
           chatId: activeChatId,
-          prompt: opts.prompt || messageImagePromt,
+          prompt: opts.prompt || summaryPrompt,
           append: opts.append,
           source: 'summary',
         },

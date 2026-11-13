@@ -36,8 +36,8 @@ export const ImageSamplers: Component<{ ctx: ImageContext }> = (props) => {
 
       <InlineRangeInput
         fieldName="imageWidth"
-        min={256}
-        max={1280}
+        min={512}
+        max={128 * 12}
         step={128}
         value={props.ctx.edit.preset.width ?? props.ctx.state.agnaiModel?.init.width ?? 1024}
         label="Image Width"
@@ -46,8 +46,8 @@ export const ImageSamplers: Component<{ ctx: ImageContext }> = (props) => {
 
       <InlineRangeInput
         fieldName="imageHeight"
-        min={256}
-        max={1280}
+        min={512}
+        max={128 * 12}
         step={128}
         value={props.ctx.edit.preset.height ?? props.ctx.state.agnaiModel?.init.height ?? 1024}
         label="Image Height"
@@ -60,7 +60,7 @@ export const ImageSamplers: Component<{ ctx: ImageContext }> = (props) => {
         label="Guidance Scale"
         min={1}
         max={10}
-        step={0.2}
+        step={0.1}
         onChange={(ev) => props.ctx.updatePreset({ cfg: ev })}
       />
 

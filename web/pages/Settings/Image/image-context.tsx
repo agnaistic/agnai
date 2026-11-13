@@ -15,7 +15,6 @@ import { useTabs } from '/web/shared/Tabs'
 import { ImageModel } from '/common/types/admin'
 import { AppSchema } from '/common/types'
 import { retrieveImageModels } from './image-hooks'
-import { debug } from 'common/debug'
 
 type SettingSource = 'Shared' | 'Character' | 'Chat'
 
@@ -28,7 +27,7 @@ const PROVIDER_TYPES = [
   { label: 'OpenAI-Compat', value: 'openai' },
 ]
 
-const initPreset = (): ImagePresetSettings => ({
+const initPreset = (init?: Partial<ImagePresetSettings>): ImagePresetSettings => ({
   _id: '',
   imageProviderId: '',
   summaryPresetId: '',
@@ -47,9 +46,11 @@ const initPreset = (): ImagePresetSettings => ({
   sampler: SD_SAMPLER['Euler a'],
   scheduler: SWARM_SCHEDULER.Normal,
   seed: 0,
+  models: {},
+  ...init,
 })
 
-const initProvider = (): ImageProviderSettings => ({
+const initProvider = (init?: Partial<ImageProviderSettings>): ImageProviderSettings => ({
   _id: '',
   name: '',
   type: 'agnai',
@@ -57,6 +58,7 @@ const initProvider = (): ImageProviderSettings => ({
   sampler: SD_SAMPLER['Euler a'],
   model: '',
   scheduler: SWARM_SCHEDULER.Normal,
+  ...init,
 })
 
 export type ImageContext = ReturnType<typeof initImageContext>
@@ -234,7 +236,6 @@ function initImageContext() {
     }
 
     if (!current) {
-      debug('img-ctx')('hydrate: %s', edit.provider._id)
       refetchModels()
       hydrateConfig(true)
     }
@@ -258,10 +259,8 @@ function initImageContext() {
       () => [tab.current(), page.open, user.user],
       () => {
         if (!user.user) {
-          debug('img-ctx')('cannot hydrate image context yet')
           return
         }
-        debug('img-ctx')('hydrating image context')
         hydrateConfig()
       }
     )
@@ -445,6 +444,12 @@ function initImageContext() {
     updateDefaults: setDefaults,
     tab,
     save,
+    cancelNewPreset: () => {
+      setEdit({ preset: { ...current.preset } })
+    },
+    newPreset: () => {
+      setEdit({ preset: initPreset({ imageProviderId: edit.provider._id }) })
+    },
     newProvider: () => {
       setEdit({ provider: initProvider() })
     },

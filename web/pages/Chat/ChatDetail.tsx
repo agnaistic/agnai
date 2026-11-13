@@ -17,6 +17,7 @@ import { getAssetUrl, setComponentPageTitle, sticky } from '../../shared/util'
 import {
   characterStore,
   chatStore,
+  imageStore,
   pageStore,
   presetStore,
   responseStore,
@@ -374,7 +375,14 @@ const ChatDetail: Component = () => {
 
       if (ev.key === 'p' || ev.key === 'KeyP') {
         ev.preventDefault()
-        msgStore.createImage({})
+        const id = ctx.messages.path.slice(-1)[0]?._id
+        msgStore.createImage({
+          onImage: () =>
+            imageStore.showMessageImages({
+              id,
+              position: Infinity,
+            }),
+        })
       }
 
       if (ev.key === 'j' || ev.key === 'KeyJ') {

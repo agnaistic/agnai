@@ -12,7 +12,7 @@ type ImagePreset = {
   samplers: Omit<ImagePresetSettings, '_id' | 'name'>
 }
 
-export const ImagePreset: Component<{ ctx: ImageContext }> = (props) => {
+export const ImagePreset: Component<{ ctx: ImageContext; prefix?: string }> = (props) => {
   const state = userStore((u) => ({ presets: u.user?.imagePresets || [] }))
 
   const options = createMemo(() => {
@@ -38,7 +38,9 @@ export const ImagePreset: Component<{ ctx: ImageContext }> = (props) => {
         options={options()}
         selected={props.ctx.current.preset._id}
         onSelect={onSelect}
-        buttonLabel={(opt) => `Preset: ${selected()?.name || 'Unnamed'}`}
+        buttonLabel={(opt) =>
+          `${props.prefix ? props.prefix + ': ' : ''}${selected()?.name || 'Unnamed'}`
+        }
       />
     </>
   )

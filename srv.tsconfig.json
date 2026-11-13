@@ -3,7 +3,7 @@
     "strict": true,
     "target": "ES2022",
     "module": "nodenext",
-    "incremental": true,
+    // "incremental": true,
     "moduleResolution": "nodenext",
     "noEmit": false,
     "allowSyntheticDefaultImports": true,

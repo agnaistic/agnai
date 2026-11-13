@@ -13,12 +13,11 @@ import {
   Show,
   Switch,
 } from 'solid-js'
-import { imageStore, pageStore, settingStore, userStore } from '/web/store'
+import { pageStore, settingStore, userStore } from '/web/store'
 import Select from '/web/shared/Select'
 import { getImageProviderName, ImageContext } from './image-context'
 import { ImageProviderLora, ImageProviderSettings } from '/common/types/image-schema'
 import {
-  NOVEL_IMAGE_MODEL,
   NOVEL_SAMPLER_REV,
   SD_SAMPLER,
   SD_SAMPLER_REV,
@@ -33,7 +32,7 @@ import { imageApi } from '/web/store/data/image'
 import { CustomOption, CustomSelect } from '/web/shared/CustomSelect'
 import TextInput from '/web/shared/TextInput'
 import Button, { ToggleButton } from '/web/shared/Button'
-import { Info, RefreshCcw, SlidersVertical, X } from 'lucide-solid'
+import { Info, RefreshCcw, X } from 'lucide-solid'
 import { useProviderList } from '../Provider/hooks'
 import { Card, Pill } from '/web/shared/Card'
 import { InlineRangeInput } from '/web/shared/RangeInput'
@@ -41,9 +40,11 @@ import { ConditionalModal } from '/web/shared/Modal'
 import Accordian from 'web/shared/Accordian'
 import { ImageModel } from './ImageModel'
 
-export const SelectImageProvider: Component<{ ctx: ImageContext; editable?: boolean }> = (
-  props
-) => {
+export const SelectImageProvider: Component<{
+  ctx: ImageContext
+  editable?: boolean
+  prefix?: string
+}> = (props) => {
   const state = userStore((s) => ({ providers: s.user?.imageProviders || [] }))
   const [_current, setCurrent] = createSignal({ id: '', model: '' })
 
@@ -57,7 +58,10 @@ export const SelectImageProvider: Component<{ ctx: ImageContext; editable?: bool
     const type = getImageProviderName(props.ctx.current.provider.type) || ''
     const name = props.ctx.current.provider.name || ''
 
-    if (type && name && name.trim() !== type) return `${type}: ${name}`
+    if (type && name && name.trim() !== type) {
+      if (props.prefix) return `${props.prefix}: ${type} - ${name}`
+      return `${type}: ${name}`
+    }
     if (type) return `Provider: ${type}`
     if (!name) return 'Provider: Unnamed'
   })
@@ -72,11 +76,6 @@ export const SelectImageProvider: Component<{ ctx: ImageContext; editable?: bool
         }
 
         const match = state.providers.find((s) => s._id === props.ctx.edit.preset.imageProviderId)
-
-        // const editing = nextProvider()
-        // if (match && match._id !== editing?._id) {
-        //   setNextProvider(match)
-        // }
 
         if (match?.type !== 'openai') {
           setCurrent({ id: '', model: '' })
@@ -143,18 +142,13 @@ export const SelectImageProvider: Component<{ ctx: ImageContext; editable?: bool
     <>
       <Switch>
         <Match when={!props.editable}>
-          <div class="flex gap-2">
-            {Selector}
-            <Button size="sm" onClick={() => imageStore.imageSettings(true)}>
-              <SlidersVertical size={20} />
-            </Button>
-          </div>
+          <div class="flex gap-2">{Selector}</div>
         </Match>
 
         <Match when={props.editable}>
           <EditImageProvider noModal close={() => {}} ctx={props.ctx}>
             <div class="flex flex-col gap-2">
-              <ImageModel ctx={props.ctx} />
+              <ImageModel ctx={props.ctx} prefix="Model" />
               <div class="flex gap-2">
                 {Selector}
                 <Button size="sm" onClick={newProvider}>
@@ -290,10 +284,6 @@ export const NovelSettings: Component<{
     return isSet
   })
 
-  const models = Object.entries(NOVEL_IMAGE_MODEL).map(([key, value]) => ({
-    label: `Model: ${key}`,
-    value,
-  }))
   const samplers = Object.entries(NOVEL_SAMPLER_REV).map(([key, value]) => ({
     label: `Sampler: ${value}`,
     value: key,
@@ -330,12 +320,6 @@ export const NovelSettings: Component<{
           onChange={(ev) => props.ctx.updateProvider({ ucPreset: ev.value })}
         />
       </Show>
-      <Select
-        items={models}
-        value={props.ctx.edit.provider.model}
-        onChange={(ev) => props.ctx.updateProvider({ model: ev.value })}
-        // openSub={props.modelOnly}
-      />
 
       <Show when={!props.modelOnly}>
         <Select
@@ -427,7 +411,6 @@ export const SwarmSettings: Component<{
   modelOnly?: ComponentSubscriber<'open'>
 }> = (props) => {
   const emitter = createEmitter('open')
-  const [models, setModels] = createSignal<CustomOption[]>([])
   const [loraList, setLoraList] = createSignal<LoraItem[]>([])
   const loras = useLoras(props.ctx.updateProvider, props.ctx.edit.provider.loras)
 
@@ -439,7 +422,6 @@ export const SwarmSettings: Component<{
       url: props.ctx.edit.provider.url,
     })
 
-    const options = result.models.map((model) => ({ label: model.title, value: model.title }))
     if ('loras' in result) {
       const opts = result.loras.map<LoraItem>((model) => ({
         id: model.title,
@@ -453,9 +435,6 @@ export const SwarmSettings: Component<{
     } else {
       setLoraList([])
     }
-
-    options.unshift({ label: 'Automatic', value: '' })
-    setModels(options)
   }
 
   onMount(() => {
@@ -477,20 +456,6 @@ export const SwarmSettings: Component<{
       </Show>
 
       <div class="flex items-center gap-1">
-        <CustomSelect
-          // listener={emitter.emit}
-          onSelect={(ev) => props.ctx.updateProvider({ model: ev.value })}
-          selected={props.ctx.edit.provider.model}
-          options={models()}
-          buttonLabel={(opt) => (
-            <Button size="sm" onClick={() => emitter.emit.open()}>
-              Model: {props.ctx.edit.provider.model || 'Automatic'}
-            </Button>
-          )}
-          autoSearch={true}
-          openSub={emitter.on}
-        />
-
         <Show when={!props.modelOnly}>
           <Show when={loraList().length}>
             <Button size="sm" onClick={() => loras.add(props.ctx.edit.provider)}>
@@ -730,14 +695,6 @@ export const AgnaiSettings: Component<{
         <i>No additional options available</i>
       </Show>
       <div class="flex items-end gap-2">
-        <Select
-          label="Image Model"
-          items={settings.names}
-          value={props.ctx.edit.provider.model || settings.names[0]?.value}
-          disabled={settings.models.length <= 1}
-          classList={{ hidden: settings.models.length === 0 }}
-          onChange={(ev) => props.ctx.updateProvider({ model: ev.value })}
-        />
         <Show when={settings.loras.length}>
           <Button onClick={() => lhook.add(props.ctx.edit.provider)}>+ Lora</Button>
         </Show>

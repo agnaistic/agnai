@@ -133,7 +133,7 @@ const Layout: Component<{ children?: any }> = (props) => {
     confirm: s.confirm,
     showImpersonate: s.showImpersonate,
   }))
-  const state = userStore((s) => ({ ui: s.ui, banned: s.banned }))
+  const state = userStore((s) => ({ ui: s.ui, banned: s.banned, user: !!s.user }))
   const cfg = settingStore((s) => ({
     init: s.init,
     initLoading: s.initLoading,
@@ -242,19 +242,23 @@ const Layout: Component<{ children?: any }> = (props) => {
           </main>
         </div>
       </div>
-      <Notifications />
-      <ImpersonateModal
-        show={page.showImpersonate}
-        close={() => pageStore.toggleImpersonate(false)}
-      />
       <InfoModal />
-      <ProfileModal />
       <BannedModal />
       <GlobalFileInput />
-      <ImageModal />
-      <ImageSettingsModal />
-      <SettingsModal />
-      <PresetModal />
+
+      <Show when={state.user}>
+        <ImpersonateModal
+          show={page.showImpersonate}
+          close={() => pageStore.toggleImpersonate(false)}
+        />
+        <Notifications />
+        <ProfileModal />
+        <ImageModal />
+        <ImageSettingsModal />
+        <SettingsModal />
+        <PresetModal />
+      </Show>
+
       <div
         class="absolute bottom-0 left-0 right-0 top-0 z-10 h-[100vh] w-full bg-black bg-opacity-20 sm:hidden"
         classList={{ hidden: !page.showMenu }}

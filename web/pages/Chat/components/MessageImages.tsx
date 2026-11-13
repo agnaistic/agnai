@@ -110,6 +110,8 @@ export const MessageImages: Component<{
                 prompt: override().trim(),
                 sourceMsgId: props.msg._id,
                 append: true,
+                onImage: () =>
+                  imageStore.showMessageImages({ id: props.msg._id, position: Infinity }),
               })
             }
           >

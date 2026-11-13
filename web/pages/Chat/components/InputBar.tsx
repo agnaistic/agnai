@@ -59,6 +59,7 @@ import { extractReasoning } from '/common/reasoning'
 import { usePresetContext } from '/web/store/preset-context'
 import { debug } from '/common/debug'
 import { Pill } from '/web/shared/Card'
+import { EmojiPicker } from './EmojiPicker'
 
 export type SendFunc = (opts: {
   msg: string
@@ -145,6 +146,25 @@ const InputBar: Component<{
       before.length + opt.label.length,
       'none'
     )
+  }
+
+  const insertEmoji = (emoji: string) => {
+    const prev = ref?.value ?? text()
+    const start = ref?.selectionStart ?? prev.length
+    const end = ref?.selectionEnd ?? prev.length
+    const next = `${prev.slice(0, start)}${emoji}${prev.slice(end)}`
+    const caret = start + emoji.length
+
+    setText(next)
+    saveDraft(next)
+
+    // TextInput writes the signal value back into the textarea, which drops the caret at the end.
+    // Restore it after that sync so consecutive picks land where the user expects.
+    queueMicrotask(() => {
+      if (!ref) return
+      ref.focus()
+      ref.setSelectionRange(caret, caret, 'none')
+    })
   }
 
   const placeholder = createMemo(() => {
@@ -399,6 +419,7 @@ const InputBar: Component<{
             offset={44}
           />
         </Show>
+        <EmojiPicker onSelect={insertEmoji} />
         <TextInput
           fieldName="chatInput"
           isMultiline
@@ -447,6 +468,7 @@ const InputBar: Component<{
             },
           }}
         />
+
         <Button
           schema="clear"
           onClick={onMoreClick}

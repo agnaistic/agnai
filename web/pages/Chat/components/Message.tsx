@@ -14,6 +14,7 @@ import {
   X,
   Zap,
   Split,
+  
   MoreHorizontal,
   ImagePlus,
   Eye,
@@ -50,6 +51,7 @@ import {
   VoiceState,
   pageStore,
   responseStore,
+  imageStore,
 } from '../../../store'
 import { markdown } from '../../../shared/markdown'
 import Button, { ButtonSchema } from '/web/shared/Button'
@@ -889,7 +891,14 @@ const MessageOptions: Component<{
         label: 'Gen Image',
         show: true,
         outer: props.ui.msgOptsInline['gen-image'],
-        onClick: (msg) => msgStore.createImage({ sourceMsgId: msg._id }),
+        onClick: (msg) =>
+          msgStore.createImage({
+            sourceMsgId: msg._id,
+            onImage: () => {
+              console.log('we got called, yay!')
+              imageStore.showMessageImages({ id: msg._id, position: Infinity })
+            },
+          }),
         icon: ImagePlus,
         class: '',
       },
