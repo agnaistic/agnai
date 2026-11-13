@@ -20,7 +20,7 @@ import { PresetTabProps } from '/web/store/preset-context'
  * 2. Add one entry here, keyed by its ThirdPartyFormat value (`gemini`).
  * 3. Set only the fields that differ from the defaults in this file.
  *    Response length falls back to a 2048 max and the generic token sentence.
- *    Temperature falls back to 1.5 in Simple mode and 10 in Advanced.
+ *    Temperature falls back to a min of 0.1, then 1.5 in Simple mode and 10 in Advanced.
  *    Context size falls back to 200000 for Claude and 32000 otherwise.
  * Which controls are shown is separate: register the provider in
  * web/shared/PresetSettings/known-provider-presets.ts.
@@ -30,7 +30,7 @@ const FORMAT_FIELDS: Partial<
     ThirdPartyFormat,
     {
       responseLength?: { helperText: string; max: number }
-      temperature?: { helperText: string; max: number }
+      temperature?: { helperText: string; min?: number; max: number }
       contextSize?: {
         max: (state: PresetTabProps['state']) => number
         note: (state: PresetTabProps['state']) => string
@@ -46,6 +46,7 @@ const FORMAT_FIELDS: Partial<
     },
     temperature: {
       helperText: 'Grok accepts 0 to 2. Reasoning models work best at 1.',
+      min: 0,
       max: 2,
     },
     contextSize: {
@@ -113,14 +114,14 @@ export const PresetMode: Field = (props) => {
 export const ResponseLength: Field<{
   subMax: Partial<SubscriptionModelLevel>
 }> = (props) => {
-  const responseLength = formatFields(props.setters.context.format)?.responseLength
+  const responseLength = () => formatFields(props.setters.context.format)?.responseLength
   return (
     <RangeInput
       fieldName="maxTokens"
       label="Response Length"
-      helperText={responseLength?.helperText ?? DEFAULT_RESPONSE_LENGTH}
+      helperText={responseLength()?.helperText ?? DEFAULT_RESPONSE_LENGTH}
       min={16}
-      max={responseLength?.max ?? 2048}
+      max={responseLength()?.max ?? 2048}
       step={1}
       value={props.state.maxTokens}
       disabled={props.state.disabled}
@@ -329,17 +330,15 @@ export const ModelFormat: Field = (props) => {
 }
 
 export const Temperature: Field = (props) => {
-  const temperature = formatFields(props.setters.context.format)?.temperature
+  const temperature = () => formatFields(props.setters.context.format)?.temperature
   return (
     <>
       <RangeInput
         fieldName="temp"
         label="Temperature"
-        helperText={temperature?.helperText ?? DEFAULT_TEMPERATURE}
-        min={0.1}
-        max={
-          temperature?.max ?? (props.state.presetMode === 'simple' ? 1.5 : 10)
-        }
+        helperText={temperature()?.helperText ?? DEFAULT_TEMPERATURE}
+        min={temperature()?.min ?? 0.1}
+        max={temperature()?.max ?? (props.state.presetMode === 'simple' ? 1.5 : 10)}
         step={0.01}
         value={props.state.temp}
         disabled={props.state.disabled}
