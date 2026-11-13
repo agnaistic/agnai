@@ -1,8 +1,10 @@
-import { Component, createMemo } from 'solid-js'
+import { Component, createMemo, createSignal } from 'solid-js'
 import { ImageContext } from './image-context'
 import { CustomSelect } from 'web/shared/CustomSelect'
+import TextInput from 'web/shared/TextInput'
 
 export const ImageModel: Component<{ ctx: ImageContext; prefix?: string }> = (props) => {
+  const [search, setSearch] = createSignal('')
   const selectModel = (id: string) => {
     props.ctx.changeModel(id)
   }
@@ -27,7 +29,24 @@ export const ImageModel: Component<{ ctx: ImageContext; prefix?: string }> = (pr
 
   const options = createMemo(() => {
     const list = props.ctx.models() || []
-    return [{ label: 'None selected', value: '' }].concat(list)
+    const opts = [{ label: 'None selected', value: '' }].concat(list)
+
+    const filter = search()
+    if (!filter.trim()) return opts
+
+    const split = filter.split(' ').map((w) => w.trim().toLowerCase())
+
+    const filtered = opts.filter((opt) => {
+      if (!opt.value) return opt
+
+      for (const word of split) {
+        if (!opt.value.includes(word)) return false
+      }
+
+      return true
+    })
+
+    return filtered
   })
 
   return (
@@ -37,6 +56,15 @@ export const ImageModel: Component<{ ctx: ImageContext; prefix?: string }> = (pr
       onSelect={(opt) => selectModel(opt.value)}
       selected={selected()}
       buttonLabel={(opt) => `${props.prefix ? props.prefix + ': ' : ''}${opt.label || 'Unknown'}`}
+      header={
+        <>
+          <TextInput
+            value={search()}
+            placeholder="Filter..."
+            onChange={(ev) => setSearch(ev.currentTarget.value)}
+          />
+        </>
+      }
     />
   )
 }
