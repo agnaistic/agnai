@@ -21,6 +21,7 @@ import { PresetTabProps } from '/web/store/preset-context'
  * 3. Set only the fields that differ from the defaults in this file.
  *    Response length falls back to a 2048 max and the generic token sentence.
  *    Temperature falls back to a min of 0.1, then 1.5 in Simple mode and 10 in Advanced.
+ *    Reasoning effort falls back to the generic token-budget sentence.
  *    Context size falls back to 200000 for Claude and 32000 otherwise.
  * Which controls are shown is separate: register the provider in
  * web/shared/PresetSettings/known-provider-presets.ts.
@@ -31,6 +32,7 @@ const FORMAT_FIELDS: Partial<
     {
       responseLength?: { helperText: string; max: number }
       temperature?: { helperText: string; min?: number; max: number }
+      reasoning?: { helperText: string }
       contextSize?: {
         max: (state: PresetTabProps['state']) => number
         note: (state: PresetTabProps['state']) => string
@@ -48,6 +50,10 @@ const FORMAT_FIELDS: Partial<
       helperText: 'Grok accepts 0 to 2. Reasoning models work best at 1.',
       min: 0,
       max: 2,
+    },
+    reasoning: {
+      helperText:
+        'Grok 4.5 and later always reason. This sets depth. The API default is high. xhigh is only used by Grok 4.6 and 4.7.',
     },
     contextSize: {
       max: (state) => grokSpec(grokModel(state)).context,
@@ -79,7 +85,7 @@ const DEFAULT_RESPONSE_LENGTH =
 const DEFAULT_TEMPERATURE =
   'Creativity: Randomness of sampling. High values can increase creativity, but may make text less sensible. Lower values will make text more predictable.'
 
-function formatFields(format?: ThirdPartyFormat) {
+export function formatFields(format?: ThirdPartyFormat) {
   if (!format) return
   return FORMAT_FIELDS[format]
 }

@@ -105,7 +105,7 @@ export const KNOWN_PROVIDERS: Record<string, ProviderDefinition> = {
     formats: [{ type: 'format', value: 'openai-chatv2' }],
   },
   xai: {
-    name: 'Grok',
+    name: 'x.AI | Grok',
     url: `https://api.x.ai/v1`,
     formats: [{ type: 'format', value: 'grok' }],
   },

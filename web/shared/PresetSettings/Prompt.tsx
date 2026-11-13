@@ -7,7 +7,7 @@ import PromptEditor, { BasicPromptTemplate } from '../PromptEditor'
 import { defaultTemplate } from '/common/mode-templates'
 import { CharacterSchema } from '/web/pages/Character/CharacterSchema'
 import { isChatPageMemo } from '../hooks'
-import { Jailbreak, ReasoningTags, JinjaTemplate, SystemPrompt } from './Fields'
+import { Jailbreak, ReasoningTags, JinjaTemplate, SystemPrompt, formatFields } from './Fields'
 import { InlineRangeInput } from '../RangeInput'
 import { FormLabel } from '../FormLabel'
 import { grokSpec } from '/srv/adapter/grok-preset'
@@ -157,9 +157,8 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
               <FormLabel
                 label="Reasoning Effort"
                 helperText={
-                  grok()
-                    ? 'Grok 4.5 and later always reason. This sets depth. The API default is high. xhigh is only used by Grok 4.6 and 4.7.'
-                    : 'Typically the amount of your response length to use for reasoning'
+                  formatFields(props.setters.context.format)?.reasoning?.helperText ??
+                  'Typically the amount of your response length to use for reasoning'
                 }
               />
               <div class="flex w-full justify-start gap-1">

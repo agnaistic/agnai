@@ -111,7 +111,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           value={props.state.minP ?? 0}
           disabled={props.state.disabled}
           aiSetting={'minP'}
-          hide={props.setters.context.format === 'grok'}
+          hide={props.setters.context.format === 'grok'} // Grok's API has no min_p.
           recommended={props.sub?.preset.minP}
           onChange={(ev) => props.setters.setState('minP', ev)}
         />
@@ -129,7 +129,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           label="Exclude Name Stops"
           helperText="Disables automatically adding character names to stopping strings"
           value={props.state.disableNameStops}
-          hide={props.setters.context.format === 'grok'}
+          hide={props.setters.context.format === 'grok'} // Name stops feed stop strings, which Grok rejects.
           onChange={(ev) => props.setters.setState('disableNameStops', ev)}
         />
         <Show when={props.setters.context.format !== 'grok'}>
