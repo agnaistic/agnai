@@ -21,7 +21,7 @@ import { PresetTabProps } from '/web/store/preset-context'
  * 3. Set only the fields that differ from the defaults in this file.
  *    Response length falls back to a 2048 max and the generic token sentence.
  *    Temperature falls back to a min of 0.1, then 1.5 in Simple mode and 10 in Advanced.
- *    Reasoning effort falls back to the generic token-budget sentence.
+ *    Reasoning effort falls back to the generic list, selected value, and token-budget sentence.
  *    Context size falls back to 200000 for Claude and 32000 otherwise.
  * Which controls are shown is separate: register the provider in
  * web/shared/PresetSettings/known-provider-presets.ts.
@@ -32,7 +32,11 @@ const FORMAT_FIELDS: Partial<
     {
       responseLength?: { helperText: string; max: number }
       temperature?: { helperText: string; min?: number; max: number }
-      reasoning?: { helperText: string }
+      reasoning?: {
+        helperText: string
+        items: (state: PresetTabProps['state']) => { label: string; value: string }[]
+        value: (state: PresetTabProps['state']) => string
+      }
       contextSize?: {
         max: (state: PresetTabProps['state']) => number
         note: (state: PresetTabProps['state']) => string
@@ -54,6 +58,16 @@ const FORMAT_FIELDS: Partial<
     reasoning: {
       helperText:
         'Grok 4.5 and later always reason. This sets depth. The API default is high. xhigh is only used by Grok 4.6 and 4.7.',
+      items: (state) =>
+        grokSpec(grokModel(state)).efforts.map((effort) => ({
+          label: effort === 'xhigh' ? 'Max (xhigh)' : effort.charAt(0).toUpperCase() + effort.slice(1),
+          value: effort,
+        })),
+      value: (state) => {
+        const efforts = grokSpec(grokModel(state)).efforts as string[]
+        const effort = state.reasoning?.effort
+        return effort && efforts.includes(effort) ? effort : 'high'
+      },
     },
     contextSize: {
       max: (state) => grokSpec(grokModel(state)).context,

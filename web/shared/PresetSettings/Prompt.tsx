@@ -165,28 +165,17 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
                 <Select
                   inline
                   items={
-                    grok()
-                      ? grok()!.efforts.map((effort) => ({
-                          label:
-                            effort === 'xhigh'
-                              ? 'Max (xhigh)'
-                              : effort.charAt(0).toUpperCase() + effort.slice(1),
-                          value: effort,
-                        }))
-                      : [
-                          { label: 'None', value: 'none' },
-                          { label: 'Low (20%)', value: 'low' },
-                          { label: 'Medium (50%)', value: 'medium' },
-                          { label: 'High (80%)', value: 'high' },
-                          { label: 'Custom', value: 'custom' },
-                        ]
+                    formatFields(props.setters.context.format)?.reasoning?.items(props.state) ?? [
+                      { label: 'None', value: 'none' },
+                      { label: 'Low (20%)', value: 'low' },
+                      { label: 'Medium (50%)', value: 'medium' },
+                      { label: 'High (80%)', value: 'high' },
+                      { label: 'Custom', value: 'custom' },
+                    ]
                   }
                   value={
-                    grok()
-                      ? grok()!.efforts.includes(props.state.reasoning?.effort as any)
-                        ? props.state.reasoning?.effort
-                        : 'high'
-                      : props.state.reasoning?.effort || 'low'
+                    formatFields(props.setters.context.format)?.reasoning?.value(props.state) ??
+                    (props.state.reasoning?.effort || 'low')
                   }
                   onChange={(ev) =>
                     props.setters.setState('reasoning', {
