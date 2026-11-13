@@ -152,15 +152,6 @@ function grokReasoningEffort(gen: Partial<AppSchema.GenSettings>, model: string)
   const effort = gen.reasoning.effort || 'high'
   if ((spec.efforts as string[]).includes(effort)) return effort as GrokEffort
   if (effort === 'xhigh') return 'high'
-
-  if (effort === 'custom') {
-    const max = Math.max(gen.maxTokens ?? 2048, 2048)
-    const budget = gen.reasoning.maxTokens ?? 0
-    const percent = budget / max
-    if (percent >= 0.65) return 'high'
-    if (percent >= 0.35) return 'medium'
-    return 'low'
-  }
 }
 
 function clampNumber(value: number | undefined, min: number, max: number) {
