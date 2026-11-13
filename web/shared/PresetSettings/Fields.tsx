@@ -9,7 +9,7 @@ import { SubscriptionModelLevel } from '/common/types/presets'
 import { Card } from '../Card'
 import PromptEditor from '../PromptEditor'
 import { ThirdPartyFormat } from '/common/adapters'
-import { grokSpec } from '/srv/adapter/grok-preset'
+import { findGrokListedModel, grokSpec } from '/srv/adapter/grok-preset'
 import { PresetTabProps } from '/web/store/preset-context'
 
 /**
@@ -34,12 +34,12 @@ const FORMAT_FIELDS: Partial<
       temperature?: { helperText: string; min?: number; max: number }
       reasoning?: {
         helperText: string
-        items: (state: PresetTabProps['state']) => { label: string; value: string }[]
-        value: (state: PresetTabProps['state']) => string
+        items: (state: PresetTabProps['state'], models?: any[]) => { label: string; value: string }[]
+        value: (state: PresetTabProps['state'], models?: any[]) => string
       }
       contextSize?: {
-        max: (state: PresetTabProps['state']) => number
-        note: (state: PresetTabProps['state']) => string
+        max: (state: PresetTabProps['state'], models?: any[]) => number
+        note: (state: PresetTabProps['state'], models?: any[]) => string
       }
     }
   >
@@ -58,21 +58,24 @@ const FORMAT_FIELDS: Partial<
     reasoning: {
       helperText:
         'Grok 4.5 and later always reason. This sets depth. The API default is high. xhigh is only used by Grok 4.6 and 4.7.',
-      items: (state) =>
-        grokSpec(grokModel(state)).efforts.map((effort) => ({
+      items: (state, models) =>
+        grokSpec(grokModel(state), findGrokListedModel(models, grokModel(state))).efforts.map((effort) => ({
           label: effort === 'xhigh' ? 'Max (xhigh)' : effort.charAt(0).toUpperCase() + effort.slice(1),
           value: effort,
         })),
-      value: (state) => {
-        const efforts = grokSpec(grokModel(state)).efforts as string[]
+      value: (state, models) => {
+        const efforts = grokSpec(grokModel(state), findGrokListedModel(models, grokModel(state))).efforts as string[]
         const effort = state.reasoning?.effort
         return effort && efforts.includes(effort) ? effort : 'high'
       },
     },
     contextSize: {
-      max: (state) => grokSpec(grokModel(state)).context,
-      note: (state) => {
-        const tokens = Math.round(grokSpec(grokModel(state)).context / 1000).toLocaleString()
+      max: (state, models) =>
+        grokSpec(grokModel(state), findGrokListedModel(models, grokModel(state))).context,
+      note: (state, models) => {
+        const length = findGrokListedModel(models, grokModel(state))?.context_length
+        if (!length) return 'Context length appears here once the Grok model list loads.'
+        const tokens = Math.round(length / 1000).toLocaleString()
         return `This Grok model accepts ${tokens}k tokens. Use Max keeps the preset on that limit.`
       },
     },
@@ -161,10 +164,11 @@ export const ContextSize: Field<{ subMax: Partial<SubscriptionModelLevel> }> = (
     return `${max}K`
   })
   const contextSize = () => formatFields(props.setters.context.format)?.contextSize
-  const contextNote = () => contextSize()?.note(props.state)
+  const models = () => props.setters.context.data
+  const contextNote = () => contextSize()?.note(props.state, models())
   const contextMax = () => {
     const sized = contextSize()
-    if (sized) return sized.max(props.state)
+    if (sized) return sized.max(props.state, models())
     if (props.setters.context.service === 'claude') return 200000
     return 32000
   }
@@ -209,7 +213,9 @@ export const ContextSize: Field<{ subMax: Partial<SubscriptionModelLevel> }> = (
         max={contextMax()}
         step={1}
         value={props.state.maxContextLength || 8192}
-        disabled={props.state.disabled}
+        disabled={
+          props.state.disabled || (props.setters.context.format === 'grok' && !!props.state.useMaxContext)
+        }
         onChange={(ev) => props.setters.setState('maxContextLength', ev)}
       />
     </>

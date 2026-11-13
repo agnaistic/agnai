@@ -10,7 +10,7 @@ import { isChatPageMemo } from '../hooks'
 import { Jailbreak, ReasoningTags, JinjaTemplate, SystemPrompt, formatFields } from './Fields'
 import { InlineRangeInput } from '../RangeInput'
 import { FormLabel } from '../FormLabel'
-import { grokSpec } from '/srv/adapter/grok-preset'
+import { findGrokListedModel, grokSpec } from '/srv/adapter/grok-preset'
 import { PresetTabProps } from '/web/store/preset-context'
 import Accordian from '../Accordian'
 import { HelpModal } from '../Modal'
@@ -25,7 +25,7 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
       props.state.providerModels?.[props.state.providerId || ''] ||
       props.state.grokModel ||
       props.state.thirdPartyModel
-    return grokSpec(model)
+    return grokSpec(model, findGrokListedModel(props.setters.context.data, model))
   })
   const isChat = isChatPageMemo()
 
@@ -165,7 +165,10 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
                 <Select
                   inline
                   items={
-                    formatFields(props.setters.context.format)?.reasoning?.items(props.state) ?? [
+                    formatFields(props.setters.context.format)?.reasoning?.items(
+                      props.state,
+                      props.setters.context.data
+                    ) ?? [
                       { label: 'None', value: 'none' },
                       { label: 'Low (20%)', value: 'low' },
                       { label: 'Medium (50%)', value: 'medium' },
@@ -174,7 +177,10 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
                     ]
                   }
                   value={
-                    formatFields(props.setters.context.format)?.reasoning?.value(props.state) ??
+                    formatFields(props.setters.context.format)?.reasoning?.value(
+                      props.state,
+                      props.setters.context.data
+                    ) ??
                     (props.state.reasoning?.effort || 'low')
                   }
                   onChange={(ev) =>

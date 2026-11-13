@@ -1,6 +1,6 @@
 import type { GenerateRequestV2, HistoryLine } from '../srv/adapter/type'
 import type { AppSchema, TokenCounter } from './types'
-import { AIAdapter, GOOGLE_LIMITS, GROK_LIMITS, MODE_SETTINGS } from './adapters'
+import { AIAdapter, GOOGLE_LIMITS, MODE_SETTINGS } from './adapters'
 import { formatCharacter } from './characters'
 import { defaultTemplate } from './mode-templates'
 import { buildMemoryPrompt } from './memory'
@@ -984,11 +984,8 @@ export function getContextLimit(
           return max ? max - genAmount : configuredMax - genAmount
         }
 
-        case 'grok': {
-          const model = gen.thirdPartyModel || gen.grokModel
-          const max = (model && GROK_LIMITS[model]) || GROK_LIMITS.fallback
-          return max ? max - genAmount : configuredMax - genAmount
-        }
+        case 'grok':
+          return configuredMax - genAmount
 
         default:
           return configuredMax - genAmount

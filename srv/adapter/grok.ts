@@ -10,9 +10,12 @@ import { AppSchema } from '/common/types'
 import { grokSpec, type GrokEffort } from './grok-preset'
 
 export {
+  GROK_CONTEXT_FALLBACK,
   GROK_PRESET_SETTINGS,
+  findGrokListedModel,
   grokModelPatch,
   grokPresetDefaults,
+  grokPriceLabel,
   grokSpec,
 } from './grok-preset'
 export type { GrokEffort, GrokModelSpec } from './grok-preset'
