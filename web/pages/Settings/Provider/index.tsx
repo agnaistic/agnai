@@ -296,6 +296,7 @@ const EditConnectionDetails: Field<{ show: boolean; close: () => void }> = (prop
       'featherless',
       'arli',
       'gemini',
+      'grok',
     ]
 
     const options = formats.map((id) => ({ label: FORMAT_LABEL[id], value: id as string }))
@@ -380,6 +381,7 @@ const ThirdPartyUrl: Field = (props) => {
         props.state.thirdPartyFormat === 'featherless' ||
         props.state.thirdPartyFormat === 'mistral' ||
         props.state.thirdPartyFormat === 'gemini' ||
+        props.state.thirdPartyFormat === 'grok' ||
         props.state.thirdPartyFormat === 'arli'
       }
       onChange={(ev) => props.setters.setState('thirdPartyUrl', ev.currentTarget.value)}

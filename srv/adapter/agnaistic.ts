@@ -26,6 +26,7 @@ import { sanitise } from '/common/requests/util'
 import { obtainLock, releaseLock } from '../api/chat/lock'
 import { getServerConfiguration } from '../db/admin'
 import { handleGemini } from './gemini'
+import { handleGrok } from './grok'
 import { getPresetConnection, PresetConnection } from '/common/providers'
 import { getServicePayload } from './payloads'
 import { stripImageContent } from '/common/template-messages'
@@ -495,6 +496,9 @@ export function getHandlers(opts: {
 
     case 'gemini':
       return handleGemini
+
+    case 'grok':
+      return handleGrok
   }
 
   return handleThirdParty

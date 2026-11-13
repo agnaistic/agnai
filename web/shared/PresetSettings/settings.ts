@@ -187,6 +187,7 @@ export const ADAPTER_SETTINGS: {
     'featherless',
     'arli',
     'gemini',
+    'grok',
     'openai-chatv2',
   ],
 
@@ -236,6 +237,7 @@ export const ADAPTER_SETTINGS: {
     'openrouter',
     'openrouter-completion',
     'gemini',
+    'grok',
     'arli',
   ],
   openRouterModel: ['openrouter', 'openrouter-completion'],

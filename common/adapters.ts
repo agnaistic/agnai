@@ -148,6 +148,7 @@ export const THIRDPARTY_HANDLERS: { [svc in ThirdPartyFormat]: AIAdapter } = {
   vllm: 'kobold',
   featherless: 'kobold',
   gemini: 'kobold',
+  grok: 'kobold',
   arli: 'kobold',
   'lm-studio': 'openai',
 }
@@ -155,6 +156,7 @@ export const THIRDPARTY_HANDLERS: { [svc in ThirdPartyFormat]: AIAdapter } = {
 export const BASIC_PROMPT_ONLY: { [svc in ThirdPartyFormat]?: boolean } = {
   featherless: true,
   gemini: true,
+  grok: true,
 }
 
 export const THIRDPARTY_FORMATS = [
@@ -175,6 +177,7 @@ export const THIRDPARTY_FORMATS = [
   'featherless',
   'arli',
   'gemini',
+  'grok',
   'lm-studio',
 ] as const
 
@@ -290,6 +293,27 @@ export const GOOGLE_LIMITS: Record<string, number> = {
   fallback: 1048576,
 }
 
+export const GROK_MODELS = {
+  GROK_47: { id: 'grok-4.7', label: 'Grok 4.7' },
+  GROK_46: { id: 'grok-4.6', label: 'Grok 4.6' },
+  GROK_45: { id: 'grok-4.5', label: 'Grok 4.5' },
+  GROK_43: { id: 'grok-4.3', label: 'Grok 4.3' },
+  GROK_420_REASONING: { id: 'grok-4.20-0309-reasoning', label: 'Grok 4.20 Reasoning' },
+  GROK_420_NON_REASONING: { id: 'grok-4.20-0309-non-reasoning', label: 'Grok 4.20' },
+  GROK_BUILD: { id: 'grok-build-0.1', label: 'Grok Build 0.1' },
+}
+
+export const GROK_LIMITS: Record<string, number> = {
+  'grok-4.7': 500000,
+  'grok-4.6': 500000,
+  'grok-4.5': 500000,
+  'grok-4.3': 1000000,
+  'grok-4.20-0309-reasoning': 1000000,
+  'grok-4.20-0309-non-reasoning': 1000000,
+  'grok-build-0.1': 256000,
+  fallback: 500000,
+}
+
 export const REPLICATE_MODEL_TYPES = {
   'Auto-detect': '',
   LLaMa: 'llama',
@@ -374,6 +398,7 @@ export const FORMAT_LABEL: { [key in ThirdPartyFormat]: string } = {
   exllamav2: 'ExllamaV2',
   featherless: 'Featherless',
   gemini: 'Google AI Studio',
+  grok: 'Grok',
   koboldcpp: 'Kobold.cpp',
   llamacpp: 'Llama.cpp',
   mistral: 'Mistral AI',

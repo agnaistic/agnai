@@ -627,6 +627,7 @@ function canAttachImage(
     llamacpp: true,
     ollama: true,
     gemini: true,
+    grok: true,
     vllm: true,
     aphrodite: true,
     tabby: true,

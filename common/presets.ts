@@ -70,6 +70,7 @@ export const presetValidator = {
   featherlessModel: 'string?',
   arliModel: 'string?',
   googleModel: 'string?',
+  grokModel: 'string?',
 
   mirostatTau: 'number?',
   mirostatLR: 'number?',

@@ -1,5 +1,5 @@
 import { Component, Match, Show, Switch, createMemo, createSignal, onMount } from 'solid-js'
-import { FLAI_CONTEXTS, GOOGLE_MODELS, OpenRouterModel } from '/common/adapters'
+import { FLAI_CONTEXTS, GOOGLE_MODELS, GROK_MODELS, OpenRouterModel } from '/common/adapters'
 import TextInput from '../TextInput'
 import Button from '../Button'
 import { pageStore, presetStore, settingStore, toastStore } from '/web/store'
@@ -49,6 +49,7 @@ export const ThirdPartyModel: Component<{
 
       switch (props.setters.context.format) {
         case 'gemini':
+        case 'grok':
           return props.setters.context.format
       }
     }
@@ -80,6 +81,9 @@ export const ThirdPartyModel: Component<{
         return 'claude-external'
 
       case 'gemini':
+      case 'grok':
+        return props.setters.context.format
+
       case 'mistral':
       case 'aphrodite':
       case 'koboldcpp':
@@ -127,6 +131,9 @@ export const ThirdPartyModel: Component<{
         </Match>
         <Match when={component() === 'gemini'}>
           <GoogleModels state={props.state} setters={props.setters} page={props.page} />
+        </Match>
+        <Match when={component() === 'grok'}>
+          <GrokModels state={props.state} setters={props.setters} page={props.page} />
         </Match>
         <Match when={component() === 'horde'}>
           <HordeModels state={props.state} setters={props.setters} page={props.page} />
@@ -945,6 +952,72 @@ const ClaudeModel: Selector = (props) => {
       search={tokenizedSearch}
       buttonLabel={label()}
       closeSub={emitter.on}
+      footer={<SelectorFooter state={props.state} setters={props.setters} />}
+    />
+  )
+}
+
+const GrokModels: Selector = (props) => {
+  const emitter = createEmitter('close')
+  const [customId, setCustomId] = createSignal('')
+  const label = createMemo(() => {
+    const id =
+      props.state.providerModels?.[props.state.providerId || 'na'] ||
+      props.state.grokModel ||
+      props.state.thirdPartyModel
+    if (!id) return 'Model - None Selected'
+    const match = Object.values(GROK_MODELS).find((model) => model.id === id)
+
+    if (!match) return id
+    return match.label
+  })
+
+  const options = createMemo(() => {
+    return Object.values(GROK_MODELS).map(({ label, id }) => ({ label, value: id }))
+  })
+
+  return (
+    <CustomSelect
+      size="sm"
+      modalTitle={
+        <div class="flex flex-col gap-2">
+          <div>Select a Model</div>
+
+          <div class="flex gap-2">
+            <TextInput
+              prelabel="Manual Model ID"
+              parentClass="w-full !font-normal !text-sm !h-8"
+              class=""
+              value={customId()}
+              onChange={(ev) => {
+                setCustomId(ev.currentTarget.value)
+              }}
+            />
+            <Button
+              size="sm"
+              schema="primary"
+              onClick={() => {
+                setProviderModel(props, customId(), { grokModel: customId() })
+                emitter.emit.close()
+              }}
+            >
+              Confirm
+            </Button>
+          </div>
+        </div>
+      }
+      options={options()}
+      search={tokenizedSearch}
+      onSelect={(opt) => {
+        setProviderModel(props, opt.value, { grokModel: opt.value })
+      }}
+      buttonLabel={label()}
+      closeSub={emitter.on}
+      selected={
+        props.state.providerModels?.[props.state.providerId || 'na'] ||
+        props.state.grokModel ||
+        props.state.thirdPartyModel
+      }
       footer={<SelectorFooter state={props.state} setters={props.setters} />}
     />
   )

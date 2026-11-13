@@ -235,6 +235,7 @@ export interface GenSettings {
   mistralModel?: string
   openRouterModel?: OpenRouterModel
   googleModel?: string
+  grokModel?: string
   featherlessModel?: string
   arliModel?: string
 
