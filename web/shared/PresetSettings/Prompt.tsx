@@ -7,9 +7,10 @@ import PromptEditor, { BasicPromptTemplate } from '../PromptEditor'
 import { defaultTemplate } from '/common/mode-templates'
 import { CharacterSchema } from '/web/pages/Character/CharacterSchema'
 import { isChatPageMemo } from '../hooks'
-import { Jailbreak, ReasoningTags, JinjaTemplate, SystemPrompt } from './Fields'
+import { Jailbreak, ReasoningTags, JinjaTemplate, SystemPrompt, formatFields } from './Fields'
 import { InlineRangeInput } from '../RangeInput'
 import { FormLabel } from '../FormLabel'
+import { findGrokListedModel, grokSpec } from '/srv/adapter/grok-preset'
 import { PresetTabProps } from '/web/store/preset-context'
 import Accordian from '../Accordian'
 import { HelpModal } from '../Modal'
@@ -18,6 +19,14 @@ import { HelpCircle } from 'lucide-solid'
 export const PromptSettings: Component<PresetTabProps> = (props) => {
   const character = chatStore((s) => ({ char: s.details[s.lastChatId]?.char }))
   const state = userStore((s) => ({ user: s.user }))
+  const grok = createMemo(() => {
+    if (props.setters.context.format !== 'grok') return
+    const model =
+      props.state.providerModels?.[props.state.providerId || ''] ||
+      props.state.grokModel ||
+      props.state.thirdPartyModel
+    return grokSpec(model, findGrokListedModel(props.setters.context.data, model))
+  })
   const isChat = isChatPageMemo()
 
   const jsonCharId = createMemo(() => {
@@ -147,27 +156,42 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
             <div class="flex flex-col gap-1">
               <FormLabel
                 label="Reasoning Effort"
-                helperText="Typically the amount of your response length to use for reasoning"
+                helperText={
+                  formatFields(props.setters.context.format)?.reasoning?.helperText ??
+                  'Typically the amount of your response length to use for reasoning'
+                }
               />
               <div class="flex w-full justify-start gap-1">
                 <Select
                   inline
-                  items={[
-                    { label: 'None', value: 'none' },
-                    { label: 'Low (20%)', value: 'low' },
-                    { label: 'Medium (50%)', value: 'medium' },
-                    { label: 'High (80%)', value: 'high' },
-                    { label: 'Custom', value: 'custom' },
-                  ]}
-                  value={props.state.reasoning?.effort || 'low'}
+                  items={
+                    formatFields(props.setters.context.format)?.reasoning?.items(
+                      props.state,
+                      props.setters.context.data
+                    ) ?? [
+                      { label: 'None', value: 'none' },
+                      { label: 'Low (20%)', value: 'low' },
+                      { label: 'Medium (50%)', value: 'medium' },
+                      { label: 'High (80%)', value: 'high' },
+                      { label: 'Custom', value: 'custom' },
+                    ]
+                  }
+                  value={
+                    formatFields(props.setters.context.format)?.reasoning?.value(
+                      props.state,
+                      props.setters.context.data
+                    ) ??
+                    (props.state.reasoning?.effort || 'low')
+                  }
                   onChange={(ev) =>
                     props.setters.setState('reasoning', {
                       ...props.state.reasoning,
                       effort: ev.value as any,
                     })
                   }
+                  hide={!!grok() && grok()!.reasoning === 'unsupported'}
                 />
-                <Show when={props.state.reasoning?.effort === 'custom'}>
+                <Show when={!grok() && props.state.reasoning?.effort === 'custom'}>
                   <InlineRangeInput
                     fieldName="reasoning.maxTokens"
                     label="Tokens"

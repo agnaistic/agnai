@@ -1,5 +1,6 @@
-import { Component, Match, Show, Switch, createMemo, createSignal, onMount } from 'solid-js'
+import { Component, Match, Show, Switch, createEffect, createMemo, createSignal, onMount } from 'solid-js'
 import { FLAI_CONTEXTS, GOOGLE_MODELS, OpenRouterModel } from '/common/adapters'
+import { findGrokListedModel, grokModelPatch, grokPriceLabel, grokSpec } from '/srv/adapter/grok-preset'
 import TextInput from '../TextInput'
 import Button from '../Button'
 import { pageStore, presetStore, settingStore, toastStore } from '/web/store'
@@ -49,6 +50,7 @@ export const ThirdPartyModel: Component<{
 
       switch (props.setters.context.format) {
         case 'gemini':
+        case 'grok':
           return props.setters.context.format
       }
     }
@@ -80,6 +82,9 @@ export const ThirdPartyModel: Component<{
         return 'claude-external'
 
       case 'gemini':
+      case 'grok':
+        return props.setters.context.format
+
       case 'mistral':
       case 'aphrodite':
       case 'koboldcpp':
@@ -127,6 +132,9 @@ export const ThirdPartyModel: Component<{
         </Match>
         <Match when={component() === 'gemini'}>
           <GoogleModels state={props.state} setters={props.setters} page={props.page} />
+        </Match>
+        <Match when={component() === 'grok'}>
+          <GrokModels state={props.state} setters={props.setters} page={props.page} />
         </Match>
         <Match when={component() === 'horde'}>
           <HordeModels state={props.state} setters={props.setters} page={props.page} />
@@ -950,6 +958,131 @@ const ClaudeModel: Selector = (props) => {
   )
 }
 
+const GrokModelNote: Component<{ model: string; models: any[] }> = (props) => {
+  const listed = () => findGrokListedModel(props.models, props.model)
+  const spec = () => grokSpec(props.model, listed())
+  const price = () => grokPriceLabel(listed())
+  const context = () => {
+    const length = listed()?.context_length
+    if (!length) return 'context length not reported'
+    return `${Math.round(length / 1000).toLocaleString()}k context`
+  }
+
+  return (
+    <div class="text-600 text-sm">
+      {props.model} · {context()}
+      <Show when={price()}> · {price()}</Show>
+      {spec().reasoning === 'unsupported'
+        ? ' · reasoning_effort is not supported'
+        : ` · reasoning ${spec().efforts.join(' / ')}`}
+    </div>
+  )
+}
+
+const GrokModels: Selector = (props) => {
+  const emitter = createEmitter('close')
+  const [customId, setCustomId] = createSignal('')
+
+  const modelList = createMemo(() => {
+    const list = props.setters.context.list.map((value) => {
+      const price = grokPriceLabel(findGrokListedModel(props.setters.context.data, value))
+      return { label: price ? `${value} · ${price}` : value, value }
+    })
+    return [{ label: 'None', value: '' }].concat(list)
+  })
+
+  const selectedId = () =>
+    props.state.providerModels?.[props.state.providerId || 'na'] ||
+    props.state.grokModel ||
+    props.state.thirdPartyModel ||
+    ''
+
+  let appliedContext = 0
+  createEffect(() => {
+    const id = selectedId()
+    const length = findGrokListedModel(props.setters.context.data, id)?.context_length
+    if (!length || !props.state.useMaxContext) {
+      appliedContext = 0
+      return
+    }
+    if (props.state.maxContextLength === length) {
+      appliedContext = length
+      return
+    }
+    if (appliedContext === length) return
+    appliedContext = length
+    props.setters.setState('maxContextLength', length)
+    if (props.state._id && props.page === 'mode') {
+      presetStore.updatePreset(props.state._id, { maxContextLength: length }, { quiet: true })
+    }
+  })
+
+  const warning = createMemo(() => {
+    if (!props.state.providerId) return
+    if (props.setters.context.loading) return
+    if (modelList().length <= 1) return
+
+    const match = modelList().find((model) => model.value === selectedId())
+    if (selectedId() && !match) return 'Your current model is not in the model list'
+  })
+
+  return (
+    <div class="flex w-full flex-col gap-1">
+      <CustomSelect
+        size="sm"
+        modalTitle={
+          <div class="flex flex-col gap-2">
+            <div>Select a Model</div>
+
+            <div class="flex gap-2">
+              <TextInput
+                prelabel="Manual Model ID"
+                parentClass="w-full !font-normal !text-sm !h-8"
+                class=""
+                value={customId()}
+                onChange={(ev) => {
+                  setCustomId(ev.currentTarget.value)
+                }}
+              />
+              <Button
+                size="sm"
+                schema="primary"
+                onClick={() => {
+                  setProviderModel(props, customId(), { grokModel: customId() })
+                  emitter.emit.close()
+                }}
+              >
+                Confirm
+              </Button>
+            </div>
+          </div>
+        }
+        options={modelList()}
+        search={tokenizedSearch}
+        onSelect={(opt) => {
+          setProviderModel(props, opt.value, { grokModel: opt.value })
+        }}
+        buttonLabel={
+          props.setters.context.loading
+            ? 'Loading models...'
+            : selectedId() || 'Model - None Selected'
+        }
+        closeSub={emitter.on}
+        selected={selectedId()}
+        footer={<SelectorFooter state={props.state} setters={props.setters} />}
+      />
+      <Show when={!!selectedId()}>
+        <GrokModelNote model={selectedId()} models={props.setters.context.data} />
+      </Show>
+      <Show when={!!warning()}>
+        <Pill type="orange" small>
+          {warning()}
+        </Pill>
+      </Show>
+    </div>
+  )
+}
+
 const GoogleModels: Selector = (props) => {
   const emitter = createEmitter('close')
   const [customId, setCustomId] = createSignal('')
@@ -1192,6 +1325,14 @@ function setProviderModel(
 
   update.providerModels = models
   update.providerSettings = settings
+
+  if (extras?.grokModel) {
+    const listed = findGrokListedModel(setters.context.data, extras.grokModel)
+    Object.assign(update, grokModelPatch(extras.grokModel, state.reasoning, listed), {
+      grokModel: extras.grokModel,
+      thirdPartyModel: '',
+    })
+  }
 
   setters.setState(update)
 

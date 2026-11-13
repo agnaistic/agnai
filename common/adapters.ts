@@ -148,6 +148,7 @@ export const THIRDPARTY_HANDLERS: { [svc in ThirdPartyFormat]: AIAdapter } = {
   vllm: 'kobold',
   featherless: 'kobold',
   gemini: 'kobold',
+  grok: 'kobold',
   arli: 'kobold',
   'lm-studio': 'openai',
 }
@@ -155,6 +156,7 @@ export const THIRDPARTY_HANDLERS: { [svc in ThirdPartyFormat]: AIAdapter } = {
 export const BASIC_PROMPT_ONLY: { [svc in ThirdPartyFormat]?: boolean } = {
   featherless: true,
   gemini: true,
+  grok: true,
 }
 
 export const THIRDPARTY_FORMATS = [
@@ -175,6 +177,7 @@ export const THIRDPARTY_FORMATS = [
   'featherless',
   'arli',
   'gemini',
+  'grok',
   'lm-studio',
 ] as const
 
@@ -374,6 +377,7 @@ export const FORMAT_LABEL: { [key in ThirdPartyFormat]: string } = {
   exllamav2: 'ExllamaV2',
   featherless: 'Featherless',
   gemini: 'Google AI Studio',
+  grok: 'Grok',
   koboldcpp: 'Kobold.cpp',
   llamacpp: 'Llama.cpp',
   mistral: 'Mistral AI',

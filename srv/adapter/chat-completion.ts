@@ -45,7 +45,7 @@ export async function toChatCompletionPayload(
     return [{ role: 'system', content: opts.prompt }]
   }
 
-  if (opts.gen.thirdPartyFormat === 'openai-chatv2' || opts.gen.thirdPartyFormat === 'gemini') {
+  if (opts.gen.thirdPartyFormat === 'openai-chatv2' || opts.gen.thirdPartyFormat === 'gemini' || opts.gen.thirdPartyFormat === 'grok') {
     const { messages } = await toChatMessages(opts, counter)
     return messages
   }

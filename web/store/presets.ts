@@ -403,6 +403,7 @@ type SafePreset = Pick<
   | 'thirdPartyFormat'
   | 'description'
   | 'googleModel'
+  | 'grokModel'
   | 'name'
   | 'json'
   | 'jsonEnabled'

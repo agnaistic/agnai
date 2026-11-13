@@ -9,7 +9,107 @@ import { SubscriptionModelLevel } from '/common/types/presets'
 import { Card } from '../Card'
 import PromptEditor from '../PromptEditor'
 import { ThirdPartyFormat } from '/common/adapters'
+import { findGrokListedModel, grokSpec } from '/srv/adapter/grok-preset'
 import { PresetTabProps } from '/web/store/preset-context'
+
+/**
+ * Copy and slider limits that differ by third-party format.
+ *
+ * To add a format such as Gemini:
+ * 1. Export any model lookup the slider needs from a browser-safe adapter module.
+ * 2. Add one entry here, keyed by its ThirdPartyFormat value (`gemini`).
+ * 3. Set only the fields that differ from the defaults in this file.
+ *    Response length falls back to a 2048 max and the generic token sentence.
+ *    Temperature falls back to a min of 0.1, then 1.5 in Simple mode and 10 in Advanced.
+ *    Reasoning effort falls back to the generic list, selected value, and token-budget sentence.
+ *    Context size falls back to 200000 for Claude and 32000 otherwise.
+ * Which controls are shown is separate: register the provider in
+ * web/shared/PresetSettings/known-provider-presets.ts.
+ */
+const FORMAT_FIELDS: Partial<
+  Record<
+    ThirdPartyFormat,
+    {
+      responseLength?: { helperText: string; max: number }
+      temperature?: { helperText: string; min?: number; max: number }
+      reasoning?: {
+        helperText: string
+        items: (state: PresetTabProps['state'], models?: any[]) => { label: string; value: string }[]
+        value: (state: PresetTabProps['state'], models?: any[]) => string
+      }
+      contextSize?: {
+        max: (state: PresetTabProps['state'], models?: any[]) => number
+        note: (state: PresetTabProps['state'], models?: any[]) => string
+      }
+    }
+  >
+> = {
+  grok: {
+    responseLength: {
+      helperText:
+        'Visible reply length. Sent as max_completion_tokens, so reasoning tokens are not counted against it.',
+      max: 16384,
+    },
+    temperature: {
+      helperText: 'Grok accepts 0 to 2. Reasoning models work best at 1.',
+      min: 0,
+      max: 2,
+    },
+    reasoning: {
+      helperText:
+        'Grok 4.5 and later always reason. This sets depth. The API default is high. xhigh is only used by Grok 4.6 and 4.7.',
+      items: (state, models) =>
+        grokSpec(grokModel(state), findGrokListedModel(models, grokModel(state))).efforts.map((effort) => ({
+          label: effort === 'xhigh' ? 'Max (xhigh)' : effort.charAt(0).toUpperCase() + effort.slice(1),
+          value: effort,
+        })),
+      value: (state, models) => {
+        const efforts = grokSpec(grokModel(state), findGrokListedModel(models, grokModel(state))).efforts as string[]
+        const effort = state.reasoning?.effort
+        return effort && efforts.includes(effort) ? effort : 'high'
+      },
+    },
+    contextSize: {
+      max: (state, models) =>
+        grokSpec(grokModel(state), findGrokListedModel(models, grokModel(state))).context,
+      note: (state, models) => {
+        const length = findGrokListedModel(models, grokModel(state))?.context_length
+        if (!length) return 'Context length appears here once the Grok model list loads.'
+        const tokens = Math.round(length / 1000).toLocaleString()
+        return `This Grok model accepts ${tokens}k tokens. Use Max keeps the preset on that limit.`
+      },
+    },
+  },
+}
+
+/** Formats that can override the chat template. Add a format here to show the Jinja field. */
+const JINJA_FORMATS: { [format in ThirdPartyFormat]?: boolean } = {
+  'openai-chatv2': true,
+  'openai-chat': true,
+  koboldcpp: true,
+  tabby: true,
+  aphrodite: true,
+  vllm: true,
+  ollama: true,
+  llamacpp: true,
+  ooba: true,
+  kobold: true,
+  exllamav2: true,
+}
+
+const DEFAULT_RESPONSE_LENGTH =
+  "Maximum length of the response. Measured in 'tokens'"
+const DEFAULT_TEMPERATURE =
+  'Creativity: Randomness of sampling. High values can increase creativity, but may make text less sensible. Lower values will make text more predictable.'
+
+export function formatFields(format?: ThirdPartyFormat) {
+  if (!format) return
+  return FORMAT_FIELDS[format]
+}
+
+function grokModel(state: PresetTabProps['state']) {
+  return state.providerModels?.[state.providerId || ''] || state.grokModel || state.thirdPartyModel
+}
 
 export type FieldProps = Omit<PresetTabProps, 'tab'>
 export type Field<T = {}, TOnly extends keyof FieldProps = keyof FieldProps> = Component<
@@ -37,13 +137,14 @@ export const PresetMode: Field = (props) => {
 export const ResponseLength: Field<{
   subMax: Partial<SubscriptionModelLevel>
 }> = (props) => {
+  const responseLength = () => formatFields(props.setters.context.format)?.responseLength
   return (
     <RangeInput
       fieldName="maxTokens"
       label="Response Length"
-      helperText="Maximum length of the response. Measured in 'tokens'"
+      helperText={responseLength()?.helperText ?? DEFAULT_RESPONSE_LENGTH}
       min={16}
-      max={2048}
+      max={responseLength()?.max ?? 2048}
       step={1}
       value={props.state.maxTokens}
       disabled={props.state.disabled}
@@ -62,6 +163,15 @@ export const ContextSize: Field<{ subMax: Partial<SubscriptionModelLevel> }> = (
     const max = Math.round(ctx / 1000)
     return `${max}K`
   })
+  const contextSize = () => formatFields(props.setters.context.format)?.contextSize
+  const models = () => props.setters.context.data
+  const contextNote = () => contextSize()?.note(props.state, models())
+  const contextMax = () => {
+    const sized = contextSize()
+    if (sized) return sized.max(props.state, models())
+    if (props.setters.context.service === 'claude') return 200000
+    return 32000
+  }
 
   return (
     <>
@@ -92,17 +202,20 @@ export const ContextSize: Field<{ subMax: Partial<SubscriptionModelLevel> }> = (
           <>
             <p>
               The amount of infomation sent to the model to generate a response.{' '}
-              <Show when={props.setters.context.service !== 'agnaistic'}>
+              <Show when={!!contextNote()}>{contextNote()}</Show>
+              <Show when={!contextNote() && props.setters.context.service !== 'agnaistic'}>
                 Check your AI service for the maximum context size.
               </Show>
             </p>
           </>
         }
         min={16}
-        max={props.setters.context.service === 'claude' ? 200000 : 32000}
+        max={contextMax()}
         step={1}
         value={props.state.maxContextLength || 8192}
-        disabled={props.state.disabled}
+        disabled={
+          props.state.disabled || (props.setters.context.format === 'grok' && !!props.state.useMaxContext)
+        }
         onChange={(ev) => props.setters.setState('maxContextLength', ev)}
       />
     </>
@@ -200,20 +313,6 @@ export const Jailbreak: Field = (props) => {
 }
 
 export const JinjaTemplate: Field = (props) => {
-  const allowed: { [format in ThirdPartyFormat]?: boolean } = {
-    'openai-chatv2': true,
-    'openai-chat': true,
-    koboldcpp: true,
-    tabby: true,
-    aphrodite: true,
-    vllm: true,
-    ollama: true,
-    llamacpp: true,
-    ooba: true,
-    kobold: true,
-    exllamav2: true,
-  }
-
   return (
     <TextInput
       fieldName="jinjaTemplate"
@@ -233,7 +332,7 @@ export const JinjaTemplate: Field = (props) => {
       If left blank, one will be generated for you."
       value={props.state.jinjaTemplate || ''}
       disabled={props.state.disabled}
-      hide={!props.setters.context.format || !allowed[props.setters.context.format]}
+      hide={!props.setters.context.format || !JINJA_FORMATS[props.setters.context.format]}
       onChange={(ev) => props.setters.setState('jinjaTemplate', ev.currentTarget.value)}
       isMultiline
     />
@@ -257,14 +356,15 @@ export const ModelFormat: Field = (props) => {
 }
 
 export const Temperature: Field = (props) => {
+  const temperature = () => formatFields(props.setters.context.format)?.temperature
   return (
     <>
       <RangeInput
         fieldName="temp"
         label="Temperature"
-        helperText="Creativity: Randomness of sampling. High values can increase creativity, but may make text less sensible. Lower values will make text more predictable."
-        min={0.1}
-        max={props.state.presetMode === 'simple' ? 1.5 : 10}
+        helperText={temperature()?.helperText ?? DEFAULT_TEMPERATURE}
+        min={temperature()?.min ?? 0.1}
+        max={temperature()?.max ?? (props.state.presetMode === 'simple' ? 1.5 : 10)}
         step={0.01}
         value={props.state.temp}
         disabled={props.state.disabled}

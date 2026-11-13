@@ -12,11 +12,16 @@ import { PresetFuncs, PresetTabProps, ContextPreset } from '/web/store/preset-co
 export const ToggleSettings: Component<PresetTabProps> = (props) => {
   return (
     <div class="flex flex-col gap-4" classList={{ hidden: props.tab !== 'Toggles' }}>
-      <Card class="flex flex-col gap-4" bg="bg-500">
+      <Card
+        class="flex flex-col gap-4"
+        bg="bg-500"
+        hide={togglesCardHidden(props.setters.context.hides)}
+      >
         <Toggle
           label="Skip Chat Role Merges"
           helperText="Chat completions: When enabled, do not collapse repeated roles into a single message"
           value={props.state.skipRoleMerging}
+          hide={props.setters.context.hides.skipRoleMerging}
           onChange={(ev) => props.setters.setState('skipRoleMerging', ev)}
         />
 
@@ -25,6 +30,7 @@ export const ToggleSettings: Component<PresetTabProps> = (props) => {
           helperMarkdown={`Chat completions: When enabled, the \`{{post}}\` amble will be sent as a USER role, instead of ASSISTANT.
           Fixes DeepSeek 3.1 issues.`}
           value={props.state.postUserRole}
+          hide={props.setters.context.hides.postUserRole}
           onChange={(ev) => props.setters.setState('postUserRole', ev)}
         />
 
@@ -175,6 +181,23 @@ export const ToggleSettings: Component<PresetTabProps> = (props) => {
         <SamplerOrder state={props.state} setters={props.setters} />
       </Card>
     </div>
+  )
+}
+
+function togglesCardHidden(hides: PresetTabProps['setters']['context']['hides']) {
+  return !!(
+    hides.skipRoleMerging &&
+    hides.postUserRole &&
+    hides.cfgScale &&
+    hides.phraseRepPenalty &&
+    hides.tempLast &&
+    hides.mirostatLR &&
+    hides.tokenHealing &&
+    hides.addBosToken &&
+    hides.banEosToken &&
+    hides.skipSpecialTokens &&
+    hides.doSample &&
+    hides.earlyStopping
   )
 }
 

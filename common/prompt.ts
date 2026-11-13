@@ -984,6 +984,9 @@ export function getContextLimit(
           return max ? max - genAmount : configuredMax - genAmount
         }
 
+        case 'grok':
+          return configuredMax - genAmount
+
         default:
           return configuredMax - genAmount
       }
