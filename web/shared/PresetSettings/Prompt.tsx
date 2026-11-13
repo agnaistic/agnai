@@ -10,6 +10,7 @@ import { isChatPageMemo } from '../hooks'
 import { Jailbreak, ReasoningTags, JinjaTemplate, SystemPrompt } from './Fields'
 import { InlineRangeInput } from '../RangeInput'
 import { FormLabel } from '../FormLabel'
+import { grokSpec } from '/srv/adapter/grok-preset'
 import { PresetTabProps } from '/web/store/preset-context'
 import Accordian from '../Accordian'
 import { HelpModal } from '../Modal'
@@ -18,6 +19,14 @@ import { HelpCircle } from 'lucide-solid'
 export const PromptSettings: Component<PresetTabProps> = (props) => {
   const character = chatStore((s) => ({ char: s.details[s.lastChatId]?.char }))
   const state = userStore((s) => ({ user: s.user }))
+  const grok = createMemo(() => {
+    if (props.setters.context.format !== 'grok') return
+    const model =
+      props.state.providerModels?.[props.state.providerId || ''] ||
+      props.state.grokModel ||
+      props.state.thirdPartyModel
+    return grokSpec(model)
+  })
   const isChat = isChatPageMemo()
 
   const jsonCharId = createMemo(() => {
@@ -147,27 +156,48 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
             <div class="flex flex-col gap-1">
               <FormLabel
                 label="Reasoning Effort"
-                helperText="Typically the amount of your response length to use for reasoning"
+                helperText={
+                  grok()
+                    ? 'Grok 4.5 and later always reason. This sets depth. The API default is high. xhigh is only used by Grok 4.6 and 4.7.'
+                    : 'Typically the amount of your response length to use for reasoning'
+                }
               />
               <div class="flex w-full justify-start gap-1">
                 <Select
                   inline
-                  items={[
-                    { label: 'None', value: 'none' },
-                    { label: 'Low (20%)', value: 'low' },
-                    { label: 'Medium (50%)', value: 'medium' },
-                    { label: 'High (80%)', value: 'high' },
-                    { label: 'Custom', value: 'custom' },
-                  ]}
-                  value={props.state.reasoning?.effort || 'low'}
+                  items={
+                    grok()
+                      ? grok()!.efforts.map((effort) => ({
+                          label:
+                            effort === 'xhigh'
+                              ? 'Max (xhigh)'
+                              : effort.charAt(0).toUpperCase() + effort.slice(1),
+                          value: effort,
+                        }))
+                      : [
+                          { label: 'None', value: 'none' },
+                          { label: 'Low (20%)', value: 'low' },
+                          { label: 'Medium (50%)', value: 'medium' },
+                          { label: 'High (80%)', value: 'high' },
+                          { label: 'Custom', value: 'custom' },
+                        ]
+                  }
+                  value={
+                    grok()
+                      ? grok()!.efforts.includes(props.state.reasoning?.effort as any)
+                        ? props.state.reasoning?.effort
+                        : 'high'
+                      : props.state.reasoning?.effort || 'low'
+                  }
                   onChange={(ev) =>
                     props.setters.setState('reasoning', {
                       ...props.state.reasoning,
                       effort: ev.value as any,
                     })
                   }
+                  hide={!!grok() && grok()!.reasoning === 'unsupported'}
                 />
-                <Show when={props.state.reasoning?.effort === 'custom'}>
+                <Show when={!grok() && props.state.reasoning?.effort === 'custom'}>
                   <InlineRangeInput
                     fieldName="reasoning.maxTokens"
                     label="Tokens"

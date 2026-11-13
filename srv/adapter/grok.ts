@@ -7,6 +7,15 @@ import { stripImageContent, toChatMessages } from '/common/template-messages'
 import { getEncoderByName } from '../tokenize'
 import { requestFullCompletion } from './chat-completion'
 import { AppSchema } from '/common/types'
+import { grokSpec, type GrokEffort } from './grok-preset'
+
+export {
+  GROK_PRESET_SETTINGS,
+  grokModelPatch,
+  grokPresetDefaults,
+  grokSpec,
+} from './grok-preset'
+export type { GrokEffort, GrokModelSpec } from './grok-preset'
 
 const GROK_URL = 'https://api.x.ai/v1'
 
@@ -30,14 +39,12 @@ export const handleGrok: ModelAdapter = async function* (opts) {
     model,
     messages,
     stream: !!opts.gen.streamResponse,
-    temperature: opts.gen.temp,
-    max_tokens: opts.gen.maxTokens,
-    top_p: opts.gen.topP,
-    presence_penalty: opts.gen.presencePenalty,
-    frequency_penalty: opts.gen.frequencyPenalty,
+    temperature: clampNumber(opts.gen.temp, 0, 2),
+    max_completion_tokens: opts.gen.maxTokens,
+    top_p: clampNumber(opts.gen.topP, 0, 1),
   }
 
-  const effort = grokReasoningEffort(opts.gen)
+  const effort = grokReasoningEffort(opts.gen, model)
   if (effort) {
     body.reasoning_effort = effort
   }
@@ -138,11 +145,13 @@ export const handleGrok: ModelAdapter = async function* (opts) {
   yield sanitise(text)
 }
 
-function grokReasoningEffort(gen: Partial<AppSchema.GenSettings>) {
-  if (!gen.reasoning?.enabled) return
+function grokReasoningEffort(gen: Partial<AppSchema.GenSettings>, model: string) {
+  const spec = grokSpec(model)
+  if (spec.reasoning === 'unsupported' || !gen.reasoning?.enabled) return
 
-  const effort = gen.reasoning.effort || 'low'
-  if (effort === 'low' || effort === 'medium' || effort === 'high') return effort
+  const effort = gen.reasoning.effort || 'high'
+  if ((spec.efforts as string[]).includes(effort)) return effort as GrokEffort
+  if (effort === 'xhigh') return 'high'
 
   if (effort === 'custom') {
     const max = Math.max(gen.maxTokens ?? 2048, 2048)
@@ -152,4 +161,9 @@ function grokReasoningEffort(gen: Partial<AppSchema.GenSettings>) {
     if (percent >= 0.35) return 'medium'
     return 'low'
   }
+}
+
+function clampNumber(value: number | undefined, min: number, max: number) {
+  if (value === undefined || Number.isNaN(value)) return
+  return Math.min(max, Math.max(min, value))
 }

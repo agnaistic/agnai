@@ -1,5 +1,6 @@
 import { Component, Match, Show, Switch, createMemo, createSignal, onMount } from 'solid-js'
-import { FLAI_CONTEXTS, GOOGLE_MODELS, GROK_MODELS, OpenRouterModel } from '/common/adapters'
+import { FLAI_CONTEXTS, GOOGLE_MODELS, OpenRouterModel } from '/common/adapters'
+import { grokModelPatch, grokSpec } from '/srv/adapter/grok-preset'
 import TextInput from '../TextInput'
 import Button from '../Button'
 import { pageStore, presetStore, settingStore, toastStore } from '/web/store'
@@ -957,69 +958,98 @@ const ClaudeModel: Selector = (props) => {
   )
 }
 
+const GrokModelNote: Component<{ model: string }> = (props) => {
+  const spec = createMemo(() => grokSpec(props.model))
+  const context = () => `${Math.round(spec().context / 1000).toLocaleString()}k context`
+
+  return (
+    <div class="text-600 text-sm">
+      {props.model} · {context()}
+      {spec().reasoning === 'unsupported'
+        ? ' · reasoning_effort is not supported'
+        : ` · reasoning ${spec().efforts.join(' / ')}`}
+    </div>
+  )
+}
+
 const GrokModels: Selector = (props) => {
   const emitter = createEmitter('close')
   const [customId, setCustomId] = createSignal('')
-  const label = createMemo(() => {
-    const id =
-      props.state.providerModels?.[props.state.providerId || 'na'] ||
-      props.state.grokModel ||
-      props.state.thirdPartyModel
-    if (!id) return 'Model - None Selected'
-    const match = Object.values(GROK_MODELS).find((model) => model.id === id)
 
-    if (!match) return id
-    return match.label
+  const modelList = createMemo(() => {
+    const list = props.setters.context.list.map((value) => ({ label: value, value }))
+    return [{ label: 'None', value: '' }].concat(list)
   })
 
-  const options = createMemo(() => {
-    return Object.values(GROK_MODELS).map(({ label, id }) => ({ label, value: id }))
+  const selectedId = () =>
+    props.state.providerModels?.[props.state.providerId || 'na'] ||
+    props.state.grokModel ||
+    props.state.thirdPartyModel ||
+    ''
+
+  const warning = createMemo(() => {
+    if (!props.state.providerId) return
+    if (props.setters.context.loading) return
+    if (modelList().length <= 1) return
+
+    const match = modelList().find((model) => model.value === selectedId())
+    if (selectedId() && !match) return 'Your current model is not in the model list'
   })
 
   return (
-    <CustomSelect
-      size="sm"
-      modalTitle={
-        <div class="flex flex-col gap-2">
-          <div>Select a Model</div>
+    <div class="flex w-full flex-col gap-1">
+      <CustomSelect
+        size="sm"
+        modalTitle={
+          <div class="flex flex-col gap-2">
+            <div>Select a Model</div>
 
-          <div class="flex gap-2">
-            <TextInput
-              prelabel="Manual Model ID"
-              parentClass="w-full !font-normal !text-sm !h-8"
-              class=""
-              value={customId()}
-              onChange={(ev) => {
-                setCustomId(ev.currentTarget.value)
-              }}
-            />
-            <Button
-              size="sm"
-              schema="primary"
-              onClick={() => {
-                setProviderModel(props, customId(), { grokModel: customId() })
-                emitter.emit.close()
-              }}
-            >
-              Confirm
-            </Button>
+            <div class="flex gap-2">
+              <TextInput
+                prelabel="Manual Model ID"
+                parentClass="w-full !font-normal !text-sm !h-8"
+                class=""
+                value={customId()}
+                onChange={(ev) => {
+                  setCustomId(ev.currentTarget.value)
+                }}
+              />
+              <Button
+                size="sm"
+                schema="primary"
+                onClick={() => {
+                  setProviderModel(props, customId(), { grokModel: customId() })
+                  emitter.emit.close()
+                }}
+              >
+                Confirm
+              </Button>
+            </div>
           </div>
-        </div>
-      }
-      options={options()}
-      search={tokenizedSearch}
-      onSelect={(opt) => {
-        setProviderModel(props, opt.value, { grokModel: opt.value })
-      }}
-      buttonLabel={label()}
-      closeSub={emitter.on}
-      selected={
-        props.state.providerModels?.[props.state.providerId || 'na'] ||
-        props.state.grokModel ||
-        props.state.thirdPartyModel
-      }
-      footer={<SelectorFooter state={props.state} setters={props.setters} />}
-    />
+        }
+        options={modelList()}
+        search={tokenizedSearch}
+        onSelect={(opt) => {
+          setProviderModel(props, opt.value, { grokModel: opt.value })
+        }}
+        buttonLabel={
+          props.setters.context.loading
+            ? 'Loading models...'
+            : selectedId() || 'Model - None Selected'
+        }
+        closeSub={emitter.on}
+        selected={selectedId()}
+        footer={<SelectorFooter state={props.state} setters={props.setters} />}
+      />
+      <Show when={!!selectedId()}>
+        <GrokModelNote model={selectedId()} />
+      </Show>
+      <Show when={!!warning()}>
+        <Pill type="orange" small>
+          {warning()}
+        </Pill>
+      </Show>
+    </div>
   )
 }
 
@@ -1265,6 +1295,13 @@ function setProviderModel(
 
   update.providerModels = models
   update.providerSettings = settings
+
+  if (extras?.grokModel) {
+    Object.assign(update, grokModelPatch(extras.grokModel, state.reasoning), {
+      grokModel: extras.grokModel,
+      thirdPartyModel: '',
+    })
+  }
 
   setters.setState(update)
 

@@ -243,14 +243,17 @@ async function getModelListByPreset(preset: Partial<AppSchema.UserGenPreset>, fo
 
     const useLocal = detail.category === 'self' || provider.provider === 'known-openrouter'
 
+    const isGrok = provider?.provider === 'known-xai'
+
     const result = useLocal
       ? await getLocalModelList({ url, key: provider.userKey || provider.key })
       : await getPresetModelList({
-          id: preset._id || '',
+          // Grok lists models for the provider key. A built-in preset has no saved record.
+          id: isGrok ? '' : preset._id || '',
           providerId: preset.providerId,
           url,
           key: isLoggedIn() ? '' : provider.key,
-          useCache: !force,
+          useCache: isGrok ? false : !force,
         })
 
     return { list: result.models, url, data: result.data }

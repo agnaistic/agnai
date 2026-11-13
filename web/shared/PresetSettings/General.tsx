@@ -111,6 +111,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           value={props.state.minP ?? 0}
           disabled={props.state.disabled}
           aiSetting={'minP'}
+          hide={props.setters.context.format === 'grok'}
           recommended={props.sub?.preset.minP}
           onChange={(ev) => props.setters.setState('minP', ev)}
         />
@@ -128,14 +129,17 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           label="Exclude Name Stops"
           helperText="Disables automatically adding character names to stopping strings"
           value={props.state.disableNameStops}
+          hide={props.setters.context.format === 'grok'}
           onChange={(ev) => props.setters.setState('disableNameStops', ev)}
         />
+        <Show when={props.setters.context.format !== 'grok'}>
         <StoppingStrings
           state={props.state}
           setters={props.setters}
           sub={props.sub}
           page={props.page}
         />
+        </Show>
 
         <MessageParsers
           state={props.state}

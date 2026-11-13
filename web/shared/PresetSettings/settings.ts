@@ -18,6 +18,7 @@ export const ADAPTER_SETTINGS: {
     'tabby',
     'mistral',
     'openrouter',
+    'grok',
   ],
   tempLast: ['agnaistic', 'tabby', 'exllamav2'],
   dynatemp_range: [
@@ -43,8 +44,8 @@ export const ADAPTER_SETTINGS: {
   dryMultiplier: ['agnaistic', 'ooba', 'tabby', 'arli', 'aphrodite'],
   smoothingFactor: ['kobold', 'aphrodite', 'ooba', 'tabby', 'agnaistic', 'arli'],
   smoothingCurve: ['kobold', 'aphrodite'],
-  maxTokens: AI_ADAPTERS.slice(),
-  maxContextLength: AI_ADAPTERS.slice(),
+  maxTokens: [...AI_ADAPTERS, 'grok'],
+  maxContextLength: [...AI_ADAPTERS, 'grok'],
   antiBond: ['openai', 'scale'],
   prefixNameAppend: ['openai', 'claude'],
 
@@ -82,6 +83,7 @@ export const ADAPTER_SETTINGS: {
     'mistral',
     'openrouter',
     'openrouter-completion',
+    'grok',
   ],
   localRequests: [
     'openai',

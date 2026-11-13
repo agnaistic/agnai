@@ -122,7 +122,7 @@ export type Sampler =
 
 export type SamplerState = 'on' | 'off' | 'auto' | string
 
-export type ReasoningEffort = 'custom' | 'high' | 'medium' | 'low' | 'none'
+export type ReasoningEffort = 'custom' | 'xhigh' | 'high' | 'medium' | 'low' | 'none'
 
 export interface GenSettings {
   name: string

@@ -1,5 +1,6 @@
 import { SetStoreFunction, createStore } from 'solid-js/store'
 import { AIAdapter, MODE_SETTINGS, PresetAISettings, ThirdPartyFormat } from '/common/adapters'
+import { grokPresetDefaults } from '/srv/adapter/grok-preset'
 import { AppSchema } from '/common/types'
 import { SubscriptionModelOption } from '/common/types/presets'
 import { agnaiPresets } from '/common/presets/agnaistic'
@@ -7,6 +8,7 @@ import { createContext, createEffect, createSignal, on, useContext } from 'solid
 import { getStore } from '/web/store/create'
 import { getPresetConnection, PresetConnection, ProviderDefinition } from '/common/providers'
 import { defaultPresets, isDefaultPreset } from '/common/default-preset'
+import { knownProviderPresetSettings } from '../shared/PresetSettings/known-provider-presets'
 import { ADAPTER_SETTINGS } from '../shared/PresetSettings/settings'
 import { isValidServiceSetting } from '../shared/util'
 import { toastStore } from './toasts'
@@ -378,14 +380,20 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
   }
 
   const changeProvider = async (providerId: string, save?: boolean) => {
+    const provider = getProvider(providerId)
+    const grokDefaults =
+      provider?.provider === 'known-xai' && context.current.thirdPartyFormat !== 'grok'
+        ? grokPresetDefaults(context.current)
+        : {}
+
     if (save) {
-      setState({ providerId })
+      setState({ providerId, ...grokDefaults })
       onStateUpdated('provider-save')
 
       await Promise.all([
         loadModels({}),
         updateAndSave(
-          { providerId },
+          { providerId, ...grokDefaults },
           {
             quiet: true,
             onSuccess: () => {
@@ -398,7 +406,7 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
       return
     }
 
-    setState({ providerId })
+    setState({ providerId, ...grokDefaults })
     onStateUpdated('provider-nosave')
     loadModels({})
   }
@@ -565,7 +573,12 @@ function createHides(store: ContextPreset, ctx: PresetConnection) {
 
   for (const key of keys) {
     const hide = hidePresetSetting(
-      { service: ctx.service, thirdPartyFormat: ctx.format, presetMode: store.presetMode },
+      {
+        service: ctx.service,
+        thirdPartyFormat: ctx.format,
+        presetMode: store.presetMode,
+        knownProvider: ctx.provider?.provider,
+      },
       key as any
     )
     hides[key] = hide
@@ -578,6 +591,14 @@ function createHides(store: ContextPreset, ctx: PresetConnection) {
     hides.thirdPartyUrlNoSuffix = true
   }
 
+  const owned = knownProviderPresetSettings(ctx.provider?.provider)
+  if (owned) {
+    const messageRoles = ['skipRoleMerging', 'postUserRole'] as const
+    for (const key of messageRoles) {
+      hides[key] = !owned.includes(key)
+    }
+  }
+
   return hides
 }
 
@@ -588,9 +609,21 @@ function maybeDeepClone(obj: any | undefined) {
 }
 
 function hidePresetSetting(
-  state: Pick<ContextPreset, 'service' | 'thirdPartyFormat' | 'presetMode'>,
+  state: Pick<ContextPreset, 'service' | 'thirdPartyFormat' | 'presetMode'> & {
+    knownProvider?: string
+  },
   prop?: keyof PresetAISettings
 ) {
+  const owned = knownProviderPresetSettings(state.knownProvider)
+  if (owned) {
+    if (!prop || !owned.includes(prop)) return true
+    if (state.presetMode && state.presetMode !== 'advanced') {
+      const enabled = MODE_SETTINGS[state.presetMode]?.[prop]
+      if (!enabled) return true
+    }
+    return false
+  }
+
   let hide = false
   if (!prop) {
     hide = false

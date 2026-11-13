@@ -1,4 +1,4 @@
-import { Component } from 'solid-js'
+import { Component, Show } from 'solid-js'
 import RangeInput from '../RangeInput'
 import { defaultPresets } from '../../../common/presets'
 import { Card } from '../Card'
@@ -11,6 +11,12 @@ import { PresetTabProps } from '/web/store/preset-context'
 export const SliderSettings: Component<PresetTabProps> = (props) => {
   return (
     <div class="flex flex-col gap-4" classList={{ hidden: props.tab !== 'Samplers' }}>
+      <Show
+        when={
+          !props.setters.context.hides.dynatemp_range ||
+          !props.setters.context.hides.dynatemp_exponent
+        }
+      >
       <Card class="flex flex-col gap-1" bg="bg-500">
         <div>Dynamic Temperature</div>
         <div class="text-600 text-sm">
@@ -47,6 +53,7 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
           hide={props.setters.context.hides.dynatemp_exponent}
         />
       </Card>
+      </Show>
 
       <Card class="flex flex-col gap-1" bg="bg-500" hide={props.setters.context.hides.xtcThreshold}>
         <div class="flex gap-1">

@@ -746,6 +746,11 @@ export function isValidServiceSetting(
   // Setting does not declare itself as a service setting
   if (!services || !state.service) return true
 
+  // Grok is served by the Kobold handler, but the API only accepts its own fields.
+  if (state.thirdPartyFormat === 'grok') {
+    return services.includes('grok')
+  }
+
   if (services.includes(state.service)) return true
   if (!state.thirdPartyFormat) {
     return false

@@ -9,6 +9,7 @@ import { SubscriptionModelLevel } from '/common/types/presets'
 import { Card } from '../Card'
 import PromptEditor from '../PromptEditor'
 import { ThirdPartyFormat } from '/common/adapters'
+import { grokSpec } from '/srv/adapter/grok-preset'
 import { PresetTabProps } from '/web/store/preset-context'
 
 export type FieldProps = Omit<PresetTabProps, 'tab'>
@@ -41,9 +42,13 @@ export const ResponseLength: Field<{
     <RangeInput
       fieldName="maxTokens"
       label="Response Length"
-      helperText="Maximum length of the response. Measured in 'tokens'"
+      helperText={
+        props.setters.context.format === 'grok'
+          ? 'Visible reply length. Sent as max_completion_tokens, so reasoning tokens are not counted against it.'
+          : "Maximum length of the response. Measured in 'tokens'"
+      }
       min={16}
-      max={2048}
+      max={props.setters.context.format === 'grok' ? 16384 : 2048}
       step={1}
       value={props.state.maxTokens}
       disabled={props.state.disabled}
@@ -92,14 +97,40 @@ export const ContextSize: Field<{ subMax: Partial<SubscriptionModelLevel> }> = (
           <>
             <p>
               The amount of infomation sent to the model to generate a response.{' '}
-              <Show when={props.setters.context.service !== 'agnaistic'}>
+              <Show when={props.setters.context.format === 'grok'}>
+                This Grok model accepts{' '}
+                {Math.round(
+                  grokSpec(
+                    props.state.providerModels?.[props.state.providerId || ''] ||
+                      props.state.grokModel ||
+                      props.state.thirdPartyModel
+                  ).context / 1000
+                ).toLocaleString()}
+                k tokens. Use Max keeps the preset on that limit.
+              </Show>
+              <Show
+                when={
+                  props.setters.context.service !== 'agnaistic' &&
+                  props.setters.context.format !== 'grok'
+                }
+              >
                 Check your AI service for the maximum context size.
               </Show>
             </p>
           </>
         }
         min={16}
-        max={props.setters.context.service === 'claude' ? 200000 : 32000}
+        max={
+          props.setters.context.format === 'grok'
+            ? grokSpec(
+                props.state.providerModels?.[props.state.providerId || ''] ||
+                  props.state.grokModel ||
+                  props.state.thirdPartyModel
+              ).context
+            : props.setters.context.service === 'claude'
+              ? 200000
+              : 32000
+        }
         step={1}
         value={props.state.maxContextLength || 8192}
         disabled={props.state.disabled}
@@ -262,9 +293,19 @@ export const Temperature: Field = (props) => {
       <RangeInput
         fieldName="temp"
         label="Temperature"
-        helperText="Creativity: Randomness of sampling. High values can increase creativity, but may make text less sensible. Lower values will make text more predictable."
+        helperText={
+          props.setters.context.format === 'grok'
+            ? 'Grok accepts 0 to 2. Reasoning models work best at 1.'
+            : 'Creativity: Randomness of sampling. High values can increase creativity, but may make text less sensible. Lower values will make text more predictable.'
+        }
         min={0.1}
-        max={props.state.presetMode === 'simple' ? 1.5 : 10}
+        max={
+          props.setters.context.format === 'grok'
+            ? 2
+            : props.state.presetMode === 'simple'
+              ? 1.5
+              : 10
+        }
         step={0.01}
         value={props.state.temp}
         disabled={props.state.disabled}
