@@ -1,15 +1,5 @@
 import { Check, FullscreenIcon, X } from 'lucide-solid'
-import {
-  Component,
-  Show,
-  JSX,
-  createMemo,
-  Switch,
-  Match,
-  createSignal,
-  onMount,
-  onCleanup,
-} from 'solid-js'
+import { Component, Show, JSX, createMemo, Switch, Match, createSignal } from 'solid-js'
 import Button from './Button'
 import './modal.css'
 import Tabs, { TabHook } from './Tabs'

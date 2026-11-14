@@ -485,7 +485,7 @@ export const SwarmSettings: Component<{
           items={SWARM_SAMPLERS}
           inline
           class="!py-1"
-          value={props.ctx.edit.provider.sampler || SWARM_SAMPLER['Euler a']}
+          value={props.ctx.edit.provider.sampler || SWARM_SAMPLER['Euler Ancestral (Randomizing)']}
           onChange={(ev) => props.ctx.updateProvider({ sampler: ev.value })}
         />
 
