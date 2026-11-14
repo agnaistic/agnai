@@ -1,6 +1,6 @@
 import { Smile } from 'lucide-solid'
 import { Component, For, Show, createMemo, createSignal, onCleanup, onMount } from 'solid-js'
-import { useLocalStorage } from '/web/shared/hooks'
+import { isMobile, useLocalStorage } from '/web/shared/hooks'
 
 /** Maximum number of recently used emojis to keep in local storage */
 const MAX_RECENT = 16
@@ -16,6 +16,7 @@ export const EmojiPicker: Component<{
 }> = (props) => {
   let container!: HTMLDivElement
 
+  const mobile = isMobile()
   const [open, setOpen] = createSignal(false)
   const [search, setSearch] = createSignal('')
 
@@ -38,6 +39,10 @@ export const EmojiPicker: Component<{
   const select = (emoji: string) => {
     remember(emoji)
     props.onSelect(emoji)
+
+    if (mobile) {
+      setOpen(false)
+    }
   }
 
   const query = createMemo(() => search().trim().toLowerCase())
