@@ -18,7 +18,7 @@ import { RootModal } from './Modal'
 import { ComponentSubscriber, createDebounce, PartialListener } from './util'
 import TextInput from './TextInput'
 
-export type OptionAction = { comp: (props: { optionValue: string }) => JSX.Element }
+export type OptionAction = { comp: (props: CustomOption & { optionValue: string }) => JSX.Element }
 
 export type CustomOption = {
   label: string | JSX.Element
@@ -65,6 +65,8 @@ export const CustomSelect: Component<{
   actions?: OptionAction[]
   searchInit?: string
   searchText?: (input: string) => void
+
+  onOpen?: () => void
 }> = (props) => {
   const [open, setOpen] = createSignal(false)
   const [filter, setFilter] = createSignal(props.searchInit ?? '')
@@ -100,6 +102,7 @@ export const CustomSelect: Component<{
       () => {
         const isOpening = open()
         if (isOpening) {
+          props.onOpen?.()
           setFilter(props.searchInit ?? '')
         }
       }
@@ -336,7 +339,13 @@ const OptionList: Component<{
                     <div class="font-bold">{option.label}</div>
                   </div>
                   <For each={props.actions || []}>
-                    {(action) => action.comp({ optionValue: option.value })}
+                    {(action) =>
+                      action.comp({
+                        optionValue: option.value,
+                        label: option.label,
+                        value: option.value,
+                      })
+                    }
                   </For>
                 </div>
               )}

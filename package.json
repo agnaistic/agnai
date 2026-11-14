@@ -76,7 +76,8 @@
     "up": "docker compose -p agnai up -d",
     "deps": "npx --yes pnpm@10 install --lockfile",
     "web": "parcel web/index.html --no-cache",
-    "api": "tsc -p api.tsconfig.json --watch"
+    "api": "tsc -p api.tsconfig.json --watch",
+    "typetask": "tsc -p tsconfig.json --noEmit -w"
   },
   "dependencies": {
     "@agnai/sentencepiece-js": "^1.1.1",

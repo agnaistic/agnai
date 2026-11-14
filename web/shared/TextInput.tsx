@@ -48,6 +48,12 @@ type Props = {
   /** Specificy `parentClass.max-height` when using this */
   growup?: boolean
 
+  /**
+   * For multiline fields: auto-grow to fit the text, but clamp the height to this many rows.
+   * If omitted, the field grows without limit (unless a max-height class is provided).
+   */
+  maxRows?: number
+
   adornment?: JSX.Element
 
   /** Do not update the input value if the value property receives a new value */
@@ -109,6 +115,15 @@ const TextInput: Component<Props> = (props) => {
     return () => clearInterval(tick)
   })
 
+  // Height of one text row (line-height + vertical padding), used for maxRows clamping
+  const rowHeight = () => {
+    const cs = getComputedStyle(inputRef)
+    const fontSize = parseFloat(cs.fontSize) || 16
+    const lineHeight = parseFloat(cs.lineHeight) || fontSize * 1.2
+    const padding = (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0)
+    return lineHeight + padding
+  }
+
   const resize = () => {
     if (props.growup || props.static) return
     if (inputRef?.value === '') {
@@ -119,10 +134,16 @@ const TextInput: Component<Props> = (props) => {
     updateCount()
 
     if (inputRef) {
-      const next = +inputRef.scrollHeight < MIN_HEIGHT ? MIN_HEIGHT : inputRef.scrollHeight
-      const curr = height()
-      if (curr === `${next}px`) return
-      setHeight(next + 'px')
+      if (inputRef) {
+        let next = +inputRef.scrollHeight < MIN_HEIGHT ? MIN_HEIGHT : inputRef.scrollHeight
+        if (props.maxRows && props.maxRows > 0) {
+          const max = Math.max(MIN_HEIGHT, props.maxRows * rowHeight())
+          if (next > max) next = max
+        }
+        const curr = height()
+        if (curr === `${next}px`) return
+        setHeight(next + 'px')
+      }
     }
   }
 
@@ -145,7 +166,7 @@ const TextInput: Component<Props> = (props) => {
 
   createEffect(
     on(
-      () => [inputRef, value(), props.isMultiline, props.growup],
+      () => [inputRef, value(), props.isMultiline, props.growup, props.maxRows],
       () => {
         if (!inputRef) return
         if (props.isMultiline && !props.growup) {

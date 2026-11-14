@@ -2,10 +2,21 @@ import { Component, createMemo, createSignal } from 'solid-js'
 import { ImageContext } from './image-context'
 import { CustomSelect } from 'web/shared/CustomSelect'
 import TextInput from 'web/shared/TextInput'
+import { RefreshCcw } from 'lucide-solid'
 
-export const ImageModel: Component<{ ctx: ImageContext; prefix?: string }> = (props) => {
+export const ImageModel: Component<{
+  ctx: ImageContext
+  prefix?: string
+  onSelect?: (modelId: string) => void
+}> = (props) => {
   const [search, setSearch] = createSignal('')
+
   const selectModel = (id: string) => {
+    if (props.onSelect) {
+      props.onSelect(id)
+      return
+    }
+
     props.ctx.changeModel(id)
   }
 
@@ -56,14 +67,19 @@ export const ImageModel: Component<{ ctx: ImageContext; prefix?: string }> = (pr
       onSelect={(opt) => selectModel(opt.value)}
       selected={selected()}
       buttonLabel={(opt) => `${props.prefix ? props.prefix + ': ' : ''}${opt.label || 'Unknown'}`}
+      onOpen={() => props.ctx.refetchModels()}
       header={
-        <>
+        <div class="flex items-center gap-2">
           <TextInput
             value={search()}
             placeholder="Filter..."
             onChange={(ev) => setSearch(ev.currentTarget.value)}
+            parentClass="text-sm w-full"
           />
-        </>
+          <div class="icon-button" onClick={() => props.ctx.refetchModels()}>
+            <RefreshCcw size={20} />
+          </div>
+        </div>
       }
     />
   )

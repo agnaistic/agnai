@@ -40,6 +40,7 @@ export const usersApi = {
   novelLogin,
   saveProvider,
   deleteProvider,
+  deletePreset,
   deleteProviderKey,
   upsertImageSettings,
 }
@@ -111,6 +112,20 @@ async function saveProvider(provider: AppSchema.Provider) {
   const exists = providers.some((p) => p._id === upsert._id)
 
   user.providers = exists ? replace(provider._id, providers, upsert) : providers.concat(upsert)
+  await localApi.saveConfig(user)
+  return { result: user, error: undefined }
+}
+
+async function deletePreset(presetId: string) {
+  if (isLoggedIn()) {
+    const res = await api.method('delete', '/user/image-preset', { presetId })
+    return res
+  }
+
+  const user = await localApi.loadItem('config')
+  const providers = exclude(user.imagePresets || [], [presetId])
+
+  user.imagePresets = providers
   await localApi.saveConfig(user)
   return { result: user, error: undefined }
 }

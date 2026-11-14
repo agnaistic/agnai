@@ -393,6 +393,7 @@ export function getAppContext() {
     chatProfiles: chats.chatProfiles,
     handle: chars.impersonating?.name || users.profile?.handle || 'You',
     chatTree: msgs.graph.tree,
+    imgWaiting: msgs.imgWaiting,
     // attachments: msgs.attachments,
     // canUseAttachments: canAttachImage(detail?.conn, subModel()),
   }

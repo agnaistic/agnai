@@ -406,10 +406,17 @@ export const upsertImageSettings = handle(async ({ body, userId }) => {
 
   if (provider || preset) {
     const update = await store.users.upsertImageSettings(user, { provider, preset })
-    result.user = update
+    result.user = update.user
+    result.preset = update.preset
+    result.provider = update.provider
+
+    // We assume that the upserted-preset is the target's new preset id
+    if (body.target && update.preset) {
+      body.target.imagePresetId = update.preset._id
+    }
   }
 
-  if (!body.target) {
+  if (!body.target?.imagePresetId) {
     return result
   }
 
@@ -482,6 +489,18 @@ export const saveProvider = handle(async ({ userId, body }) => {
 
   const user = await store.users.saveUserProvider(userId, body as any)
   return user
+})
+
+export const deleteImagePreset = handle(async ({ userId, body }) => {
+  assertValid({ id: 'string?', presetId: 'string?' }, body)
+  const presetId = body.id || body.presetId
+
+  if (!presetId) {
+    throw errors.BadRequest
+  }
+
+  const next = await store.users.deleteImagePreset({ userId, presetId })
+  return next
 })
 
 export const deleteProvider = handle(async ({ userId, body }) => {

@@ -18,25 +18,26 @@ import { usePresetContext } from '/web/store/preset-context'
 import { useImageContext } from './image-context'
 import { SelectImageProvider } from './ImageProvider'
 import { ImageSamplers } from './ImageSamplers'
-import { ImagePreset } from './ImagePreset'
+import { CreateImagePresetModal, ImagePreset } from './ImagePreset'
 
 export const ImageSettingsModal = () => {
   const isChat = isChatPageMemo(true)
-  const [ctx] = useImageContext()
-  const settings = imageStore((s) => ({ showImgSettings: s.showImgSettings }))
 
+  const [ctx] = useImageContext()
   const [summaryPreset, presetSetters] = usePresetContext({ anonymous: true })
-  const [presetFooter, setPresetFooter] = createSignal<any>()
+
+  const settings = imageStore((s) => ({ showImgSettings: s.showImgSettings }))
   const presets = presetStore((s) => ({
     list: s.presets,
     options: s.presets.map((pre) => ({ label: pre.name, value: pre._id })),
   }))
-
   const entity = chatStore((s) => ({
     chat: s.details[s.lastChatId]?.chat,
     char: s.details[s.lastChatId]?.char,
   }))
 
+  const [newPreset, setNewPreset] = createSignal(false)
+  const [presetFooter, setPresetFooter] = createSignal<any>()
   const [editPreset, setEditPreset] = createSignal(false)
 
   const isAllEnabled = createMemo(() => Array.from(Object.values(ctx.defaults)).every((v) => !!v))
@@ -142,7 +143,7 @@ export const ImageSettingsModal = () => {
           </Show>
           <div class="flex gap-2">
             <ImagePreset ctx={ctx} prefix="Preset" />
-            <Button size="sm" onClick={() => ctx.newPreset()}>
+            <Button size="sm" onClick={() => setNewPreset(true)}>
               New +
             </Button>
           </div>
@@ -274,6 +275,8 @@ export const ImageSettingsModal = () => {
           footer={setPresetFooter}
         />
       </Modal>
+
+      <CreateImagePresetModal ctx={ctx} show={newPreset()} close={() => setNewPreset(false)} />
     </>
   )
 }

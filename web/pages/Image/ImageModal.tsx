@@ -13,7 +13,7 @@ import {
 } from '../../store'
 import { getAssetUrl, getJsonSchema } from '../../shared/util'
 import Button from '/web/shared/Button'
-import { useDraft, useImageCache } from '/web/shared/hooks'
+import { createKeyHook, useDraft, useImageCache } from '/web/shared/hooks'
 import TextInput from '/web/shared/TextInput'
 import {
   ArrowLeft,
@@ -307,6 +307,11 @@ const ImageCollectionModal: Component<{}> = (props) => {
     }
   }
 
+  createKeyHook((ev) => {
+    if (!ev.ctrlKey) return
+    if (ev.key === 'Enter') generateImage()
+  })
+
   const ImageNavigate = (
     <div class="flex items-center justify-center gap-2">
       <Button size="sm" disabled={reel.state.images.length <= 1} onClick={reel.prev}>
@@ -486,6 +491,9 @@ const PromptSettings: Component<{
           <TextInput
             placeholder="Caption Hint: What to focus on when generating the caption?"
             class="!text-sm"
+            isMultiline
+            maxRows={2}
+            textarea={{ rows: 2 }}
             onChange={(ev) =>
               promptStore.imageHint({
                 chatId: msgs.message.msg.chatId,

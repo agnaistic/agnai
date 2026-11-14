@@ -1,11 +1,21 @@
 import { Check, FullscreenIcon, X } from 'lucide-solid'
-import { Component, Show, JSX, createMemo, Switch, Match, createSignal } from 'solid-js'
+import {
+  Component,
+  Show,
+  JSX,
+  createMemo,
+  Switch,
+  Match,
+  createSignal,
+  onMount,
+  onCleanup,
+} from 'solid-js'
 import Button from './Button'
 import './modal.css'
 import Tabs, { TabHook } from './Tabs'
 import { markdown } from './markdown'
 import { Portal } from 'solid-js/web'
-import { useMobileDetect } from './hooks'
+import { createKeyHook, useMobileDetect } from './hooks'
 import { PartialEventEmitter } from './util'
 
 interface Props {
@@ -64,12 +74,14 @@ const Modal: Component<Props> = (props) => {
 
   const minHeight = createMemo(() => (props.fixedHeight ? 'modal-height-fixed' : ''))
 
-  const defaultSubmit = (ev: Event) => {
-    ev.preventDefault()
-  }
+  createKeyHook((ev) => {
+    if (!props.show || props.dismissable === false) return
+
+    if (ev.key === 'Escape') props.close()
+  })
 
   // on-screen readers require focusing on the dialog to work
-  const autofocus = (ref: HTMLFormElement) => setTimeout(() => ref.focus())
+  const autofocus = (ref: HTMLDivElement) => setTimeout(() => ref.focus())
 
   return (
     <Show when={props.show}>
@@ -82,9 +94,8 @@ const Modal: Component<Props> = (props) => {
             <div class="absolute inset-0 bg-black" />
           </div>
           <div class="modal-body">
-            <form
+            <div
               ref={autofocus}
-              onSubmit={props.onSubmit || defaultSubmit}
               class={`modal-container bg-900 z-50 w-[calc(100vw-0px)] overflow-hidden rounded-lg shadow-md shadow-black transition-all ${width()}`}
               classList={{ 'h-screen': props.maxHeight || full(), 'opacity-80': props.transparent }}
               role="dialog"
@@ -165,7 +176,7 @@ const Modal: Component<Props> = (props) => {
                   {props.footer}
                 </div>
               </Show>
-            </form>
+            </div>
           </div>
         </div>
       </Portal>

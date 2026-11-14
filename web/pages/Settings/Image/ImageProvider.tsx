@@ -44,6 +44,7 @@ export const SelectImageProvider: Component<{
   ctx: ImageContext
   editable?: boolean
   prefix?: string
+  onSelect?: (opt: CustomOption) => void
 }> = (props) => {
   const state = userStore((s) => ({ providers: s.user?.imageProviders || [] }))
   const [_current, setCurrent] = createSignal({ id: '', model: '' })
@@ -117,6 +118,15 @@ export const SelectImageProvider: Component<{
     // setOpen(true)
   }
 
+  const onSelect = (opt: CustomOption) => {
+    if (props.onSelect) {
+      props.onSelect(opt)
+      return
+    }
+
+    props.ctx.changeProvider(opt.value)
+  }
+
   const closeSub = createEmitter('close')
 
   const Selector = (
@@ -127,9 +137,7 @@ export const SelectImageProvider: Component<{
       options={providers()}
       selected={props.ctx.edit.preset.imageProviderId || ''}
       closeSub={closeSub.on}
-      onSelect={(ev) => {
-        props.ctx.changeProvider(ev.value)
-      }}
+      onSelect={onSelect}
       header={
         <Button size="sm" onClick={newProvider}>
           New +
@@ -141,7 +149,7 @@ export const SelectImageProvider: Component<{
   return (
     <>
       <Switch>
-        <Match when={!props.editable}>
+        <Match when={!props.editable || !!props.onSelect}>
           <div class="flex gap-2">{Selector}</div>
         </Match>
 

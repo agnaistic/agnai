@@ -323,7 +323,13 @@ export const userStore = createStore<UserState>(
         preset?: ImagePresetSettings
         provider?: ImageProviderSettings
       },
-      onSuccess?: () => void
+      onSuccess?: (result: {
+        user: Partial<AppSchema.User>
+        chat?: Partial<AppSchema.Chat>
+        character?: Partial<AppSchema.Character>
+        preset?: ImagePresetSettings
+        provider?: ImageProviderSettings
+      }) => void
     ) {
       const res = await usersApi.upsertImageSettings(update)
       if (res.result) {
@@ -331,7 +337,7 @@ export const userStore = createStore<UserState>(
         if (res.result.character) events.emit(EVENTS.charUpdated, res.result.character)
         if (res.result.user) yield { user: { ...prev.user, ...res.result.user } }
 
-        onSuccess?.()
+        onSuccess?.(res.result)
       }
     },
 
@@ -355,6 +361,16 @@ export const userStore = createStore<UserState>(
 
       onDone?.(false)
     },
+
+    async *deletePreset({ user }, presetId: string, onDone?: (success: boolean) => void) {
+      const res = await usersApi.deletePreset(presetId)
+      onDone?.(!!res.result)
+      if (res.result) {
+        toastStore.success('Image Preset deleted')
+        return { user: { ...user!, imagePresets: res.result.imagePresets } }
+      }
+    },
+
     async *deleteProvider({ user }, providerId: string, onDone?: (success: boolean) => void) {
       const res = await usersApi.deleteProvider(providerId)
       onDone?.(!!res.result)
@@ -363,6 +379,7 @@ export const userStore = createStore<UserState>(
         return { user: { ...user!, providers: res.result.providers } }
       }
     },
+
     async *stopSubscription({ billingLoading }) {
       if (billingLoading) return
       yield { billingLoading: true }

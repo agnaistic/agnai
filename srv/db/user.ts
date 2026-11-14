@@ -48,6 +48,25 @@ export async function ensureInitialUser() {
   logger.info(config.init, 'Created initial user')
 }
 
+export async function deleteImagePreset(opts: { userId: string; presetId: string }) {
+  await db('user').updateOne(
+    { _id: opts.userId },
+    {
+      $pull: {
+        imagePresets: { _id: opts.presetId },
+      },
+    },
+    {}
+  )
+
+  const next = await getUser(opts.userId)
+  if (!next) {
+    throw new Error('Invalid user')
+  }
+
+  return toSafeUser(next)
+}
+
 export async function deleteUserProvider(opts: { userId: string; providerId: string }) {
   await db('user').updateOne(
     { _id: opts.userId },
@@ -324,20 +343,26 @@ export async function upsertImageSettings(
 ) {
   const { preset, provider } = settings
 
-  const updates: Partial<AppSchema.User> = {}
+  const updates: {
+    user: Partial<AppSchema.User>
+    preset?: ImagePresetSettings
+    provider?: ImageProviderSettings
+  } = { user: {} }
 
   if (preset) {
     const presets = patchImagePresets(user, preset)
-    updates.imagePresets = presets
+    updates.preset = preset
+    updates.user.imagePresets = presets
   }
 
   if (provider) {
     const providers = patchImageProviders(user, provider)
-    updates.imageProviders = providers
+    updates.provider = provider
+    updates.user.imageProviders = providers
   }
 
-  await db('user').updateOne({ _id: user._id }, { $set: updates })
-  return { ...updates }
+  await db('user').updateOne({ _id: user._id }, { $set: updates.user })
+  return updates
 }
 
 function patchImagePresets(user: AppSchema.User, preset: ImagePresetSettings) {

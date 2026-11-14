@@ -10,7 +10,7 @@ export const ImageSamplers: Component<{ ctx: ImageContext }> = (props) => {
       <TextInput
         value={props.ctx.edit.preset.name}
         label="Preset Name"
-        placeholder={`Name of this image preset`}
+        placeholder={`Image Preset description...`}
         onChange={(ev) => props.ctx.updatePreset({ name: ev.currentTarget.value })}
       />
 

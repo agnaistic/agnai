@@ -3,11 +3,153 @@ import { Component, For, Show, createMemo, createSignal, onCleanup, onMount } fr
 import { useLocalStorage } from '/web/shared/hooks'
 
 /** Maximum number of recently used emojis to keep in local storage */
-const MAX_RECENT = 10
+const MAX_RECENT = 16
 const RECENT_KEY = 'recent-emojis'
 
 /** An emoji paired with a searchable name (used for the filter box) */
 export type EmojiEntry = [emoji: string, name: string]
+
+export const EmojiPicker: Component<{
+  /** Called when the user selects an emoji from the picker */
+  onSelect: (emoji: string) => void
+  class?: string
+}> = (props) => {
+  let container!: HTMLDivElement
+
+  const [open, setOpen] = createSignal(false)
+  const [search, setSearch] = createSignal('')
+
+  const [stored, setStored] = useLocalStorage<string[]>(RECENT_KEY, [])
+
+  const recent = createMemo(() => {
+    const list = stored()
+    if (!Array.isArray(list)) return [] as string[]
+    return list.filter((emoji) => typeof emoji === 'string' && emoji.length).slice(0, MAX_RECENT)
+  })
+
+  const remember = (emoji: string) => {
+    const exists = recent().some((em) => emoji === em)
+    if (exists) return
+
+    const next = [emoji, ...recent().filter((e) => e !== emoji)].slice(0, MAX_RECENT)
+    setStored(next)
+  }
+
+  const select = (emoji: string) => {
+    remember(emoji)
+    props.onSelect(emoji)
+  }
+
+  const query = createMemo(() => search().trim().toLowerCase())
+
+  const groups = createMemo(() => {
+    const q = query()
+    if (!q) return EMOJI_GROUPS
+
+    return EMOJI_GROUPS.map((group) => ({
+      label: group.label,
+      emojis: group.emojis.filter(([emoji, name]) => emoji === q || name.includes(q)),
+    })).filter((group) => group.emojis.length)
+  })
+
+  const onClickOutside = (ev: MouseEvent | TouchEvent) => {
+    if (!open()) return
+    if (container && ev.target instanceof Node && container.contains(ev.target)) return
+    setOpen(false)
+  }
+
+  const onKeyDown = (ev: KeyboardEvent) => {
+    if (!open()) return
+    if (ev.key === 'Escape') setOpen(false)
+  }
+
+  onMount(() => {
+    document.addEventListener('click', onClickOutside)
+    document.addEventListener('touchend', onClickOutside)
+    document.addEventListener('keydown', onKeyDown)
+  })
+
+  onCleanup(() => {
+    document.removeEventListener('click', onClickOutside)
+    document.removeEventListener('touchend', onClickOutside)
+    document.removeEventListener('keydown', onKeyDown)
+  })
+
+  return (
+    <div ref={container!} class={`relative flex h-[40px] items-center ${props.class || ''}`}>
+      <button
+        type="button"
+        aria-label="Open emoji picker"
+        class="icon-button flex h-full items-center px-2"
+        onClick={(ev) => {
+          ev.preventDefault()
+          setOpen(!open())
+        }}
+      >
+        <Smile size={18} />
+      </button>
+
+      <Show when={open()}>
+        <div class="bg-800 absolute bottom-full left-0 z-50 mb-1 w-[280px] rounded-md border-[1px] border-[var(--bg-600)] p-2 xs:w-[320px]">
+          <input
+            type="text"
+            class="focusable-field mb-1 w-full rounded-md px-2 py-1 text-sm"
+            placeholder="Search emojis..."
+            spellcheck={false}
+            value={search()}
+            onInput={(ev) => setSearch(ev.currentTarget.value)}
+          />
+
+          <Show when={recent().length && !query()}>
+            <div class="text-400 mb-0.5 px-1 text-xs">Recently used</div>
+            <div class="mb-1 grid grid-cols-8 gap-0.5">
+              <For each={recent()}>
+                {(emoji) => (
+                  <button
+                    type="button"
+                    class="cursor-pointer rounded-md p-1 text-lg leading-none hover:bg-[var(--bg-700)]"
+                    onClick={() => select(emoji)}
+                  >
+                    {emoji}
+                  </button>
+                )}
+              </For>
+            </div>
+          </Show>
+
+          <div class="max-h-56 overflow-y-auto">
+            <Show
+              when={groups().length}
+              fallback={<div class="text-400 p-2 text-sm">No emojis found</div>}
+            >
+              <For each={groups()}>
+                {(group) => (
+                  <>
+                    <div class="text-400 mb-0.5 px-1 text-xs">{group.label}</div>
+                    <div class="mb-1 grid grid-cols-8 gap-0.5">
+                      <For each={group.emojis}>
+                        {([emoji, name]) => (
+                          <button
+                            type="button"
+                            title={name}
+                            class="cursor-pointer rounded-md p-1 text-lg leading-none hover:bg-[var(--bg-700)]"
+                            onClick={() => select(emoji)}
+                          >
+                            {emoji}
+                          </button>
+                        )}
+                      </For>
+                    </div>
+                  </>
+                )}
+              </For>
+            </Show>
+          </div>
+        </div>
+      </Show>
+    </div>
+  )
+}
 
 export const EMOJI_GROUPS: { label: string; emojis: EmojiEntry[] }[] = [
   {
@@ -504,142 +646,3 @@ export const EMOJI_GROUPS: { label: string; emojis: EmojiEntry[] }[] = [
     ],
   },
 ]
-
-export const EmojiPicker: Component<{
-  /** Called when the user selects an emoji from the picker */
-  onSelect: (emoji: string) => void
-  class?: string
-}> = (props) => {
-  let container!: HTMLDivElement
-
-  const [open, setOpen] = createSignal(false)
-  const [search, setSearch] = createSignal('')
-
-  const [stored, setStored] = useLocalStorage<string[]>(RECENT_KEY, [])
-
-  const recent = createMemo(() => {
-    const list = stored()
-    if (!Array.isArray(list)) return [] as string[]
-    return list.filter((emoji) => typeof emoji === 'string' && emoji.length).slice(0, MAX_RECENT)
-  })
-
-  const remember = (emoji: string) => {
-    const next = [emoji, ...recent().filter((e) => e !== emoji)].slice(0, MAX_RECENT)
-    setStored(next)
-  }
-
-  const select = (emoji: string) => {
-    remember(emoji)
-    props.onSelect(emoji)
-  }
-
-  const query = createMemo(() => search().trim().toLowerCase())
-
-  const groups = createMemo(() => {
-    const q = query()
-    if (!q) return EMOJI_GROUPS
-
-    return EMOJI_GROUPS.map((group) => ({
-      label: group.label,
-      emojis: group.emojis.filter(([emoji, name]) => emoji === q || name.includes(q)),
-    })).filter((group) => group.emojis.length)
-  })
-
-  const onClickOutside = (ev: MouseEvent | TouchEvent) => {
-    if (!open()) return
-    if (container && ev.target instanceof Node && container.contains(ev.target)) return
-    setOpen(false)
-  }
-
-  const onKeyDown = (ev: KeyboardEvent) => {
-    if (!open()) return
-    if (ev.key === 'Escape') setOpen(false)
-  }
-
-  onMount(() => {
-    document.addEventListener('click', onClickOutside)
-    document.addEventListener('touchend', onClickOutside)
-    document.addEventListener('keydown', onKeyDown)
-  })
-
-  onCleanup(() => {
-    document.removeEventListener('click', onClickOutside)
-    document.removeEventListener('touchend', onClickOutside)
-    document.removeEventListener('keydown', onKeyDown)
-  })
-
-  return (
-    <div ref={container!} class={`relative flex h-[40px] items-center ${props.class || ''}`}>
-      <button
-        type="button"
-        aria-label="Open emoji picker"
-        class="icon-button flex h-full items-center px-2"
-        onClick={(ev) => {
-          ev.preventDefault()
-          setOpen(!open())
-        }}
-      >
-        <Smile size={18} />
-      </button>
-
-      <Show when={open()}>
-        <div class="bg-800 absolute bottom-full left-0 z-50 mb-1 w-[280px] rounded-md border-[1px] border-[var(--bg-600)] p-2 xs:w-[320px]">
-          <input
-            type="text"
-            class="focusable-field mb-1 w-full rounded-md px-2 py-1 text-sm"
-            placeholder="Search emojis..."
-            spellcheck={false}
-            value={search()}
-            onInput={(ev) => setSearch(ev.currentTarget.value)}
-          />
-
-          <Show when={recent().length && !query()}>
-            <div class="text-400 mb-0.5 px-1 text-xs">Recently used</div>
-            <div class="mb-1 grid grid-cols-8 gap-0.5">
-              <For each={recent()}>
-                {(emoji) => (
-                  <button
-                    type="button"
-                    class="cursor-pointer rounded-md p-1 text-lg leading-none hover:bg-[var(--bg-700)]"
-                    onClick={() => select(emoji)}
-                  >
-                    {emoji}
-                  </button>
-                )}
-              </For>
-            </div>
-          </Show>
-
-          <div class="max-h-56 overflow-y-auto">
-            <Show
-              when={groups().length}
-              fallback={<div class="text-400 p-2 text-sm">No emojis found</div>}
-            >
-              <For each={groups()}>
-                {(group) => (
-                  <>
-                    <div class="text-400 mb-0.5 px-1 text-xs">{group.label}</div>
-                    <div class="mb-1 grid grid-cols-8 gap-0.5">
-                      <For each={group.emojis}>
-                        {([emoji, name]) => (
-                          <button
-                            type="button"
-                            title={name}
-                            class="cursor-pointer rounded-md p-1 text-lg leading-none hover:bg-[var(--bg-700)]"
-                            onClick={() => select(emoji)}
-                          >
-                            {emoji}
-                          </button>
-                        )}
-                      </For>
-                    </div>
-                  </>
-                )}
-              </For>
-            </Show>
-          </div>
-        </div>
-      </Show>
-    </div>
-  )
-}

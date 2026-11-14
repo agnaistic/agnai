@@ -359,8 +359,16 @@ function initImageContext() {
   }
 
   const changeProvider = async (providerId: string) => {
-    editPreset({ imageProviderId: providerId })
-    await changeImageProvider(tab.current(), entity, providerId)
+    if (!current.preset._id) {
+      // Legacy, we should actually always have a preset Id. We should never reach here
+      await changeImageProvider(tab.current(), entity, providerId)
+    } else {
+      const update: ImagePresetSettings = { ...current.preset, imageProviderId: providerId }
+      await userStore.upsertImageSettings({ preset: update })
+      setCurrent('preset', 'imageProviderId', providerId)
+      setEdit('preset', 'imageProviderId', providerId)
+    }
+
     refetchModels()
   }
 
@@ -447,8 +455,19 @@ function initImageContext() {
     cancelNewPreset: () => {
       setEdit({ preset: { ...current.preset } })
     },
-    newPreset: () => {
-      setEdit({ preset: initPreset({ imageProviderId: edit.provider._id }) })
+    createNewPreset: async (preset: { name: string; providerId: string; modelId: string }) => {
+      const init = initPreset({ name: preset.name, imageProviderId: preset.providerId })
+      if (preset.modelId && preset.providerId) {
+        init.models = { [preset.providerId]: preset.modelId }
+      }
+
+      const target = getImageTarget(tab.current(), entity)
+      await userStore.upsertImageSettings({ target, preset: init }, (result) => {
+        if (!result?.preset) return
+        setEdit({ preset: result.preset })
+        setCurrent({ preset: result.preset })
+      })
+      toastStore.success('Image Preset created')
     },
     newProvider: () => {
       setEdit({ provider: initProvider() })

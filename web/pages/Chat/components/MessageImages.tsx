@@ -85,7 +85,12 @@ export const MessageImages: Component<{
           )}
         </For>
 
-        <Show when={props.ctx.imgWaiting?.messageId === props.msg._id}>
+        <Show
+          when={
+            props.ctx.imgWaiting?.messageId === props.msg._id ||
+            props.ctx.imgPrompt?.messageId === props.msg._id
+          }
+        >
           <img
             class="mt-2 max-h-12 max-w-[unset] rounded-md sm:max-h-16"
             classList={{ hidden: !props.ctx.imgPreview }}
