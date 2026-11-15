@@ -201,7 +201,7 @@ export const ManageProvider: Component<{
   const label = createMemo(() => {
     const id = provider()
     if (!id) {
-      return 'Provider: Choose a Provider'
+      return 'Provider: Choose a Provider Type'
     }
     const detail = getSafeProviderDetail(id)
     return `Provider: ${detail?.detail?.name || id}`

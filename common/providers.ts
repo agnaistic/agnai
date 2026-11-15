@@ -147,7 +147,7 @@ export const KNOWN_SELF_HOST: Record<string, ProviderDefinition> = {
 
 export const CUSTOM_PROVIDERS: Record<string, ProviderDefinition> = {
   'openai-chatv2': {
-    name: 'OpenAI Compat',
+    name: 'OpenAI Compatible',
     formats: [
       {
         type: 'format',

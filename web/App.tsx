@@ -70,6 +70,10 @@ const App: Component = () => {
       <Route path={['/info', '/']} component={HomePage} />
       <Route path="/presets/:id" component={lazy(() => import('./pages/GenerationPresets'))} />
       <Route
+        path="/providers"
+        component={lazy(() => import('./pages/GenerationPresets/PresetList'))}
+      />
+      <Route
         path="/presets"
         component={lazy(() => import('./pages/GenerationPresets/PresetList'))}
       />

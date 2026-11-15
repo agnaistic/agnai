@@ -407,10 +407,6 @@ export async function parseTemplate(
   replaceSections(sections, /\n\n+/g, '\n\n')
   await addCount('final', output)
 
-  if (sizes.length > 1) {
-    console.log(`>>>\nContext:\n${sizes.join('\n')}\n<<<\n`)
-  }
-
   const length = await opts.limit?.encoder?.(output)
 
   const historyMsgIndex = flags.messages.findIndex(

@@ -540,6 +540,7 @@ async function handlePostStreamResponse(input: {
 
   if (canCreate) {
     opts.state = 'complete'
+
     await msgsApi.createMessage({
       kind: opts.kind?.startsWith('send-event') ? opts.kind : 'send-noreply',
       chatId,

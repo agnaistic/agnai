@@ -17,7 +17,7 @@ import { LogProbs } from './LogProbs'
 import Modal from '/web/shared/Modal'
 import { cleanPrompt } from '/common/util'
 import { AppSchema } from '/common/types'
-import { SquareArrowOutUpRight, WandSparkles } from 'lucide-solid'
+import { SquareArrowOutUpRight, WandSparkles, X } from 'lucide-solid'
 import { RelativeSpinner } from '/web/shared/Loading'
 import { getMessageImagePrompt } from '/web/shared/hooks'
 import { getMessageDepth } from '/common/chat'
@@ -237,10 +237,13 @@ export const MessageImagePrompt: Component<{
   }
 
   return (
-    <Card border class="flex flex-col gap-3">
+    <Card border class="relative flex flex-col gap-3">
+      <div class="icon-button absolute right-1 top-1" onClick={props.close}>
+        <X size={20} />
+      </div>
       <TextInput
         helperText="Caption Hint: What to focus on when generating the caption?"
-        placeholder="Caption Hint: What to focus on?"
+        placeholder="Hint..."
         class="!text-sm"
         onChange={(ev) =>
           promptStore.imageHint({ chatId: props.msg.chatId, text: ev.currentTarget.value })
@@ -248,68 +251,72 @@ export const MessageImagePrompt: Component<{
         value={persist.imageHint}
       />
 
-      <TextInput
-        class="max-h-[160px]"
-        helperText={
-          <div class="mb-0.5 flex flex-col gap-0.5">
-            <div>Image Prompt</div>
-
-            <div class="flex items-center gap-1.5">
-              <Button
-                size="pill"
-                schema="secondary"
-                onClick={updateImagePrompt}
-                disabled={prompt() === props.msg.imagePrompt}
-              >
-                Save
-              </Button>
-
-              <Button
-                size="pill"
-                schema="secondary"
-                onClick={generatePrompt}
-                disabled={ctx.imgPrompt && !ctx.imgPrompt.signal}
-              >
-                <Show
-                  when={ctx.imgPrompt}
-                  fallback={
-                    <>
-                      <WandSparkles size={16} /> Prompt
-                    </>
-                  }
-                >
-                  <RelativeSpinner size={8} />
-                  Interrupt
-                </Show>
-              </Button>
-              <Button
-                size="pill"
-                schema="secondary"
-                onClick={() => {
-                  setPrompt(cleanPrompt(prompt()))
-                }}
-              >
-                Clean
-              </Button>
-              <div
-                class="icon-button flex items-center gap-0.5"
-                onClick={() => {
-                  imageStore.showMessageImages({ id: props.msg._id, position: 0 })
-                  props.close()
-                }}
-              >
-                Editor
-                <SquareArrowOutUpRight size={16} />
-              </div>
-              {props.children}
+      <div class="flex flex-col gap-0">
+        <TextInput
+          class="max-h-[160px]"
+          helperText={
+            <div class="mb-0.5 flex flex-col gap-0.5">
+              <div>Image Prompt</div>
             </div>
+          }
+          parentClass="text-sm"
+          isMultiline
+          value={prompt()}
+          onChange={(ev) => receivePrompt(ev.currentTarget.value)}
+        />
+        <div class="flex w-full items-start justify-between gap-1.5">
+          <div class="flex gap-1.5">
+            <Button
+              size="pill"
+              schema="secondary"
+              onClick={() => {
+                setPrompt(cleanPrompt(prompt()))
+              }}
+            >
+              Clean
+            </Button>
+
+            <Button
+              size="pill"
+              schema="secondary"
+              onClick={generatePrompt}
+              disabled={ctx.imgPrompt && !ctx.imgPrompt.signal}
+            >
+              <Show
+                when={ctx.imgPrompt}
+                fallback={
+                  <>
+                    <WandSparkles size={16} /> Prompt
+                  </>
+                }
+              >
+                <RelativeSpinner size={8} />
+                Interrupt
+              </Show>
+            </Button>
+            <Button
+              size="pill"
+              schema="secondary"
+              onClick={updateImagePrompt}
+              disabled={prompt() === props.msg.imagePrompt}
+            >
+              Save
+            </Button>
           </div>
-        }
-        parentClass="text-sm"
-        isMultiline
-        value={prompt()}
-        onChange={(ev) => receivePrompt(ev.currentTarget.value)}
-      />
+
+          <div
+            class="icon-button flex items-center gap-0.5"
+            onClick={() => {
+              imageStore.showMessageImages({ id: props.msg._id, position: 0 })
+              props.close()
+            }}
+          >
+            Editor
+            <SquareArrowOutUpRight size={16} />
+          </div>
+          {props.children}
+        </div>
+      </div>
     </Card>
   )
 }

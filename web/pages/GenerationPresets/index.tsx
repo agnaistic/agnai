@@ -19,10 +19,11 @@ import { usePresetContext } from '/web/store/preset-context'
 
 export const GenerationPresetsPage: Component = () => {
   const { updateTitle } = setComponentPageTitle('Preset')
+
   const params = useParams()
   const [query] = useSearchParams()
-
   const nav = useNavigate()
+
   const [selecting, setSelecting] = createSignal(false)
   const [deleting, setDeleting] = createSignal(false)
   const [store, setters] = usePresetContext({ anonymous: true })

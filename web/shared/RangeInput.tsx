@@ -191,11 +191,6 @@ export const InlineRangeInput: Component<{
     on(
       () => props.value,
       () => {
-        console.log(
-          `initing [${
-            props.fieldName || 'inline-range'
-          }] input: ${!!input} | inited: ${!!inited()} | value: ${props.value}`
-        )
         if (inited()) return
         if (props.value === undefined) return
         if (!input) return

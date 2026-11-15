@@ -14,7 +14,6 @@ import {
   X,
   Zap,
   Split,
-  
   MoreHorizontal,
   ImagePlus,
   Eye,
@@ -895,7 +894,6 @@ const MessageOptions: Component<{
           msgStore.createImage({
             sourceMsgId: msg._id,
             onImage: () => {
-              console.log('we got called, yay!')
               imageStore.showMessageImages({ id: msg._id, position: Infinity })
             },
           }),
