@@ -116,7 +116,7 @@ function initImageContext() {
 
   const [models, { refetch: refetchModels }] = createResource(
     async () => {
-      const list = await retrieveImageModels(edit.provider)
+      const list = await retrieveImageModels(edit.provider).catch(() => [])
       return list
     },
     { initialValue: [{ label: 'Loading...', value: '' }] }

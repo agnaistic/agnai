@@ -1,16 +1,14 @@
-import { Component, createMemo, createSignal } from 'solid-js'
+import { Component, createMemo } from 'solid-js'
 import { ImageContext } from './image-context'
 import { CustomSelect } from 'web/shared/CustomSelect'
-import TextInput from 'web/shared/TextInput'
 import { RefreshCcw } from 'lucide-solid'
+import Button from 'web/shared/Button'
 
 export const ImageModel: Component<{
   ctx: ImageContext
   prefix?: string
   onSelect?: (modelId: string) => void
 }> = (props) => {
-  const [search, setSearch] = createSignal('')
-
   const selectModel = (id: string) => {
     if (props.onSelect) {
       props.onSelect(id)
@@ -28,36 +26,25 @@ export const ImageModel: Component<{
     return providerModel
   })
 
-  const selected = createMemo(() => {
+  const options = createMemo(() => {
     const list = props.ctx.models() || []
-    const match = list.find((l) => l.value === modelId())
+    const opts = [{ label: 'None selected', value: '' }]
+
+    const model = props.ctx.current.preset.models?.[props.ctx.current.preset.imageProviderId]
+    if (!list.length && model) {
+      opts.push({ label: model, value: model })
+    }
+
+    return opts.concat(list)
+  })
+
+  const selected = createMemo(() => {
+    const match = options().find((l) => l.value === modelId())
 
     if (!match) {
       return { label: 'None', value: '' }
     }
     return match
-  })
-
-  const options = createMemo(() => {
-    const list = props.ctx.models() || []
-    const opts = [{ label: 'None selected', value: '' }].concat(list)
-
-    const filter = search()
-    if (!filter.trim()) return opts
-
-    const split = filter.split(' ').map((w) => w.trim().toLowerCase())
-
-    const filtered = opts.filter((opt) => {
-      if (!opt.value) return opt
-
-      for (const word of split) {
-        if (!opt.value.includes(word)) return false
-      }
-
-      return true
-    })
-
-    return filtered
   })
 
   return (
@@ -68,17 +55,18 @@ export const ImageModel: Component<{
       selected={selected()}
       buttonLabel={(opt) => `${props.prefix ? props.prefix + ': ' : ''}${opt.label || 'Unknown'}`}
       onOpen={() => props.ctx.refetchModels()}
+      autoSearch
       header={
         <div class="flex items-center gap-2">
-          <TextInput
+          {/* <TextInput
             value={search()}
             placeholder="Filter..."
             onChange={(ev) => setSearch(ev.currentTarget.value)}
             parentClass="text-sm w-full"
-          />
-          <div class="icon-button" onClick={() => props.ctx.refetchModels()}>
-            <RefreshCcw size={20} />
-          </div>
+          /> */}
+          <Button size="sm" onClick={() => props.ctx.refetchModels()}>
+            Refresh <RefreshCcw size={12} />
+          </Button>
         </div>
       }
     />

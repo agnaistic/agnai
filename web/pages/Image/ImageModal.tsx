@@ -137,11 +137,6 @@ const ImageCollectionModal: Component<{}> = (props) => {
     return id
   })
 
-  const show = createMemo(() => {
-    const next = store.src?.id !== undefined && store.src.type !== 'url'
-    return next
-  })
-
   const imageSettings = useCurrentChatImageSettings()
 
   const [state, update] = createStore<ImageState>({
@@ -390,7 +385,7 @@ const ImageCollectionModal: Component<{}> = (props) => {
   return (
     <Modal
       debug="img-col"
-      show={show()}
+      show
       close={close}
       maxWidth="full"
       fixedHeight
