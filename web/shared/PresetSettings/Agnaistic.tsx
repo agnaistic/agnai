@@ -14,6 +14,7 @@ import { AppSchema } from '/common/types'
 import { Pill } from '../Card'
 import { RootModal } from '../Modal'
 import { PresetFuncs, ContextPreset } from '/web/store/preset-context'
+import Button from '../Button'
 
 const MODEL_NAMES = new Map<string, string>()
 
@@ -69,7 +70,7 @@ export const AgnaisticSettings: Component<{
     }
 
     if (!opt) {
-      return <div>None</div>
+      return 'None'
     }
 
     return (
@@ -360,7 +361,7 @@ const ModelLabel: Component<{
   })
 
   return (
-    <div class="flex flex-col items-start">
+    <Button class="flex flex-col items-start" size="sm">
       <div class="flex items-center justify-between gap-1">
         <div class="min-w-fit font-bold">{props.sub.name}</div>
         <div class="text-700 flex flex-wrap gap-1 text-xs">
@@ -380,6 +381,6 @@ const ModelLabel: Component<{
       <Show when={props.disabled}>
         <div class="text-700 text-xs">Requires {props.requires}</div>
       </Show>
-    </div>
+    </Button>
   )
 }

@@ -297,7 +297,7 @@ export const ManageProvider: Component<{
         </div>
       }
     >
-      <div class="text-md">Provide connection details to use an external service</div>
+      <div class="text-md">Connection Details for Third-party Services</div>
       <div class="flex flex-col gap-2">
         <CustomSelect
           categories={categories()}
