@@ -1,15 +1,13 @@
 import * as horde from '../../../common/horde-gen'
-import { getMaxImageContext } from '../../../common/image-prompt'
 import { api } from '../api'
 import { getStore } from '../create'
-import { decode, encode } from '/common/tokenize'
 import { cleanPrompt, neat, wait } from '/common/util'
 import { localApi } from './storage'
 import { localEmit, subscribe } from '../socket'
 import { getAssetUrl, Require } from '/web/shared/util'
 import { v4 } from 'uuid'
 import { md5 } from './md5'
-import { getImagePromptEntities, getPromptEntities } from './common'
+import { getImagePromptEntities } from './common'
 import { inferenceSignal } from './inference'
 import { TickHandler } from '/common/prompt'
 import { extractReasoning } from '/common/reasoning'
@@ -217,7 +215,6 @@ export async function generateImage(
   opts: Require<GenerateOpts, 'messageId'>,
   callbacks?: { onSummary?: (summary: string) => void; onTick?: TickHandler }
 ) {
-  const entities = getPromptEntities({ messageId: opts.messageId })
   const result = opts.prompt
     ? await localApi.result({ response: opts.prompt })
     : await generateImagePrompt({
@@ -234,12 +231,12 @@ export async function generateImage(
 
   callbacks?.onSummary?.(summary)
 
-  const max = getMaxImageContext(entities.user)
-  const trimmed = await encode(summary)
-    .then((tokens) => tokens.slice(0, max))
-    .then(decode)
+  if (!summary.trim()) {
+    return localApi.error(`Image captioned failed to generate: Empty response received`)
+  }
 
-  const req = await createImageRequest({ prompt: trimmed, messageId: opts.messageId })
+
+  const req = await createImageRequest({ prompt: summary, messageId: opts.messageId })
   const requestId = v4()
 
   try {
