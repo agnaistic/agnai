@@ -235,7 +235,6 @@ export async function generateImage(
     return localApi.error(`Image captioned failed to generate: Empty response received`)
   }
 
-
   const req = await createImageRequest({ prompt: summary, messageId: opts.messageId })
   const requestId = v4()
 

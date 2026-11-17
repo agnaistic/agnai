@@ -134,9 +134,7 @@ const InputBar: Component<{
   // The ":query" text is typed directly in the message input; the panel tracks the
   // ":token" next to the caret. null = inactive. The caret can move inside the token
   // without reindexing, so arrow navigation stays stable.
-  const [emojiToken, setEmojiToken] = createSignal<{ start: number; query: string } | null>(
-    null
-  )
+  const [emojiToken, setEmojiToken] = createSignal<{ start: number; query: string } | null>(null)
   const [emojiIndex, setEmojiIndex] = createSignal(0)
   // Start offset of a token the user explicitly dismissed with Escape
   const [emojiDismissedAt, setEmojiDismissedAt] = createSignal(-1)
