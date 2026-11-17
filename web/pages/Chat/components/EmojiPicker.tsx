@@ -88,7 +88,10 @@ export const EmojiPicker: Component<{
         class="icon-button flex h-full items-center px-2"
         onClick={(ev) => {
           ev.preventDefault()
-          setOpen(!open())
+          const next = !open()
+          // Always start with a fresh search when the picker opens
+          if (next) setSearch('')
+          setOpen(next)
         }}
       >
         <Smile size={18} />
@@ -154,6 +157,17 @@ export const EmojiPicker: Component<{
       </Show>
     </div>
   )
+}
+
+/**
+ * Flat search across all emoji groups, used by the ":" quick emoji search.
+ * Returns at most `max` matches.
+ */
+export function searchEmojis(query: string, max: number): EmojiEntry[] {
+  const q = query.trim().toLowerCase()
+  const all = EMOJI_GROUPS.flatMap((group) => group.emojis)
+  if (!q) return all.slice(0, max)
+  return all.filter(([emoji, name]) => name.includes(q) || emoji === q).slice(0, max)
 }
 
 export const EMOJI_GROUPS: { label: string; emojis: EmojiEntry[] }[] = [
@@ -360,6 +374,9 @@ export const EMOJI_GROUPS: { label: string; emojis: EmojiEntry[] }[] = [
       ['🐮', 'cow'],
       ['🐷', 'pig'],
       ['🐸', 'frog'],
+      ['🙈', 'cover eyes'],
+      ['🙉', 'cover ears'],
+      ['🙊', 'cover mouth'],
       ['🐵', 'monkey'],
       ['🐔', 'chicken'],
       ['🐧', 'penguin'],
