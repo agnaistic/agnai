@@ -793,6 +793,6 @@ export async function migrateImageSettings(
   entity.imagePresetId = preset._id
   entity.imageProviderId = undefined
   entity.imageSettings = undefined
-  
+
   return preset
 }
