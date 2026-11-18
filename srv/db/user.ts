@@ -720,3 +720,79 @@ export function toSafeUser(user: AppSchema.User, seed?: string) {
 
   return user
 }
+
+export async function migrateImageSettings(
+  user: AppSchema.User,
+  type: 'chat' | 'character',
+  entity: AppSchema.Chat | AppSchema.Character
+) {
+  if (!user) return
+  if (!entity) return
+  if (!entity.imageSettings) return
+
+  const providerId = entity.imageProviderId || user.imageProviderId
+  const provider = user.imageProviders?.find((p) => p._id === providerId)
+
+  const cfg = entity.imageSettings
+  const preset: ImagePresetSettings = {
+    _id: v4(),
+    imageProviderId: providerId || '',
+    cfg: cfg.cfg,
+    width: cfg.width,
+    height: cfg.height,
+    steps: cfg.steps,
+    negative: cfg.negative,
+    suffix: cfg.suffix,
+    prefix: cfg.prefix,
+    summariseChat: true,
+    summaryPrompt: cfg.summaryPrompt,
+    autofix: cfg.autofix ?? true,
+    name: `${type === 'character' ? entity.name : 'Migrated Chat'} preset`,
+    sampler: cfg.sampler,
+    scheduler: cfg.scheduler,
+    seed: cfg.seed ?? 0,
+    models: {},
+    clipSkip: cfg.clipSkip ?? 0,
+    summaryPresetId: cfg.summaryPresetId,
+  }
+
+  if (provider) {
+    preset.models![provider._id] = provider.model
+  }
+
+  const presets = user.imagePresets || []
+  presets.push(preset)
+
+  await db('user').updateOne({ _id: user._id }, { $set: { imagePresets: presets } })
+
+  if (type === 'chat') {
+    await db('chat').updateOne(
+      { _id: entity._id },
+      {
+        $set: {
+          imagePresetId: preset._id,
+          imageSettings: null as any,
+          imageProviderId: null as any,
+        },
+      }
+    )
+  } else {
+    await db('character').updateOne(
+      { _id: entity._id },
+      {
+        $set: {
+          imagePresetId: preset._id,
+          imageSettings: null as any,
+          imageProviderId: null as any,
+        },
+      }
+    )
+  }
+
+  user.imagePresets = presets
+  entity.imagePresetId = preset._id
+  entity.imageProviderId = undefined
+  entity.imageSettings = undefined
+  
+  return preset
+}

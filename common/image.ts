@@ -166,6 +166,30 @@ export function getImageSettings(
     return { preset: undefined, provider: IMG_PROVIDER_DEFAULTS.horde, src }
   }
 
+  /**
+   * Attempt to gracefully handle un-migrated chats and characters
+   */
+  if (!src.presetId && src.settings) {
+    let provider = user.imageProviders?.find(
+      (p) => p._id === src.providerId || p._id === src.settings?.imageProviderId
+    )
+
+    if (!provider) {
+      provider =
+        user.imageProviders?.find((p) => p._id === user.imageProviderId) || user.imageProviders?.[0]
+    }
+
+    if (!provider) {
+      provider = IMG_PROVIDER_DEFAULTS.horde
+    }
+
+    return {
+      preset: src.settings,
+      provider: deepClone(provider),
+      src,
+    }
+  }
+
   let preset = user.imagePresets?.find((prv) => prv._id === src.presetId)
 
   // Fallback to global settings if configured
@@ -184,6 +208,7 @@ export function getImageSettings(
 
   const provider = deepClone(
     user.imageProviders?.find((prov) => prov._id === preset.imageProviderId) ||
+      user.imageProviders?.[0] ||
       IMG_PROVIDER_DEFAULTS.horde
   )
 
@@ -207,26 +232,29 @@ function getImageSource(
         providerId: chat?.imageProviderId || (chat?.imageSettings as any)?.type,
         presetId: chat?.imagePresetId,
         settings: chat?.imageSettings,
+        entityId: chat?._id,
       }
     }
 
     case 'main-character':
     case 'last-character': {
       return {
-        source: 'character',
+        source: 'character' as const,
         providerId: char?.imageProviderId || (char?.imageSettings as any)?.type,
         presetId: char?.imagePresetId,
         settings: char?.imageSettings,
+        entityId: char?._id,
       }
     }
 
     case 'settings':
     default: {
       return {
-        source: 'settings',
+        source: 'settings' as const,
         presetId: user?.imagePresetId,
         providerId: user?.imageProviderId,
         settings: null,
+        entityId: '',
       }
     }
   }

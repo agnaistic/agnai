@@ -832,6 +832,7 @@ function addImagePreset(user: AppSchema.User) {
     summaryPrompt: legacy.summaryPrompt || '',
     summariseChat: true,
     summaryPresetId: legacy.summaryPresetId || '',
+    models: {},
   }
 
   user.imagePresetId = preset._id
@@ -840,6 +841,11 @@ function addImagePreset(user: AppSchema.User) {
   user.imagePresets = presets
 
   delete user.images
+
+  for (const prv of user.imageProviders || []) {
+    preset.models![prv._id] = prv.model
+  }
+
   return { preset, user }
 }
 

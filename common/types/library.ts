@@ -58,9 +58,11 @@ export interface Character extends BaseCharacter {
   characterVersion?: string
   prefill?: string
 
-  imageSettings?: ImagePresetSettings
   imageProviderId?: string
   imagePresetId?: string
+
+  /** Deprecated in favor if image presets */
+  imageSettings?: ImagePresetSettings
 }
 
 export interface LibraryCharacter extends Omit<Character, 'kind' | 'tags'> {

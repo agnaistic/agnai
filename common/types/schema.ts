@@ -303,9 +303,10 @@ export namespace AppSchema {
     treeLeafId?: string
 
     imageSource?: ImageSettingsSource
-    imageSettings?: ImagePresetSettings
     imageProviderId?: string
     imagePresetId?: string
+    /** Deprecated in favor if image presets */
+    imageSettings?: ImagePresetSettings
 
     background?: string
     localSettings?: { bgFormat?: 'contain' | 'cover' | 'auto' }

@@ -12,7 +12,7 @@ export const getCharacterChats = handle(async (req) => {
   return { character, chats: list }
 })
 
-export const getChatDetail = handle(async ({ userId, params, query, user }) => {
+export const getChatDetail = handle(async ({ userId, params, query, user, authed }) => {
   const id = params.id
   const detail = await store.chats.getChat(id, query.impersonating as string)
 
@@ -21,6 +21,17 @@ export const getChatDetail = handle(async ({ userId, params, query, user }) => {
   const canView = user?.admin ? true : await store.chats.canViewChat(userId, detail.chat)
   if (!canView) {
     throw errors.Forbidden
+  }
+
+  /** Progessively migrate all chat and character image settings to image presets */
+  if (detail.chat.userId === userId) {
+    await store.users.migrateImageSettings(authed!, 'chat', detail.chat)
+
+    for (const char of detail.characters) {
+      if (!char.imageSettings) continue
+      if (char.userId !== userId) continue
+      await store.users.migrateImageSettings(authed!, 'character', char)
+    }
   }
 
   const [members, active] = await Promise.all([
