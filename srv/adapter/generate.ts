@@ -9,7 +9,6 @@ import { buildPromptPlaceholders, JsonField, simplifyPreset } from '../../common
 import { configure } from '../../common/horde-gen'
 import needle from 'needle'
 import { HORDE_GUEST_KEY } from '../api/horde'
-import { getTokenCounter } from '../tokenize'
 import { getAppConfig } from '../api/settings'
 import { getHandlers, getSubscriptionPreset } from './agnaistic'
 import { deepClone, getSubscriptionModelLimits, parseStops, tryParse } from '/common/util'
@@ -49,7 +48,7 @@ export type InferenceRequest = {
   chatId?: string
   requestId?: string
   prompt: string
-  messages?: Array<any>
+  messages: Array<any>
   guest?: string
   user: AppSchema.User
   settings?: Partial<AppSchema.UserGenPreset>
@@ -308,7 +307,7 @@ async function getRequestPreset(opts: InferenceRequest) {
       throw new StatusError(`[2] Could not locate preset for inference request`, 402)
     const members = await store.chats.getActiveMembers(opts.chatId)
 
-    const isMember = members.some((id) => id === opts.user._id)
+    const isMember = opts.user.admin || members.some((id) => id === opts.user._id)
     if (!isMember) throw new StatusError(`[3] Could not locate preset for inference request`, 402)
   }
 
@@ -368,8 +367,6 @@ export async function createChatStream(
    */
 
   if (!guestSocketId) {
-    const { adapter, model } = getAdapter(opts.chat, opts.user, opts.settings)
-    const encoder = getTokenCounter(adapter, model)
     const nextSettings = simplifyPreset(opts.user, opts.settings, subscription?.preset)
     opts.settings = nextSettings
     opts.parts = await buildPromptPlaceholders(
@@ -390,8 +387,7 @@ export async function createChatStream(
         resolvedScenario: opts.resolvedScenario || '',
         props: opts.parts.props,
       },
-      opts.lines,
-      encoder
+      opts.lines
     )
   }
 
@@ -413,8 +409,7 @@ export async function createChatStream(
       .filter((pb) => !!pb.seq)
   }
 
-  const { adapter, isThirdParty, model } = getAdapter(opts.chat, opts.user, opts.settings)
-  const encoder = getTokenCounter(adapter, model, subscription?.preset)
+  const { adapter, isThirdParty } = getAdapter(opts.chat, opts.user, opts.settings)
   const handler = getHandlers({ user: opts.user, settings: opts.settings })
 
   /**
@@ -422,7 +417,7 @@ export async function createChatStream(
    * We never need to use the users context length here as the subscription should contain the maximum possible context length.
    */
 
-  const { messages, assembled } = await toChatMessages(opts, encoder)
+  const { messages, assembled } = await toChatMessages(opts)
 
   if (assembled.sections.warnings.noHistory) {
     throw new StatusError(
@@ -444,19 +439,6 @@ export async function createChatStream(
       400
     )
   }
-
-  const size = encoder(
-    [
-      opts.parts.sampleChat,
-      opts.parts.scenario,
-      opts.parts.memory,
-      opts.parts.systemPrompt,
-      opts.parts.ujb,
-      opts.parts.persona,
-    ]
-      .filter((l) => !!l)
-      .join('\n')
-  )
 
   if (opts.impersonate) {
     Object.assign(opts.characters, { impersonated: opts.impersonate })
@@ -491,7 +473,6 @@ export async function createChatStream(
     jsonSchema: jsonSchema || opts.jsonSchema,
     reschemaPrompt: opts.reschemaPrompt,
     subscription,
-    encoder,
     jsonValues: opts.jsonValues,
     contextSize: assembled.length,
     signal: opts.signal,
@@ -504,7 +485,6 @@ export async function createChatStream(
     adapter,
     settings: gen,
     user: opts.user,
-    size,
     length: assembled.length,
     json: !!jsonSchema || !!opts.jsonSchema,
     conn,

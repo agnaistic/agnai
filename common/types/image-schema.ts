@@ -1,34 +1,38 @@
 export type ImageType = NovelSettings | HordeSettings | SDSettings | AgnaiSettings | SwarmSettings
 
 export type BaseImageSettings = {
-  presetId?: string
-  type: ImageProviderType
+  sampler: string
+  scheduler: string
 
-  summaryPresetId?: string
-  summaryPrompt?: string
-  summariseChat?: boolean
+  steps: number
+  cfg: number
+  seed: number
+  prefix: string
+  suffix: string
 
-  prefix?: string
-  suffix?: string
-  negative?: string
+  negative: string
+  width: number
+  height: number
+  clipSkip?: number
 
   autofix?: boolean
-  template?: string
-  clipSkip?: number
-  width: number
-  height: number
-  steps: number
-  cfg: number
-  seed?: number
+
+  summaryPresetId?: string
+  summariseChat?: boolean
+  summaryPrompt?: string
+  // template?: string
 }
 
-export type ImagePresetSettings = {
-  clipSkip?: number
-  width: number
-  height: number
-  steps: number
-  cfg: number
-  seed?: number
+export type ImagePresetSettings = BaseImageSettings & {
+  _id: string
+  name: string
+  imageProviderId: string
+
+  models?: { [providerId: string]: string }
+
+  summaryPresetId?: string
+  summariseChat?: boolean
+  summaryPrompt: string
 }
 
 export type ImageDefaults = {
@@ -38,18 +42,6 @@ export type ImageDefaults = {
   sampler: boolean
   guidance: boolean
   steps: boolean
-}
-
-export type ImageSettings = BaseImageSettings & {
-  novel: ImageProviderSettings
-  horde: ImageProviderSettings
-  sd: ImageProviderSettings
-  agnai: ImageProviderSettings
-  swarm: ImageProviderSettings
-  openai: ImageProviderSettings /** Never actually exists, just for backwards compat */
-
-  active?: ImageProviderType
-  imageProviderId: string
 }
 
 export type ImageProviderType = 'novel' | 'horde' | 'sd' | 'agnai' | 'swarm' | 'openai'
@@ -67,7 +59,7 @@ export type ImageProviderSettings = {
   type: ImageProviderType
   url: string
   sampler: string
-  scheduler: string
+  scheduler?: string
   model: string
 
   // Inherit auth from Text Provider

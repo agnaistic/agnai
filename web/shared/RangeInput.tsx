@@ -1,4 +1,4 @@
-import { Component, Show, createEffect, on } from 'solid-js'
+import { Component, Show, createEffect, createSignal, on } from 'solid-js'
 import type { JSX } from 'solid-js'
 import { PresetAISettings, samplerDisableValues } from '../../common/adapters'
 import { markdown } from './markdown'
@@ -29,6 +29,21 @@ const RangeInput: Component<{
 }> = (props) => {
   let range: HTMLInputElement | undefined
   let input: HTMLInputElement | undefined
+
+  const [inited, setInited] = createSignal(false)
+
+  createEffect(
+    on(
+      () => props.value,
+      () => {
+        if (inited()) return
+        if (props.value === undefined) return
+        if (!input) return
+        input.value = `${props.value}`
+        setInited(true)
+      }
+    )
+  )
 
   function updateRangeSliders(evented: boolean, source: 'slider' | 'input', next?: string) {
     if (!range || !input) return
@@ -137,12 +152,12 @@ const RangeInput: Component<{
         />
         <input
           ref={input}
+          type="number"
           id={props.fieldName}
           name={props.fieldName}
           class="form-field focusable-field border-0.25 float-right box-border inline-block min-w-24 rounded-lg border border-[var(--bg-600)] p-1 hover:border-white/20"
-          value={props.value}
+          // value={props.value}
           min={props.min}
-          type="number"
           max={props.max}
           step={props.step}
           onInput={onInput('input')}
@@ -170,6 +185,21 @@ export const InlineRangeInput: Component<{
   let range: HTMLInputElement | undefined
   let input: HTMLInputElement | undefined
 
+  const [inited, setInited] = createSignal(false)
+
+  createEffect(
+    on(
+      () => props.value,
+      () => {
+        if (inited()) return
+        if (props.value === undefined) return
+        if (!input) return
+        input.value = `${props.value}`
+        setInited(true)
+      }
+    )
+  )
+
   function updateRangeSliders(evented: boolean, source: 'slider' | 'input', next?: string) {
     if (!range || !input) return
 
@@ -181,10 +211,10 @@ export const InlineRangeInput: Component<{
 
     if (isNaN(+parsed)) {
       range.value = parsed
-      input.value = parsed
       return
     }
 
+    input.value = parsed
     range.value = parsed
 
     if (source === 'slider') {
@@ -257,7 +287,7 @@ export const InlineRangeInput: Component<{
         id={props.fieldName}
         name={props.fieldName}
         class="form-field focusable-field border-0.25 float-right box-border inline-block w-32 rounded-lg border border-[var(--bg-600)] p-1 hover:border-white/20"
-        value={props.value}
+        // value={props.value}
         min={props.min}
         type="number"
         max={props.max}

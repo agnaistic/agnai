@@ -205,7 +205,8 @@ export function localSSE(opts: SSEOpts<{ host: string }>) {
   const resp = needle.post(joinUrl(opts.host, opts.path), JSON.stringify(opts.body), {
     parse: false,
     signal: opts.signal?.signal,
-
+    open_timeout: 0,
+    read_timeout: 0,
     headers: {
       ...opts.headers,
       Accept: 'text/event-stream',
@@ -331,6 +332,8 @@ export function fetchSSE(opts: SSEOpts) {
   let resp = needle.post(api.toApiUrl(path), JSON.stringify(body), {
     parse: false,
     signal: signal?.signal,
+    open_timeout: 120_000,
+    read_timeout: 180_000,
 
     headers: {
       ...headers,
@@ -625,6 +628,19 @@ export function clearAuth() {
 
 export function isLoggedIn() {
   return !!getAuth()
+}
+
+export function isAdmin() {
+  const data = getUserToken()
+  return !!data?.admin
+}
+
+export function getUserToken() {
+  const auth = getAuth()
+  if (!auth) return
+
+  const data = getTokenBody(auth)
+  return data
 }
 
 export function getUserId() {

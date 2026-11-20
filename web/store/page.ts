@@ -17,6 +17,11 @@ export type PageState = {
   showImpersonate: boolean
   showSettings: boolean
 
+  capture?: {
+    show: boolean
+    callback: (result: { file: File; image: string }) => void
+  }
+
   confirm?: {
     title?: string
     message: string | JSX.Element
@@ -36,6 +41,11 @@ export type PageState = {
     callback: (files: FileInputResult[]) => void
   }
 
+  preset?: {
+    title: string
+    presetId: string
+  }
+
   flags: FeatureFlags
 }
 
@@ -49,6 +59,13 @@ export const pageStore = createStore<PageState>('page', {
   flags: getFlags(),
 })((getter, setter) => {
   return {
+    openPreset(_, opts: { presetId: string; title: string }) {
+      return { preset: opts }
+    },
+    closePreset() {
+      return { preset: undefined }
+    },
+
     openAttach(
       {},
       opts: { multiple?: boolean; accept?: string },
@@ -89,6 +106,14 @@ export const pageStore = createStore<PageState>('page', {
     },
     toggleOverlay({ showOverlay }, next?: boolean) {
       return { showOverlay: next === undefined ? !showOverlay : next }
+    },
+
+    closeCapture() {
+      return { capture: undefined }
+    },
+
+    openCapture(_, callback: (result: { file: File; image: string }) => void) {
+      return { capture: { show: true, callback } }
     },
 
     openConfirm(

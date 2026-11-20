@@ -24,6 +24,8 @@ export type Reference =
   | [Validator]
   | [Validator, '?']
   | Validator
+  | UnionValidator
+  | OptionalUnionValidator
   | [...string[]]
   | readonly [...string[]]
   | [...string[], null]
@@ -53,6 +55,12 @@ export type FromPrimitive<T extends Primitive> = T extends 'string'
   ? any
   : T extends 'unknown'
   ? unknown
+  : never
+
+export type FromObjectUnion<T> = T extends OptionalUnionValidator
+  ? UnwrapBody<T[number]> | undefined
+  : T extends UnionValidator
+  ? UnwrapBody<T[number]>
   : never
 
 export type FromTuple<T> = T extends
@@ -86,10 +94,14 @@ export type FromTupleBody<T> = T extends [infer U, infer O]
   : never
 
 export type UnwrapBody<T extends Validator> = T extends OptionalValidator<T>
-  ? UnwrapBody<Omit<T, '__optional__'>> | undefined
+  ? UnwrapBody<Omit<T, '__optional__' | '__union__'>> | undefined
   : {
       -readonly [key in keyof T]: T[key] extends Primitive
         ? FromPrimitive<T[key]>
+        : T[key] extends OptionalUnionValidator
+        ? FromObjectUnion<T[key]>
+        : T[key] extends UnionValidator
+        ? FromObjectUnion<T[key]>
         : T[key] extends OptionalPrimitive
         ? FromOptional<T[key]>
         : T[key] extends [Primitive, '?'] | readonly [Primitive, '?']
@@ -108,12 +120,29 @@ export type UnwrapBody<T extends Validator> = T extends OptionalValidator<T>
     }
 
 type OptionalValidator<T extends Validator> = T & { __optional__: any }
+type OptionalUnionValidator<T extends Validator[] = Validator[]> = T & {
+  __union__: any
+  __optional__: any
+}
 
-export function optional<T extends Validator>(ref: T): OptionalValidator<T> {
+type UnionValidator<T extends Validator[] = Validator[]> = T & { __union__: any }
+
+export function optional<T extends Validator | Validator>(ref: T): OptionalValidator<T> {
   ;(ref as any).__optional__ = true
   return ref as OptionalValidator<T>
 }
 
 export function optionalArray<T extends Validator>(ref: [T]): [T, '?'] {
   return [...ref.slice(), '?'] as [T, '?']
+}
+
+export function union<T extends Validator[]>(ref: T) {
+  ;(ref as any).__union__ = true
+  return ref as UnionValidator<T>
+}
+
+export function optionalUnion<T extends Validator[]>(ref: T) {
+  ;(ref as any).__union__ = true
+  ;(ref as any).__optional__ = true
+  return ref as OptionalUnionValidator<T>
 }

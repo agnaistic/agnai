@@ -2,10 +2,8 @@ import { Component, createEffect, createMemo, createSignal, For, on, Show } from
 import { AppSchema } from '/common/types'
 import { getAssetUrl, storage } from '/web/shared/util'
 import { getMessageImages, msgStore } from '/web/store/message'
-import { Pencil, PlusCircle, X } from 'lucide-solid'
+import { Pencil, PlusCircle } from 'lucide-solid'
 import { MessageImagePrompt } from './MessageMeta'
-import Button from '/web/shared/Button'
-import { ICON_SIZES } from '/web/icons/AppIcon'
 import { ImageButton, imageStore } from '/web/store/images'
 import { ChatContext } from '/web/store/context'
 import { RelativeSpinner } from '/web/shared/Loading'
@@ -25,9 +23,17 @@ export const MessageImages: Component<{
   const [showPrompt, setShowPrompt] = createSignal(false)
   const [override, setOverride] = createSignal('')
 
+  const generating = createMemo(() => {
+    return (
+      props.ctx.imgWaiting?.messageId === props.msg._id ||
+      props.ctx.imgPrompt?.messageId === props.msg._id
+    )
+  })
+
   const canShow = createMemo(() => {
+    const progress = generating()
     const show = images().length > 0 || !!props.msg.imagePrompt || !!props.msg.json?.imageCaption
-    return show
+    return show || progress
   })
 
   createEffect(
@@ -62,11 +68,7 @@ export const MessageImages: Component<{
           close={() => setShowPrompt(false)}
           onPrompt={(next) => setOverride(next)}
           onClose={() => setOverride('')}
-        >
-          <Button size="sm" onClick={() => setShowPrompt(false)}>
-            <X size={ICON_SIZES.PILL} />
-          </Button>
-        </MessageImagePrompt>
+        ></MessageImagePrompt>
       </Show>
 
       <div class="flex flex-wrap gap-2" classList={{ hidden: !canShow() }}>
@@ -85,7 +87,12 @@ export const MessageImages: Component<{
           )}
         </For>
 
-        <Show when={props.ctx.imgWaiting?.messageId === props.msg._id}>
+        <Show
+          when={
+            props.ctx.imgWaiting?.messageId === props.msg._id ||
+            props.ctx.imgPrompt?.messageId === props.msg._id
+          }
+        >
           <img
             class="mt-2 max-h-12 max-w-[unset] rounded-md sm:max-h-16"
             classList={{ hidden: !props.ctx.imgPreview }}
@@ -110,6 +117,8 @@ export const MessageImages: Component<{
                 prompt: override().trim(),
                 sourceMsgId: props.msg._id,
                 append: true,
+                onImage: () =>
+                  imageStore.showMessageImages({ id: props.msg._id, position: Infinity }),
               })
             }
           >

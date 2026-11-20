@@ -48,22 +48,6 @@ aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa: books
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:"
 `;
 
-exports[`Prompt building will exclude lowest priority memory to fit in budget 1`] = `
-"OtherBot's Persona: OtherBot replies a lot
-
-Scenario: MAIN MainChar
-Facts:ENTRY TWO
-ENTRY THREE
-How OtherBot speaks: SAMPLECHAT OtherBot
-
-<START>
-MainChar: FIRST
-ChatOwner: 1-TRIGGER
-ChatOwner: 10-TRIGGER
-ChatOwner: 20-TRIGGER
-OtherBot:"
-`;
-
 exports[`Prompt building will exclude matches that are not a whole word match 1`] = `
 "OtherBot's Persona: OtherBot replies a lot
 

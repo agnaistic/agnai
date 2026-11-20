@@ -77,12 +77,14 @@ export type MessageOption =
   | 'visible'
   | 'gen-image'
   | 'gen-json'
+  | 'camera'
 
 export type UISettings = {
   theme: string
   themeBg?: string
 
   mode: ThemeMode
+  contentAlign?: 'left' | 'center'
 
   bgCustomGradient: string
 
@@ -155,6 +157,7 @@ export const defaultUIsettings: UISettings = {
   theme: 'sky',
   themeBg: 'truegray',
 
+  contentAlign: 'center',
   bgCustomGradient: '',
 
   mode: 'dark',
@@ -200,5 +203,6 @@ export const defaultUIsettings: UISettings = {
     visible: { outer: false, pos: 3.9 },
     'gen-image': { outer: false, pos: 3.8 },
     'gen-json': { outer: false, pos: 3.81 },
+    camera: { outer: false, pos: 6.1 },
   },
 }

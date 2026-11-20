@@ -1,5 +1,5 @@
 import './images.scss'
-import { Component, For, JSX, Show, createEffect, createMemo, on } from 'solid-js'
+import { Component, For, JSX, Show, createEffect, createMemo, on, onMount } from 'solid-js'
 import Modal from '../../shared/Modal'
 import {
   ConfirmAction,
@@ -13,24 +13,33 @@ import {
 } from '../../store'
 import { getAssetUrl, getJsonSchema } from '../../shared/util'
 import Button from '/web/shared/Button'
-import { useDraft, useImageCache } from '/web/shared/hooks'
+import { createKeyHook, useDraft, useImageCache } from '/web/shared/hooks'
 import TextInput from '/web/shared/TextInput'
-import { ArrowLeft, ArrowRight, Download, SettingsIcon, Trash, WandSparkles } from 'lucide-solid'
+import {
+  ArrowLeft,
+  ArrowRight,
+  Download,
+  SettingsIcon,
+  SlidersVertical,
+  SquareSparkles,
+  Trash,
+  WandSparkles,
+} from 'lucide-solid'
 import { cleanPrompt, hydrateTemplate } from '/common/util'
 import { RelativeSpinner } from '/web/shared/Loading'
-import { imageApi } from '/web/store/data/image'
+import { createCaptionInferenceSignal, imageApi } from '/web/store/data/image'
 import { getStore } from '/web/store/create'
 import { createStore, SetStoreFunction } from 'solid-js/store'
 import { ChatImageSettings, useCurrentChatImageSettings } from '../Settings/Image/ImageSettings'
 import { Copy } from '/web/shared/Copy'
 import { downloadImage } from '../Character/util'
 import { debug } from '/common/debug'
-import { genApi } from '/web/store/data/inference'
-import { getImagePromptEntities } from '/web/store/data/common'
 import { usePresetContext } from '/web/store/preset-context'
 import { useAppContext } from '/web/store/context'
 import { useImageContext } from '../Settings/Image/image-context'
-import { SelectImageProvider } from '../Settings/Image/ImageProvider'
+import { TickHandler } from '/common/prompt'
+import { ImageModel } from '../Settings/Image/ImageModel'
+import { ImagePreset } from '../Settings/Image/ImagePreset'
 
 const log = debug('image-modal')
 
@@ -126,11 +135,6 @@ const ImageCollectionModal: Component<{}> = (props) => {
     const id = store.src?.id
     if (!id) return ''
     return id
-  })
-
-  const show = createMemo(() => {
-    const next = store.src?.id !== undefined && store.src.type !== 'url'
-    return next
   })
 
   const imageSettings = useCurrentChatImageSettings()
@@ -298,6 +302,11 @@ const ImageCollectionModal: Component<{}> = (props) => {
     }
   }
 
+  createKeyHook((ev) => {
+    if (!ev.ctrlKey) return
+    if (ev.key === 'Enter') generateImage()
+  })
+
   const ImageNavigate = (
     <div class="flex items-center justify-center gap-2">
       <Button size="sm" disabled={reel.state.images.length <= 1} onClick={reel.prev}>
@@ -335,16 +344,24 @@ const ImageCollectionModal: Component<{}> = (props) => {
   )
 
   const GenerationActions = (
-    <div class="flex flex-col gap-2">
-      <div class="flex w-full items-end justify-end">
-        <SelectImageProvider ctx={imgctx} />
+    <div class="flex flex-col items-start gap-2">
+      <div class="flex flex-col">
+        <div class="text-500 text-sm">Preset</div>
+        <div class="flex gap-1">
+          <ImagePreset ctx={imgctx} />
+
+          <Button size="sm" onClick={() => imageStore.imageSettings(true)}>
+            <SlidersVertical size={20} />
+          </Button>
+        </div>
       </div>
 
-      <div class="flex w-full items-end justify-end gap-2">
-        <Button size="sm" onClick={generateImage} disabled={state.loading}>
-          Generate Image
-        </Button>
+      <div class="flex flex-col">
+        <div class="text-500 text-sm">Model</div>
+        <ImageModel ctx={imgctx} />
+      </div>
 
+      <div class="flex w-full">
         <For each={store?.options || []}>
           {(action) => (
             <Button
@@ -357,7 +374,6 @@ const ImageCollectionModal: Component<{}> = (props) => {
           )}
         </For>
       </div>
-
       <div class="flex w-full justify-center">
         <Show when={store.preview}>
           <img src={store.preview?.base64} />
@@ -369,7 +385,7 @@ const ImageCollectionModal: Component<{}> = (props) => {
   return (
     <Modal
       debug="img-col"
-      show={show()}
+      show
       close={close}
       maxWidth="full"
       fixedHeight
@@ -389,6 +405,7 @@ const ImageCollectionModal: Component<{}> = (props) => {
         actions={GenerationActions}
         footer={ImageNavigate}
         settings={imageSettings()}
+        generate={generateImage}
       >
         <section class="relative flex max-h-[calc(100%-200px)] justify-center">
           <Show when={state.loading}>
@@ -413,45 +430,34 @@ const PromptSettings: Component<{
   children: JSX.Element
   actions: JSX.Element
   footer: JSX.Element
+  generate: () => void
 }> = (props) => {
   const persist = promptStore((s) => ({ imageHint: s.imageHint }))
   const msgs = msgStore((s) => ({ message: s.graph.tree[props.messageId || ''] }))
 
-  const gen = genApi.inferenceSignal({
-    onTick: (res, state) => {
-      if (state === 'partial') props.update('prompt', res)
-      if (state === 'done' || state === 'error') props.update('promptLoading', false)
-    },
-  })
+  const onPromptTick: TickHandler = (res, state) => {
+    if (state === 'partial') props.update('prompt', res)
+    if (state === 'done' || state === 'error') props.update('promptLoading', false)
+  }
+
+  const gen = props.messageId ? createCaptionInferenceSignal({ onTick: onPromptTick }) : null
 
   const fullImagePrompt = createMemo(() => {
-    const parts = [props.settings?.prefix, props.state.prompt, props.settings?.suffix]
-      .filter((c) => !!c?.trim())
-      .join(', ')
+    const parts = [props.state.prompt].filter((c) => !!c?.trim()).join(', ')
     const cleaned = cleanPrompt(parts)
     return cleaned
   })
 
   const generatePrompt = async () => {
+    if (!props.messageId) return
+    if (!gen) return
+
     if (gen.state.status === 'loading') {
       gen.cancel()
       return
     }
 
-    const ents = await getImagePromptEntities(props.messageId)
-
-    const template = imageApi.getSummaryTemplate({
-      task: ents.summary,
-      generate: 'Image Caption',
-      focus: persist.imageHint,
-    })
-
-    await gen.send({ prompt: template, preset: ents.preset })
-  }
-
-  const onCleanPrompt = () => {
-    const cleaned = cleanPrompt(props.state.prompt)
-    props.update('prompt', cleaned)
+    await gen.generate(props.messageId)
   }
 
   const saveMessagePrompt = () => {
@@ -462,9 +468,15 @@ const PromptSettings: Component<{
   const canSave = createMemo(() => {
     if (!props.messageId) return false
     if (!msgs.message) return false
+    if (!fullImagePrompt().trim()) return true
 
-    if (msgs.message.msg.imagePrompt === fullImagePrompt()) return false
+    if (msgs.message.msg.imagePrompt?.trim() === fullImagePrompt().trim()) return false
     return true
+  })
+
+  onMount(() => {
+    if (!props.messageId) return
+    promptStore.loadImageHint(msgs.message.msg.chatId)
   })
 
   return (
@@ -474,6 +486,9 @@ const PromptSettings: Component<{
           <TextInput
             placeholder="Caption Hint: What to focus on when generating the caption?"
             class="!text-sm"
+            isMultiline
+            maxRows={2}
+            textarea={{ rows: 2 }}
             onChange={(ev) =>
               promptStore.imageHint({
                 chatId: msgs.message.msg.chatId,
@@ -494,16 +509,24 @@ const PromptSettings: Component<{
           textarea={{ rows: 3 }}
         />
 
-        <div class="flex w-full items-center justify-between">
+        <div class="flex w-full justify-end">
           <Copy text={fullImagePrompt()}>
             <span class="text-sm">Copy</span>
           </Copy>
+        </div>
 
+        <div class="flex w-full items-center justify-between">
           <div class="flex-end flex gap-2">
-            <Show when={props.messageId}>
+            <Show when={!!gen && props.messageId}>
+              <Show when={props.messageId}>
+                <Button size="sm" onClick={saveMessagePrompt} disabled={!canSave()}>
+                  Save
+                </Button>
+              </Show>
+
               <Button size="sm" onClick={generatePrompt}>
                 <Show
-                  when={gen.state.status !== 'loading'}
+                  when={gen?.state.status !== 'loading'}
                   fallback={
                     <>
                       <RelativeSpinner size={20} />
@@ -511,19 +534,14 @@ const PromptSettings: Component<{
                     </>
                   }
                 >
-                  <WandSparkles size={16} /> Prompt
+                  Prompt <WandSparkles size={16} />
                 </Show>
               </Button>
-              <Button size="sm" onClick={onCleanPrompt}>
-                Fix
-              </Button>
-
-              <Show when={props.messageId}>
-                <Button size="sm" onClick={saveMessagePrompt} disabled={!canSave()}>
-                  Save
-                </Button>
-              </Show>
             </Show>
+
+            <Button size="sm" onClick={props.generate} disabled={props.state.loading}>
+              Generate <SquareSparkles size={16} />
+            </Button>
           </div>
         </div>
 

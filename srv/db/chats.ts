@@ -7,10 +7,17 @@ import { StatusError, errors } from '../api/wrap'
 import { parseTemplate } from '/common/template-parser'
 import { config } from '../config'
 import { sortAsc } from '/common/chat'
+import { toMap } from '/common/util'
 
 export async function getChatOnly(id: string) {
   const chat = await db('chat').findOne({ _id: id })
   return chat
+}
+
+export async function assertChatOwner(opts: { userId: string; chatId: string }) {
+  const chat = await getChatOnly(opts.chatId)
+
+  if (!chat || chat.userId !== opts.userId) throw new StatusError(`Chat - Not allowed`, 405)
 }
 
 export async function getChatGraph(id: string) {
@@ -165,7 +172,10 @@ export async function canViewChat(senderId: string, chat: AppSchema.Chat) {
   return !!membership
 }
 
-export async function getAllChats(userId: string, shallow?: boolean) {
+export async function getAllChats(
+  userId: string,
+  shallow?: boolean
+): Promise<Array<AppSchema.Chat & { character: AppSchema.Character }>> {
   const memberships = await db('chat-member').find({ userId }).toArray()
 
   if (config.ui.chatCounts) {
@@ -215,44 +225,46 @@ export async function getAllChats(userId: string, shallow?: boolean) {
       ])
       .toArray()
 
-    return list
+    return list as Array<AppSchema.Chat & { character: AppSchema.Character; messageCount: number }>
   }
 
-  const project = shallow
-    ? { _id: 1, characters: 1 }
-    : {
-        _id: 1,
-        userId: 1,
-        name: 1,
-        characterId: 1,
-        characters: 1,
-        createdAt: 1,
-        updatedAt: 1,
-        genPreset: 1,
-        'character.name': 1,
-      }
+  const project = {
+    _id: 1,
+    userId: 1,
+    name: 1,
+    avatar: 1,
+    characterId: 1,
+    characters: 1,
+    createdAt: 1,
+    updatedAt: 1,
+    genPreset: 1,
+    memoryId: 1,
+    userEmbedId: 1,
+    memberIds: 1,
+    scenarioIds: 1,
+    scenarioStates: 1,
+    imageProviderId: 1,
+    imagePresetId: 1,
+    imageSource: 1,
+    treeLeafId: 1,
+  }
 
-  const list = await db('chat')
-    .aggregate([
-      {
-        $match: {
-          $or: [{ userId }, { _id: { $in: memberships.map((mem) => mem.chatId) } }],
-        },
-      },
-      {
-        $lookup: {
-          from: 'character',
-          localField: 'characterId',
-          foreignField: '_id',
-          as: 'character',
-        },
-      },
-      { $unwind: { path: '$character' } },
-      {
-        $project: project,
-      },
-    ])
+  const chats = await db('chat')
+    .find({
+      $or: [{ userId }, { _id: { $in: memberships.map((mem) => mem.chatId) } }],
+    })
     .toArray()
+
+  const charIds = Array.from(new Set(chats.map((ch) => ch.characterId)).keys())
+
+  const chars = (await db('character')
+    .find({ _id: { $in: charIds } })
+    .project(project)
+    .toArray()) as AppSchema.Character[]
+
+  const map = toMap(chars)
+
+  const list = chats.map((ch) => ({ ...ch, character: map[ch.characterId] }))
   return list
 }
 

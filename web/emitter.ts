@@ -6,20 +6,27 @@ export const EVENTS = {
   loggedOut: 'logged-out',
   sessionExpired: 'session-expired',
   init: 'init',
-  charsReceived: 'chars-received',
-  allChars: 'all-chars-recieved',
-  allChats: 'all-chats-received',
   setInputText: 'set-input-text',
-  charUpdated: 'character-updated',
+
   clearMsgs: 'clear-messages',
   receiveMsgs: 'receive-messages',
+
+  allChats: 'all-chats-received',
+  chatOpened: 'chat-opened',
+  chatClosed: 'chat-closed',
+  chatUpdated: 'chat-updated',
+
+  allChars: 'all-chars-recieved',
+  charsReceived: 'chars-received',
   charAdded: 'char-added',
   charDeleted: 'char-deleted',
+
+  // Notify the character store that a character was updated
+  charUpdated: 'character-updated',
+
   tierReceived: 'tier-received',
   configUpdated: 'server-config-updated',
   checkoutSuccess: 'checkout-success',
-  chatOpened: 'chat-opened',
-  chatClosed: 'chat-closed',
   userBanned: 'user-banned',
   msgAttachment: 'msg-attachment',
   setWaiting: 'set-waiting',

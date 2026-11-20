@@ -31,3 +31,8 @@ declare module '*.json' {
   const mod: any
   export default mod
 }
+
+declare module 'wikijs' {
+  const foo: any
+  export default foo
+}

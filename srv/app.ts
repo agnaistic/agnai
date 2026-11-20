@@ -97,7 +97,7 @@ export function createApp() {
   }
 
   app.use((req, res, next) => {
-    if (req.url.startsWith('/api') || req.url.startsWith('/v1')) {
+    if (req.url?.startsWith('/api') || req.url.startsWith('/v1')) {
       return next(errors.NotFound)
     }
 

@@ -19,6 +19,9 @@ import {
   Eye,
   EyeOff,
   BracesIcon,
+  ImageUpIcon,
+  ScanFaceIcon,
+  LucideProps,
 } from 'lucide-solid'
 import {
   Accessor,
@@ -47,17 +50,18 @@ import {
   VoiceState,
   pageStore,
   responseStore,
+  imageStore,
 } from '../../../store'
 import { markdown } from '../../../shared/markdown'
 import Button, { ButtonSchema } from '/web/shared/Button'
 import { ChatContext, useAppContext } from '/web/store/context'
-import { hydrateTemplate, trimSentence } from '/common/util'
+import { hydrateTemplate, stopResponse, trimSentence } from '/common/util'
 import { EVENTS, events } from '/web/emitter'
 import { Pill } from '/web/shared/Card'
 import { DropMenu } from '/web/shared/DropMenu'
 import { Portal } from 'solid-js/web'
 import { UI } from '/common/types'
-import { LucideProps } from 'lucide-solid/dist/types/types'
+// import { LucideProps } from 'lucide-solid/dist/types/types'
 import { createStore } from 'solid-js/store'
 import { MessageImages } from './MessageImages'
 import Select from '/web/shared/Select'
@@ -509,7 +513,7 @@ const Message: Component<MessageProps> = (props) => {
                   when={
                     !edit() &&
                     !props.swipe &&
-                    user.user?._id === ctx.chat?.userId &&
+                    (user.user?._id === ctx.chat?.userId || user.user?.admin) &&
                     ctx.chat?.mode !== 'companion'
                   }
                 >
@@ -624,14 +628,6 @@ const Message: Component<MessageProps> = (props) => {
                     </span>
                   </Show>
 
-                  <MessageImages
-                    messageId={props.messageId}
-                    msg={msg()}
-                    onEditClick={editMessageMeta}
-                    ctx={ctx}
-                  />
-                  <MessageAttachments msg={msg()} ctx={ctx} />
-
                   <Show when={!props.partial && props.last}>
                     <div class="flex items-center justify-center gap-2">
                       <For each={msg().actions}>
@@ -673,6 +669,13 @@ const Message: Component<MessageProps> = (props) => {
               </Switch>
             </div>
           </div>
+          <MessageImages
+            messageId={props.messageId}
+            msg={msg()}
+            onEditClick={editMessageMeta}
+            ctx={ctx}
+          />
+          <MessageAttachments msg={msg()} ctx={ctx} />
           <Show when={!edit()}>{props.last && props.children}</Show>
         </div>
       </div>
@@ -832,16 +835,26 @@ const MessageOptions: Component<{
         key: 'attach',
         class: '',
         label: 'Attach',
-        outer: { outer: false, pos: 0 },
-        icon: ImagePlus,
-        show:
-          !!props.canUseAttachments &&
-          (props.msg.userId === props.ctx.user?._id ||
-            props.ctx.impersonate?._id === props.msg.characterId),
+        outer: { outer: props.ui.msgOptsInline.attach?.outer, pos: 0 },
+        icon: ImageUpIcon,
+        show: !!props.canUseAttachments,
         onClick: () =>
           pageStore.openAttach(
             { multiple: true, accept: 'image/jpg,image/png,image/jpeg' },
             (files) => attachImages(props.msg._id, files)
+          ),
+      },
+
+      camera: {
+        key: 'camera',
+        class: '',
+        label: 'Attach from Camera',
+        outer: { outer: props.ui.msgOptsInline.camera?.outer, pos: 0 },
+        icon: ScanFaceIcon,
+        show: !!props.canUseAttachments,
+        onClick: () =>
+          pageStore.openCapture((res) =>
+            msgStore.addAttachment(props.msg._id, [{ type: 'image', image: res.image }])
           ),
       },
 
@@ -877,7 +890,13 @@ const MessageOptions: Component<{
         label: 'Gen Image',
         show: true,
         outer: props.ui.msgOptsInline['gen-image'],
-        onClick: (msg) => msgStore.createImage({ sourceMsgId: msg._id }),
+        onClick: (msg) =>
+          msgStore.createImage({
+            sourceMsgId: msg._id,
+            onImage: () => {
+              imageStore.showMessageImages({ id: msg._id, position: Infinity })
+            },
+          }),
         icon: ImagePlus,
         class: '',
       },
@@ -1279,16 +1298,20 @@ function getMessageContent(
 ) {
   const isRetry = props.retrying?._id === msg._id
   const isPartial = msg._id === 'partial-response'
+  // const bot = msg.characterId ? ctx.allBots[msg.characterId] : null
 
   if (isRetry || isPartial) {
     const { thoughts, content } = extractReasoning(props.partial ? props.partial : msg.msg, {
       tags: preset?.reasoning,
       display: ctx.ui.displayReasoning,
     })
+
+    const message = removeAssistantName(ctx, msg, content)
+
     if (props.partial) {
       return {
         type: 'partial' as const,
-        message: renderMessage(ctx, preset, content, false, 'partial'),
+        message: renderMessage(ctx, preset, message, false, 'partial'),
         thoughts,
         class: 'streaming-markdown',
         generating: true,
@@ -1298,7 +1321,7 @@ function getMessageContent(
     if (isPartial && msg.msg) {
       return {
         type: 'partial' as const,
-        message: renderMessage(ctx, preset, content, false, 'partial'),
+        message: renderMessage(ctx, preset, message, false, 'partial'),
         thoughts,
         class: 'streaming-markdown',
         generating: true,
@@ -1319,7 +1342,7 @@ function getMessageContent(
     display: ctx.ui.displayReasoning,
   })
 
-  let message = content
+  let message = removeAssistantName(ctx, msg, content)
 
   if (props.last && props.swipe) message = props.swipe
   if (msg.event && !props.showHiddenEvents) {
@@ -1345,7 +1368,9 @@ function getMessageContent(
     (name) => name !== sender + ':'
   )
 
-  const trimmed = stopResponse({ text: message, author: sender, stops: allStops })
+  const trimmed = msg.userId
+    ? message
+    : stopResponse({ text: message, author: sender, stops: allStops })
 
   return {
     type: 'message' as const,
@@ -1353,35 +1378,6 @@ function getMessageContent(
     thoughts,
     class: 'not-streaming',
   }
-}
-
-function stopResponse(opts: { text: string; author: string; stops: string[] }) {
-  let generated = opts.text
-
-  let index = -1
-  let trimmed = opts.stops.reduce((prev, endToken) => {
-    const idx = generated.indexOf(endToken)
-
-    if (idx === -1) return prev
-
-    const text = generated.slice(0, idx)
-    if (index === -1 || idx < index) {
-      index = idx
-      return text
-    }
-
-    return prev
-  }, '')
-
-  if (index === -1) {
-    if (generated.startsWith(`${opts.author}:`)) {
-      generated = generated.slice(opts.author.length + 1)
-    }
-
-    return generated.trim()
-  }
-
-  return trimmed || generated
 }
 
 function getJsonUpdate(ctx: ChatContext, def: AppSchema.Character['json'], json: any) {
@@ -1446,4 +1442,17 @@ async function attachImages(msgId: string, files: FileInputResult[]) {
   }
 
   msgStore.addAttachment(msgId, add)
+}
+
+function removeAssistantName(ctx: ChatContext, msg: AppSchema.ChatMessage, message?: string) {
+  if (!msg.characterId) return msg.msg
+
+  message ??= msg.msg
+
+  const bot = ctx.allBots[msg.characterId]
+  if (!bot) return message
+
+  if (!message.startsWith(`${bot.name}:`)) return message
+
+  return message.slice(bot.name.length + 1)
 }

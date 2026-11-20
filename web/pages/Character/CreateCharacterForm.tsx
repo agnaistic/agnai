@@ -45,7 +45,6 @@ import { AdvancedOptions } from './form/AdvancedOptions'
 import { AvatarField } from './form/AvatarField'
 import { usePresetContext } from '/web/store/preset-context'
 import { PageSpinner } from '/web/shared/Loading'
-// import { randomElement } from '/common/util'
 
 const formatOptions = [
   { value: 'attributes', label: 'Attributes (Key: value)' },
@@ -410,6 +409,12 @@ export const CreateCharacterForm: Component<{
                   <Plus />
                   New
                 </Button>
+
+                {/*<Button size='sm' onClick={() => {
+                  setForceNew(true)
+                }}>
+                  <Copy /> Copy
+                </Button>*/}
               </Show>
 
               <Show when={!state.edit}>

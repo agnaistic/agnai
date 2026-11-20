@@ -34,7 +34,7 @@ type MemoryPromptContext = {
   sender: string
   depth: number
   budget: number
-  encoder: TokenCounter
+  encoder?: TokenCounter
 }
 
 export type CharacterBook = {
@@ -70,7 +70,7 @@ export type CharacterBook = {
 
 type CharacterBookEntry = CharacterBook['entries'][number]
 
-export async function buildMemoryPrompt(opts: MemoryOpts, encoder: TokenCounter): Promise<string> {
+export async function buildMemoryPrompt(opts: MemoryOpts, encoder?: TokenCounter): Promise<string> {
   const ctx = getMemoryPromptContext(opts, encoder)
   if (!ctx) return ''
 
@@ -95,7 +95,7 @@ export async function buildMemoryPrompt(opts: MemoryOpts, encoder: TokenCounter)
 
 function getMemoryPromptContext(
   opts: MemoryOpts,
-  encoder: TokenCounter
+  encoder?: TokenCounter
 ): MemoryPromptContext | undefined {
   const depth = +(opts.settings?.memoryDepth || presetDefaults.memoryDepth || Infinity)
   if (isNaN(depth) || depth <= 0) return
@@ -113,7 +113,7 @@ function getMemoryPromptContext(
     sender,
     depth,
     budget,
-    encoder,
+    encoder: encoder,
   }
 }
 
@@ -171,7 +171,7 @@ async function findMatchWithLowestAge(
   return {
     messageAge: lowestAge,
     entry,
-    tokens: await ctx.encoder(text),
+    tokens: (await ctx.encoder?.(text)) ?? 0,
     text,
   }
 }

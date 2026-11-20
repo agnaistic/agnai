@@ -5,7 +5,6 @@ import { ModelAdapter } from './type'
 import { sanitise } from '/common/requests/util'
 import { sendMany } from '../api/ws'
 import { logger } from '../middleware'
-import { getTokenCounter } from '../tokenize'
 import { config } from '../config'
 import { ReplicateModel, ReplicateModelType } from '/common/types/replicate'
 
@@ -139,7 +138,7 @@ export const handleReplicate: ModelAdapter = async function* (opts) {
   //   '6282abe6a492de4145d7bb601023762212f9ddbbe78278bd6771c8b3b2f2a13b'
 
   let input: ReplicateRequest['input']
-  const encoder = getTokenCounter('replicate', modelType)
+
   switch (modelType) {
     case 'stablelm': {
       // TODO: Use a similar logic to OpenAI
@@ -148,7 +147,7 @@ export const handleReplicate: ModelAdapter = async function* (opts) {
         .replace(new RegExp(`^${opts.members[0].handle || 'You'}:`, 'gm'), '\n<|USER|>')
       input = {
         prompt,
-        max_tokens: (await encoder(opts.prompt)) + (opts.gen.maxTokens || 500),
+        max_tokens: opts.gen.maxTokens || 500,
         temperature: opts.gen.temp,
         top_p: opts.gen.topP,
         repetition_penalty: opts.gen.repetitionPenalty,
@@ -166,7 +165,7 @@ export const handleReplicate: ModelAdapter = async function* (opts) {
         )
       input = {
         prompt,
-        max_length: (await encoder(opts.prompt)) + (opts.gen.maxTokens || 500),
+        max_length: opts.gen.maxTokens || 500,
         decoding: 'top_p',
         temperature: opts.gen.temp,
         top_p: opts.gen.topP,
@@ -178,7 +177,7 @@ export const handleReplicate: ModelAdapter = async function* (opts) {
     case 'llama': {
       input = {
         prompt: opts.prompt,
-        max_length: (await encoder(opts.prompt)) + (opts.gen.maxTokens || 500),
+        max_length: opts.gen.maxTokens || 500,
         temperature: opts.gen.temp,
         top_p: opts.gen.topP,
         repetition_penalty: opts.gen.repetitionPenalty,

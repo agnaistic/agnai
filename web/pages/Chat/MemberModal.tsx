@@ -400,7 +400,7 @@ const CharacterParticipant: Component<{
   chat: AppSchema.Chat | undefined
   edit?: (charId: string) => void
 }> = (props) => {
-  const isTemp = createMemo(() => props.char._id.startsWith('temp-'))
+  const isTemp = createMemo(() => props.char._id?.startsWith('temp-'))
 
   const toggleTempChar = (state: boolean) => {
     if (!props.chat) return
@@ -440,7 +440,7 @@ const CharacterParticipant: Component<{
           <div class="text-xs italic text-[var(--text-600)]">
             {props.isMain
               ? 'Main Character'
-              : props.char._id.startsWith('temp-')
+              : props.char._id?.startsWith('temp-')
               ? 'Temporary Character'
               : 'Character'}
           </div>

@@ -37,7 +37,7 @@ export type ImageRequestOpts = {
   user: AppSchema.User
   prompt: string
   negative: string
-  settings: BaseImageSettings | undefined
+  settings: BaseImageSettings
   provider: ImageProviderSettings
   override?: string
   raw_prompt: string | undefined

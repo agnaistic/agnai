@@ -17,6 +17,7 @@ import { getAssetUrl, setComponentPageTitle, sticky } from '../../shared/util'
 import {
   characterStore,
   chatStore,
+  imageStore,
   pageStore,
   presetStore,
   responseStore,
@@ -51,6 +52,7 @@ import { SendFunc } from './components/InputBar'
 import { MessageVisibility } from './components/Visibility'
 import { PendingMessages } from './components/Pending'
 import { debug } from '/common/debug'
+import { CaptureModal } from './components/Attachments'
 
 export { ChatDetail as default }
 
@@ -172,7 +174,7 @@ const ChatDetail: Component = () => {
       </>
     )
   })
-  const isOwner = createMemo(() => chats.chat?.userId === user.user?._id)
+  const isOwner = createMemo(() => chats.chat?.userId === user.user?._id || !!user.user?.admin)
   const tts = createMemo(
     () => (user.user?.texttospeech?.enabled ?? true) && !!chats.char?.voice?.service
   )
@@ -373,7 +375,14 @@ const ChatDetail: Component = () => {
 
       if (ev.key === 'p' || ev.key === 'KeyP') {
         ev.preventDefault()
-        msgStore.createImage({})
+        const id = ctx.messages.path.slice(-1)[0]?._id
+        msgStore.createImage({
+          onImage: () =>
+            imageStore.showMessageImages({
+              id,
+              position: Infinity,
+            }),
+        })
       }
 
       if (ev.key === 'j' || ev.key === 'KeyJ') {
@@ -558,6 +567,7 @@ const ChatDetail: Component = () => {
       </Show>
 
       <PromptModal />
+      <CaptureModal />
 
       <ConfirmModal
         message={

@@ -28,6 +28,13 @@ export const ToggleSettings: Component<PresetTabProps> = (props) => {
           onChange={(ev) => props.setters.setState('postUserRole', ev)}
         />
 
+        <Toggle
+          label="Ensure User/Assistant/User/..."
+          helperText="Chat completions: When enabled, ensure first message is 'user' and messages alternate"
+          value={props.state.alternateRoles}
+          onChange={(ev) => props.setters.setState('alternateRoles', ev)}
+        />
+
         <TextInput
           fieldName="cfgOppose"
           label="CFG Opposing Prompt"

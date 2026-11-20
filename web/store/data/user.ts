@@ -7,6 +7,7 @@ import { storage } from '/web/shared/util'
 import { HORDE_SEED } from '/common/horde-gen'
 import { AIAdapter } from '/common/adapters'
 import { v4 } from 'uuid'
+import { ImagePresetSettings, ImageProviderSettings } from 'common/types/image-schema'
 
 export type InitEntities = {
   profile: AppSchema.Profile
@@ -39,7 +40,9 @@ export const usersApi = {
   novelLogin,
   saveProvider,
   deleteProvider,
+  deletePreset,
   deleteProviderKey,
+  upsertImageSettings,
 }
 
 export async function getInit(caches?: { presets?: any[]; books?: any[]; templates?: any[] }) {
@@ -83,6 +86,19 @@ async function deleteProviderKey(providerId: string) {
   return { result: user, error: undefined }
 }
 
+async function upsertImageSettings(update: {
+  target?: { type: string; id?: string; imagePresetId: string }
+  preset?: ImagePresetSettings
+  provider?: ImageProviderSettings
+}) {
+  if (isLoggedIn()) {
+    const res = await api.post('/user/image-settings', update)
+    return res
+  }
+
+  return { result: true, error: undefined }
+}
+
 async function saveProvider(provider: AppSchema.Provider) {
   if (isLoggedIn()) {
     const res = await api.post('/user/provider', provider)
@@ -96,6 +112,20 @@ async function saveProvider(provider: AppSchema.Provider) {
   const exists = providers.some((p) => p._id === upsert._id)
 
   user.providers = exists ? replace(provider._id, providers, upsert) : providers.concat(upsert)
+  await localApi.saveConfig(user)
+  return { result: user, error: undefined }
+}
+
+async function deletePreset(presetId: string) {
+  if (isLoggedIn()) {
+    const res = await api.method('delete', '/user/image-preset', { presetId })
+    return res
+  }
+
+  const user = await localApi.loadItem('config')
+  const providers = exclude(user.imagePresets || [], [presetId])
+
+  user.imagePresets = providers
   await localApi.saveConfig(user)
   return { result: user, error: undefined }
 }

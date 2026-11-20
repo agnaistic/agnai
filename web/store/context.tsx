@@ -17,6 +17,7 @@ import { pageStore } from './page'
 import { ResponseState, responseStore } from './response'
 import { imageStore } from './images'
 import { getStoppingStrings } from '/common/requests/payloads'
+import { ImageContextProvider } from 'web/pages/Settings/Image/image-context'
 
 export type ChatContext = {
   appReady: boolean
@@ -186,7 +187,13 @@ export function ContextProvider(props: { children: any }) {
 
     if (!chat) return []
 
-    const leafId = chat?.treeLeafId || msgs.msgs.slice(-1)[0]?._id || ''
+    let leafId = chat?.treeLeafId || msgs.msgs.slice(-1)[0]?._id || ''
+
+    const leafNode = msgs.graph.tree[leafId]
+    if (!leafNode) {
+      leafId = msgs.msgs.slice(-1)[0]?._id
+    }
+
     const path = resolveChatPath(msgs.graph.tree, leafId)
     return path
   })
@@ -304,7 +311,9 @@ export function ContextProvider(props: { children: any }) {
 
   return (
     <Context.Provider value={[state, setState]}>
-      <PresetStateProvider>{props.children}</PresetStateProvider>
+      <ImageContextProvider>
+        <PresetStateProvider>{props.children}</PresetStateProvider>
+      </ImageContextProvider>
     </Context.Provider>
   )
 }
@@ -384,6 +393,7 @@ export function getAppContext() {
     chatProfiles: chats.chatProfiles,
     handle: chars.impersonating?.name || users.profile?.handle || 'You',
     chatTree: msgs.graph.tree,
+    imgWaiting: msgs.imgWaiting,
     // attachments: msgs.attachments,
     // canUseAttachments: canAttachImage(detail?.conn, subModel()),
   }

@@ -1,16 +1,14 @@
 import * as horde from '../../../common/horde-gen'
-import { getMaxImageContext } from '../../../common/image-prompt'
 import { api } from '../api'
 import { getStore } from '../create'
-import { decode, encode } from '/common/tokenize'
 import { cleanPrompt, neat, wait } from '/common/util'
 import { localApi } from './storage'
 import { localEmit, subscribe } from '../socket'
-import { getAssetUrl } from '/web/shared/util'
+import { getAssetUrl, Require } from '/web/shared/util'
 import { v4 } from 'uuid'
 import { md5 } from './md5'
-import { getImagePromptEntities, getPromptEntities } from './common'
-import { inferenceHelper } from './inference'
+import { getImagePromptEntities } from './common'
+import { inferenceSignal } from './inference'
 import { TickHandler } from '/common/prompt'
 import { extractReasoning } from '/common/reasoning'
 import { swarmApi } from '/common/requests/swarmui'
@@ -19,6 +17,7 @@ import { getImagePrompt, getImageSettings } from '/common/image'
 import { imageStore } from '../images'
 import { isChatPage } from '/web/shared/hooks'
 import { FileInputResult } from '/web/shared/FileInput'
+import { getChatImageHint } from '../prompt'
 
 export type ImageRequestEntities = Awaited<ReturnType<typeof createImageRequest>>
 
@@ -80,30 +79,81 @@ async function processImageFile(file: File): Promise<FileInputResult> {
     content: base64,
   }
 }
-export async function generateImagePrompt(opts: {
+
+export type ImagePromptOpts = {
   onTick?: TickHandler
   question?: string
-  messageId?: string
+  messageId: string
   signal?: AbortController
-}) {
-  const imgEnts = await getImagePromptEntities(opts.messageId)
-  const helper = inferenceHelper({ preset: imgEnts.preset, onTick: opts.onTick })
-  const template = getSummaryTemplate({
-    task: imgEnts.summary,
-    generate: 'Image Caption',
-    focus: opts.question,
-  })
-  const settings = imgEnts.preset || imgEnts.entities.settings
+}
 
-  console.log(
-    'Using',
-    settings.service,
-    'to summarise:',
-    settings.name || '',
-    `\n${imgEnts.summary || ''}`
-  )
+export function createCaptionInferenceSignal(opts: Omit<ImagePromptOpts, 'messageId'>) {
+  const task = 'Image Caption'
 
-  const stream = await helper.send({ prompt: template, preset: settings, signal: opts.signal })
+  const onTick: TickHandler = (response, state) => {
+    switch (state) {
+      case 'done':
+      case 'partial': {
+        if (!response.startsWith(task + ':')) {
+          opts.onTick?.(response, state)
+          return
+        }
+
+        const parsed = response.slice(task.length + 1).trim()
+        opts.onTick?.(parsed, state)
+        return
+      }
+
+      default: {
+        opts.onTick?.(response, state)
+        return
+      }
+    }
+  }
+
+  const helper = inferenceSignal({ onTick })
+
+  const generate = async (messageId: string, signal?: AbortController) => {
+    const ents = getImagePromptEntities(messageId)
+    helper.update({ preset: ents.preset })
+
+    let focus = opts.question
+    if (!focus) {
+      focus = getChatImageHint()
+    }
+
+    const template = getSummaryTemplate({ task: ents.summary, generate: task, focus })
+
+    console.log(
+      'Using',
+      ents.preset.service,
+      'to summarise:',
+      ents.preset.name || '',
+      `\n${ents.summary || ''}`
+    )
+
+    const stream = await helper.send({
+      prompt: template,
+      preset: ents.preset,
+      signal,
+    })
+
+    return stream
+  }
+
+  return { ...helper, generate }
+}
+
+export async function generateImagePrompt(opts: ImagePromptOpts) {
+  const gen = createCaptionInferenceSignal(opts)
+
+  let focus = opts.question
+  if (!focus && opts.messageId) {
+    focus = getChatImageHint()
+  }
+
+  const stream = await gen.generate(opts.messageId)
+
   const result = await stream.promise
 
   if (result.result?.response) {
@@ -162,10 +212,9 @@ export async function getImageModelList(opts: {
 }
 
 export async function generateImage(
-  opts: GenerateOpts,
+  opts: Require<GenerateOpts, 'messageId'>,
   callbacks?: { onSummary?: (summary: string) => void; onTick?: TickHandler }
 ) {
-  const entities = await getPromptEntities({ messageId: opts.messageId })
   const result = opts.prompt
     ? await localApi.result({ response: opts.prompt })
     : await generateImagePrompt({
@@ -182,12 +231,11 @@ export async function generateImage(
 
   callbacks?.onSummary?.(summary)
 
-  const max = getMaxImageContext(entities.user)
-  const trimmed = await encode(summary)
-    .then((tokens) => tokens.slice(0, max))
-    .then(decode)
+  if (!summary.trim()) {
+    return localApi.error(`Image captioned failed to generate: Empty response received`)
+  }
 
-  const req = await createImageRequest({ prompt: trimmed, messageId: opts.messageId })
+  const req = await createImageRequest({ prompt: summary, messageId: opts.messageId })
   const requestId = v4()
 
   try {
@@ -217,7 +265,8 @@ async function dispatchImage(req: ImageRequestEntities, opts: GenerateOpts, requ
       const { text: image } = await horde.generateImage(
         req.entities.user,
         req.request.prompt,
-        req.request.negative,
+        req.settings!,
+        req.provider,
         (status) => {}
       )
 
@@ -402,6 +451,7 @@ subscribe('image-failed', { requestId: 'string', error: 'string' }, (body) => {
 })
 
 function getSummaryTemplate(opts: { task: string | undefined; focus?: string; generate?: string }) {
+  const generate = opts.generate || 'Chat Summary'
   let prompt =
     opts.task ||
     neat`Write an image caption of the current scene using physical descriptions without names. Respond using comma-separate BOORU TAGS.`
@@ -410,7 +460,6 @@ function getSummaryTemplate(opts: { task: string | undefined; focus?: string; ge
     prompt += `\nSpecifically focus on: ${opts.focus}`
   }
 
-  const generate = opts.generate || 'Chat Summary'
   const prefix = ['a', 'e', 'i', 'o', 'u'].includes(generate[0].toLowerCase()) ? 'an' : 'a'
 
   return neat`
@@ -495,14 +544,14 @@ export async function createImageRequest(input: {
 }) {
   const ents = getImageEntities()
   const { user } = getStore('user').getState()
-  const { settings, provider } = getImageSettings(ents.chat, ents.char, ents.user)
+  const { preset: settings, provider } = getImageSettings(ents.chat, ents.char, ents.user)
   const { rawPrompt, prompt } = getImagePrompt(input, settings)
 
   const opts: ImageRequestOpts = {
     negative: settings?.negative || '',
     prompt,
     raw_prompt: rawPrompt,
-    settings,
+    settings: settings!,
     user: user!,
     override: '',
     provider,

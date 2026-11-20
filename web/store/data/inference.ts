@@ -78,6 +78,8 @@ const initState = (init?: {
   signal: null as AbortController | null,
 })
 
+export type InferenceHelper = Awaited<ReturnType<typeof inferenceHelper>>
+
 export function inferenceHelper(init: {
   chatId?: string
   preset?: Partial<AppSchema.GenSettings>
@@ -185,7 +187,7 @@ export function inferenceHelper(init: {
 }
 
 export function inferenceSignal(init: {
-  preset?: AppSchema.GenSettings
+  preset?: Partial<AppSchema.GenSettings>
   schema?: GenerateRequestV2['jsonSchema']
   onTick?: TickHandler
   maxContext?: number
@@ -202,7 +204,7 @@ export function inferenceSignal(init: {
     cancel: helper.cancel,
     send: helper.send,
     update: (next: {
-      preset?: AppSchema.GenSettings
+      preset?: Partial<AppSchema.GenSettings>
       schema?: GenerateRequestV2['jsonSchema']
       maxContext?: number
     }) => {
@@ -383,7 +385,7 @@ export async function inferenceStream(opts: InferenceOpts, onTick?: TickHandler)
     })
     api.localSSE({
       host: conn?.url,
-      path: payload.messages ? `/chat/completions` : '/completions',
+      path: payload.messages?.length ? `/chat/completions` : '/completions',
       body: opts.payload || fallback,
       headers,
       signal: opts.signal,

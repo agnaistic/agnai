@@ -73,3 +73,25 @@ export function isUnion<T extends string>(value: any): value is [T] | string[] |
 
   return true
 }
+
+export function isObjectUnion<T extends Validator[] | readonly Validator[]>(
+  value: any
+): value is Validator[] {
+  if (value?.__union__ !== true) return false
+  if (Array.isArray(value) === false) return false
+  if (value.length < 1) return false
+
+  for (const entry of value) {
+    if (typeof entry !== 'object') return false
+    if (isPrimitive(entry)) return false
+  }
+
+  return true
+}
+
+export function isOptionalObjectUnion<T extends Validator[] | readonly Validator[]>(
+  value: any
+): value is Validator[] {
+  if (value?.__optional__ !== true) return false
+  return isObjectUnion(value)
+}

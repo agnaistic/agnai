@@ -34,6 +34,7 @@ export type CharacterUpdate = Partial<
     | 'imageSettings'
     | 'json'
     | 'folder'
+    | 'imagePresetId'
   >
 >
 

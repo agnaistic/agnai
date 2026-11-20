@@ -51,7 +51,7 @@ export type TemplateOpts = {
   /** If present, history will be rendered last */
   limit?: {
     context: number
-    encoder: TokenCounter
+    encoder?: TokenCounter
     output?: Record<string, { src: string; lines: string[]; raw?: string[] }>
   }
 
@@ -204,6 +204,21 @@ type BotsProp = 'i' | 'personality' | 'name'
 
 export type ParsedTemplate = Awaited<ReturnType<typeof parseTemplate>>
 
+export function parseInterps(
+  template: string,
+  opts: Pick<TemplateOpts, 'impersonate' | 'char' | 'replyAs' | 'chat' | 'characters'> = {}
+) {
+  const flags: InternalState = { is_final: true, jsonAliases: {}, messages: [] }
+  const ast = parser.parse(template, {}) as PNode[]
+  const result = render(template, opts, flags, ast)
+    .replace(/\r\n/g, '\n')
+    .replace(/\n\n+/g, '\n\n')
+    .trim()
+  flags.is_final = false
+
+  return result
+}
+
 /**
  * This function also returns inserts because Chat and Claude discard the
  * parsed string and use the inserts for their own prompt builders
@@ -305,7 +320,7 @@ export async function parseTemplate(
       sizes.push(`limit: ${opts.limit.context}, words: ${words}`)
     }
 
-    const tokens = await opts.limit.encoder(prompt)
+    const tokens = (await opts.limit.encoder?.(prompt)) ?? 0
     tally += tokens
     sizes.push(`${label}: ${tokens}/${tally}`)
   }
@@ -345,7 +360,7 @@ export async function parseTemplate(
     // This is based on the idea that the template author knows that 'the bottom of the prompt is more important'
     // Therefore we will prioritise low-priority blocks at the bottom of the prompt higher than the top of the prompt.
     for (const { id, content } of (opts.lowpriority ?? []).reverse()) {
-      const contentLength = await opts.limit.encoder(content)
+      const contentLength = (await opts.limit.encoder?.(content)) ?? 0
       if (contentLength > unusedTokens) {
         output = output.replace(id, '')
         replaceSections(sections, id, '')
@@ -391,10 +406,6 @@ export async function parseTemplate(
   replaceSections(sections, /\r\n/g, '\n')
   replaceSections(sections, /\n\n+/g, '\n\n')
   await addCount('final', output)
-
-  if (sizes.length > 1) {
-    console.log(`>>>\nContext:\n${sizes.join('\n')}\n<<<\n`)
-  }
 
   const length = await opts.limit?.encoder?.(output)
 
@@ -733,7 +744,7 @@ function renderCondition(
   opts: TemplateOpts,
   flags: InternalState
 ) {
-  if (opts.repeatable) return ''
+  // if (opts.repeatable) return ''
 
   if (node.value === 'example_dialogue') {
     flags.sample_chat = true
@@ -806,10 +817,10 @@ function getEntities(holder: IterableHolder, opts: TemplateOpts) {
         if (char.deletedAt) continue
 
         // Exclude temp characters that have been disabled/removed
-        if (char._id.startsWith('temp-') && char.favorite === false) continue
+        if (char._id?.startsWith('temp-') && char.favorite === false) continue
 
         // Exclude non-temp characters that have been removed from the chat
-        if (!char._id.startsWith('temp-') && !opts.chat?.characters?.[char._id]) continue
+        if (!char._id?.startsWith('temp-') && !opts.chat?.characters?.[char._id]) continue
         chars.push(char)
       }
       return chars
@@ -951,7 +962,7 @@ function getPlaceholder(
 ) {
   if (opts.repeatable && !repeatableHolders.has(node.value as any)) return ''
 
-  if (node.value.startsWith('json.')) {
+  if (node.value?.startsWith('json.')) {
     const target = node.value.replace('json.', '')
 
     const jsonValues = opts.jsonValues || opts.history?.slice(-1)[0]?.json || {}
@@ -960,7 +971,7 @@ function getPlaceholder(
     return value
   }
 
-  if (node.value.startsWith('var.') || node.value.startsWith('vars.')) {
+  if (node.value?.startsWith('var.') || node.value?.startsWith('vars.')) {
     const name = node.value.replace('var.', '').replace('vars.', '')
     return opts.parts?.props?.[name] || ''
   }

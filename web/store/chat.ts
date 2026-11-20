@@ -15,6 +15,9 @@ import { embedApi } from './embeddings'
 import { subscribe } from './socket'
 import { toastStore } from './toasts'
 import { replace } from '/common/util'
+import { debug } from '/common/debug'
+
+const log = debug('chat-store')
 
 export type AllChat = ChatData
 
@@ -151,6 +154,12 @@ export const chatStore = createStore<ChatState>('chat', {
 
   events.on(EVENTS.allChats, (chats) => {
     chatStore.setState({ allChats: chats.sort(sortDesc) })
+  })
+
+  events.on(EVENTS.chatUpdated, (chat) => {
+    log('received chat update')
+    if (!chat?._id) return
+    handleEditChat(chat)
   })
 
   return {
@@ -558,7 +567,7 @@ export const chatStore = createStore<ChatState>('chat', {
       const detail = details[msg.chatId]
       if (!detail) return
 
-      const entities = await getPromptEntities()
+      const entities = getPromptEntities()
 
       const encoder = await getEncoder()
       const replyAs = detail.replyAs?.startsWith('temp-')
@@ -608,10 +617,17 @@ chatStore.subscribe(async (state, prev) => {
   }
 })
 
-// function updateAutoReplyAs() {
+function handleEditChat(chat: Partial<AppSchema.Chat> & { _id: string }) {
+  if (!chat?._id) return
+  const state = chatStore.getState()
 
-// }
+  const allChats = state.allChats.map((ch) => (ch._id === chat._id ? { ...ch, ...chat } : ch))
 
+  const prev = state.details[chat._id]?.chat
+  const details = updateDetails(chat._id, { chat: { ...prev, ...chat } })
+
+  chatStore.setState({ allChats, details })
+}
 function toMemberKeys(prev: Record<string, AppSchema.Profile>, curr: AppSchema.Profile) {
   prev[curr.userId] = curr
   return prev
@@ -848,12 +864,10 @@ function updateDetails(id: string, update: Partial<ChatDetail>): Record<string, 
   const { details } = chatStore.getState()
   const last = details[id] || {}
 
-  const next = {
-    ...details,
-    [id]: {
-      ...last,
-      ...update,
-    },
+  const next = { ...details }
+
+  if (last) {
+    next[id] = { ...last, ...update }
   }
 
   return next

@@ -17,6 +17,7 @@ import { getScenarioEventType } from '/common/scenario'
 import { getStore } from '../create'
 import { getDeletionChanges, toQuickGraph } from '/common/chat'
 import { chatsApi } from './chats'
+import { debug } from 'common/debug'
 
 export const msgsApi = {
   createMessage,
@@ -63,8 +64,10 @@ export async function createMessage(opts: {
 
   meta?: any
   json?: any
+
+  dryrun?: boolean
 }) {
-  const props = await getPromptEntities()
+  const props = getPromptEntities()
   const messageId = opts.messageId || v4()
 
   const text = await parseTemplate(opts.text, {
@@ -94,17 +97,19 @@ export async function createMessage(opts: {
 
   localEmit({ type: 'message-created', msg: preMsg, chatId: opts.chatId })
 
-  const result = await api.post(`/chat/${opts.chatId}/send`, {
-    kind: opts.kind,
-    text: text.parsed,
-    impersonate: opts.character,
-    ooc: opts.ooc,
-    parent: opts.parent,
-    bot: opts.bot,
-    messageId,
-    meta: opts.meta,
-    json: opts.json,
-  })
+  const result = !opts.dryrun
+    ? await api.post(`/chat/${opts.chatId}/send`, {
+        kind: opts.kind,
+        text: text.parsed,
+        impersonate: opts.character,
+        ooc: opts.ooc,
+        parent: opts.parent,
+        bot: opts.bot,
+        messageId,
+        meta: opts.meta,
+        json: opts.json,
+      })
+    : await localApi.result({ message: preMsg })
 
   // await record('add', opts.chatId, messageId, opts.parent)
   if (isLoggedIn() && result.result?.message) {
@@ -135,7 +140,8 @@ export async function editMessage(msg: AppSchema.ChatMessage, replace: string) {
 
 export async function editMessageProps(
   msg: Pick<AppSchema.ChatMessage, '_id' | 'chatId'>,
-  payload: Partial<AppSchema.ChatMessage> & { assignTree?: boolean }
+  payload: Partial<AppSchema.ChatMessage> & { assignTree?: boolean },
+  dryrun?: boolean
 ) {
   const update = { ...payload }
   if (update.meta && Object.keys(update.meta).length === 0) {
@@ -156,10 +162,13 @@ export async function editMessageProps(
     const emit = { type: 'message-edited', chatId: msg.chatId, messageId: msg._id, ...update }
     if (original) localEmit(emit)
 
+    if (dryrun) {
+      return localApi.result(emit)
+    }
+
     const res = await api.method('put', `/chat/${msg._id}/message-props`, update)
     if (res.result && !original) localEmit(emit)
     if (res.error && original) localEmit({ ...emit, ...original })
-
     return res
   }
 
@@ -185,7 +194,7 @@ export async function getMessages(chatId: string, before: string) {
   return res
 }
 
-async function getActiveTemplateParts() {
+async function getActiveTemplateParts(messageId?: string) {
   const { details, lastChatId } = chatStore.getState()
   const active = details[lastChatId]
 
@@ -194,7 +203,9 @@ async function getActiveTemplateParts() {
     signal,
     kind: 'summary',
     text: '',
+    messageId,
   })
+
   const toLine = messageToLine({
     chars: entities.characters,
     members: entities.members,
@@ -339,6 +350,7 @@ subscribe('inference', { requestId: 'string', response: 'string', output: 'any?'
   if (!cb) return
 
   cb(body.response, 'done', body.output)
+  debug('gen')(body.output)
   genApi.callbacks.delete(body.requestId)
 })
 

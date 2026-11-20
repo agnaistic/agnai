@@ -23,7 +23,7 @@ import {
 } from '../shared/colors'
 import { UserType } from '/common/types/admin'
 import { EMBED_MODELS, embedApi } from './embeddings'
-import { ImageProviderSettings } from '/common/types/image-schema'
+import { ImagePresetSettings, ImageProviderSettings } from '/common/types/image-schema'
 
 const BACKGROUND_KEY = 'ui-bg'
 export const ACCOUNT_KEY = 'agnai-username'
@@ -316,6 +316,31 @@ export const userStore = createStore<UserState>(
       }
     },
 
+    async *upsertImageSettings(
+      prev,
+      update: {
+        target?: { type: string; id?: string; imagePresetId: string }
+        preset?: ImagePresetSettings
+        provider?: ImageProviderSettings
+      },
+      onSuccess?: (result: {
+        user: Partial<AppSchema.User>
+        chat?: Partial<AppSchema.Chat>
+        character?: Partial<AppSchema.Character>
+        preset?: ImagePresetSettings
+        provider?: ImageProviderSettings
+      }) => void
+    ) {
+      const res = await usersApi.upsertImageSettings(update)
+      if (res.result) {
+        if (res.result.chat) events.emit(EVENTS.chatUpdated, res.result.chat)
+        if (res.result.character) events.emit(EVENTS.charUpdated, res.result.character)
+        if (res.result.user) yield { user: { ...prev.user, ...res.result.user } }
+
+        onSuccess?.(res.result)
+      }
+    },
+
     async *saveProvider(
       { user },
       provider: AppSchema.Provider,
@@ -336,6 +361,16 @@ export const userStore = createStore<UserState>(
 
       onDone?.(false)
     },
+
+    async *deletePreset({ user }, presetId: string, onDone?: (success: boolean) => void) {
+      const res = await usersApi.deletePreset(presetId)
+      onDone?.(!!res.result)
+      if (res.result) {
+        toastStore.success('Image Preset deleted')
+        return { user: { ...user!, imagePresets: res.result.imagePresets } }
+      }
+    },
+
     async *deleteProvider({ user }, providerId: string, onDone?: (success: boolean) => void) {
       const res = await usersApi.deleteProvider(providerId)
       onDone?.(!!res.result)
@@ -344,6 +379,7 @@ export const userStore = createStore<UserState>(
         return { user: { ...user!, providers: res.result.providers } }
       }
     },
+
     async *stopSubscription({ billingLoading }) {
       if (billingLoading) return
       yield { billingLoading: true }
@@ -1161,44 +1197,45 @@ function getInitialEmbeddingsModel(user: AppSchema.User) {
 }
 
 async function autoSwitchImageService(init: { config: AppSchema.AppConfig; user: AppSchema.User }) {
-  // If it's already set, ignore
-  if (!init.user || !init.config) return
+  return
+  // // If it's already set, ignore
+  // if (!init.user || !init.config) return
 
-  const config = init.config.serverConfig
-  if (init.user.images?.type === 'agnai') return
+  // const config = init.config.serverConfig
+  // if (init.user.images?.type === 'agnai') return
 
-  // If we've changed from the default, ignore
-  if (init.user.images?.type !== 'horde') return
+  // // If we've changed from the default, ignore
+  // if (init.user.images?.type !== 'horde') return
 
-  if (!config?.imagesEnabled) return
-  if (!config?.imagesModels?.length) return
+  // if (!config?.imagesEnabled) return
+  // if (!config?.imagesModels?.length) return
 
-  const { tiers } = userStore.getState()
+  // const { tiers } = userStore.getState()
 
-  const sub = getUserSubscriptionTier(init.user, tiers)
-  if (!sub?.tier?.imagesAccess) return
+  // const sub = getUserSubscriptionTier(init.user, tiers)
+  // if (!sub?.tier?.imagesAccess) return
 
-  const next = { ...init.user.images }
-  next.type = 'agnai'
+  // const next = { ...init.user.images }
+  // next.type = 'agnai'
 
-  if (config?.defaultImageModel) {
-    if (next.agnai) {
-      next.agnai.model = config.defaultImageModel
-    } else {
-      next.agnai = {
-        _id: 'agnai',
-        name: 'Agnaistic',
-        type: 'agnai',
-        url: '',
-        model: config.defaultImageModel,
-        sampler: 'k_euler_a',
-        scheduler: '',
-        draftMode: false,
-      }
-    }
-  }
+  // if (config?.defaultImageModel) {
+  //   if (next.agnai) {
+  //     next.agnai.model = config.defaultImageModel
+  //   } else {
+  //     next.agnai = {
+  //       _id: 'agnai',
+  //       name: 'Agnaistic',
+  //       type: 'agnai',
+  //       url: '',
+  //       model: config.defaultImageModel,
+  //       sampler: 'k_euler_a',
+  //       scheduler: '',
+  //       draftMode: false,
+  //     }
+  //   }
+  // }
 
-  userStore.updateConfig({ images: next })
+  // userStore.updateConfig({ images: next })
 }
 
 userStore.subscribe((next, prev) => {

@@ -1,11 +1,11 @@
-import ws from 'ws'
+import { WebSocketServer } from 'ws'
 import { Server } from 'http'
 import { AppSocket } from './types'
 import { handleMessage } from './handle'
 import { v4 } from 'uuid'
 
 export function setupSockets(srv: Server) {
-  const sockets = new ws.Server({ noServer: true, clientTracking: false })
+  const sockets = new WebSocketServer({ noServer: true, clientTracking: false })
 
   srv.on('upgrade', (req, socket, head) => {
     sockets.handleUpgrade(req, socket, head, (client) => {

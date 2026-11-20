@@ -12,17 +12,15 @@ import {
   insertsDeeperThanConvoHistory,
 } from '../../common/prompt'
 import { AppLog } from '../middleware'
-import { getTokenCounter } from '../tokenize'
-import { toChatCompletionPayload } from './chat-completion'
+
 import { sendOne } from '../api/ws'
 import { joinUrl } from '/common/requests/util'
 import { GenSettings } from '/common/types/presets'
-import { OPENAI_MODELS } from '/common/presets/openai'
 import { CLAUDE_MODELS, CLAUDE_TEXT_MODELS } from '/common/presets/claude'
 import { fetchStream } from '/common/requests/stream'
 import { remapMessages } from './template-chat-payload'
 import { getMimeTypeBase64 } from '/common/util'
-import { stripImageContent, toChatMessages } from '/common/template-messages'
+import { stripImageContent } from '/common/template-messages'
 
 const CHAT_URL = `https://api.anthropic.com/v1/messages`
 const TEXT_URL = `https://api.anthropic.com/v1/complete`
@@ -57,9 +55,6 @@ const TEMP_TOPP_EXCLUSIVE: Record<string, boolean> = {
   'claude-sonnet-4-20250514': false,
   'claude-3-haiku-20240307': false,
 }
-
-// There's no tokenizer for Claude, we use OpenAI's as an estimation
-const encoder = () => getTokenCounter('claude', '')
 
 export const handleClaude: ModelAdapter = async function* (opts) {
   let { user, log, guest, gen, isThirdParty } = opts
@@ -220,7 +215,7 @@ export const handleClaude: ModelAdapter = async function* (opts) {
 
   log.debug({ ...payload, prompt: null, messages: null }, 'Claude payload')
   log.debug(`Prompt:\n${payload.prompt}`)
-  yield { prompt: payload.messages ? stripImageContent(payload.messages) : payload.prompt }
+  yield { prompt: payload.messages?.length ? stripImageContent(payload.messages) : payload.prompt }
 
   const iterator = payload.stream
     ? streamCompletion({
@@ -455,34 +450,10 @@ const streamCompletion: CompletionGenerator = async function* (opts) {
   return
 }
 
-export async function createClaudeChatCompletionV2(opts: AdapterProps) {
-  let messages = opts.messages
-  if (!messages) {
-    const result = await toChatMessages(opts, getTokenCounter('claude', ''))
-    messages = result.messages
-  }
-
-  // Last message must be 'thinking' block or role 'user'
-  const lastMsg = messages?.slice(-1)?.[0]
-  if (lastMsg?.role === 'assistant') {
-    lastMsg.role = 'user'
-  }
-
-  return messages
-}
-
 export async function createClaudeChatCompletion(opts: AdapterProps) {
   const result = {
     system: '',
     messages: opts.messages!,
-  }
-
-  if (!result.messages) {
-    result.messages = await toChatCompletionPayload(
-      opts,
-      getTokenCounter('openai', OPENAI_MODELS.Turbo),
-      opts.gen.maxTokens!
-    )
   }
 
   // Claude doesn't have a system role, so we extract the first message to put it in the system
@@ -547,8 +518,6 @@ async function createClaudePrompt(opts: AdapterProps) {
   // Some API keys require that prompts start with this
   const mandatoryPrefix = '\n\nHuman: '
 
-  const enc = encoder()
-
   const { parsed: rawGaslight, inserts } = await injectPlaceholders(
     ensureValidTemplate(gen.gaslight || defaultPresets.claude.gaslight, ['history', 'post']),
     {
@@ -556,16 +525,14 @@ async function createClaudePrompt(opts: AdapterProps) {
       parts,
       lastMessage: opts.lastMessage,
       characters: opts.characters || {},
-      encoder: enc,
       jsonValues: opts.jsonValues,
     }
   )
   const gaslight = processLine('system', rawGaslight)
-  const gaslightCost = await encoder()(mandatoryPrefix + gaslight)
+  const gaslightCost = 0
   const { parsed } = await injectPlaceholders(parts.ujb ?? '', {
     opts,
     parts,
-    encoder: enc,
     characters: opts.characters || {},
     jsonValues: opts.jsonValues,
   })
@@ -573,16 +540,12 @@ async function createClaudePrompt(opts: AdapterProps) {
   const ujb = parsed ? processLine('system', parsed) : ''
 
   const prefill = opts.parts.prefill ? opts.parts.prefill + '\n' : ''
-  const prefillCost = await enc(prefill)
+  const prefillCost = 0
 
-  const maxBudget =
-    maxContextLength -
-    maxResponseTokens -
-    gaslightCost -
-    prefillCost -
-    (await enc(ujb)) -
-    (await enc(opts.replyAs.name + ':')) -
-    (await enc([...inserts.values()].join(' ')))
+  const maxBudget = maxContextLength - maxResponseTokens - gaslightCost - prefillCost
+  // (await enc(ujb)) -
+  // (await enc(opts.replyAs.name + ':')) -
+  // (await enc([...inserts.values()].join(' ')))
 
   let tokens = 0
   const history: string[] = []
@@ -603,11 +566,11 @@ async function createClaudePrompt(opts: AdapterProps) {
 
   for (const line of all) {
     const distanceFromBottom = all.length - 1 - i
-    const lineType: LineType = line.startsWith(sender)
+    const lineType: LineType = line?.startsWith(sender)
       ? 'user'
-      : line.startsWith('System:')
+      : line?.startsWith('System:')
       ? 'system'
-      : line.startsWith(sampleAmble)
+      : line?.startsWith(sampleAmble)
       ? 'example'
       : 'char'
     if (distanceFromBottom === examplePos) {
@@ -616,7 +579,7 @@ async function createClaudePrompt(opts: AdapterProps) {
     }
 
     const processedLine = processLine(lineType, line)
-    const cost = await enc(processedLine)
+    const cost = 0 // await enc(processedLine)
     if (cost + tokens >= maxBudget) break
     const insert = inserts.get(distanceFromBottom)
     if (insert) history.push(processLine('system', insert))

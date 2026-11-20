@@ -17,6 +17,7 @@ import { EVENTS, events } from '../emitter'
 import { getScenarioEventType } from '/common/scenario'
 import { imageApi } from './data/image'
 import { resolveChatPath } from '/common/chat'
+import { getUserToken } from './api'
 
 export type VoiceState = 'generating' | 'playing'
 
@@ -385,7 +386,7 @@ export const responseStore = createStore<ResponseState>(
       _,
       opts: {
         chatId: string
-        messageId?: string
+        messageId: string
         onSummary?: (summary: string) => void
         onTick?: TickHandler
         question?: string
@@ -480,7 +481,7 @@ async function handlePreSend(opts: {
   onSuccess?: () => void
   onError?: (err?: string) => void
 }) {
-  const isEvent = opts.mode.startsWith('send-event:')
+  const isEvent = opts.mode?.startsWith('send-event:')
   if (!isEvent && opts.mode !== 'ooc' && opts.mode !== 'send' && opts.mode !== 'send-noreply') {
     return
   }
@@ -501,6 +502,7 @@ async function handlePreSend(opts: {
 
   const parent = botGen.getMessageParent(opts.mode, msgs)
 
+  const user = getUserToken()
   const res = await msgsApi.createMessage({
     kind: isEvent ? getScenarioEventType(opts.mode) : 'send-noreply',
     chatId: opts.chatId,
@@ -509,6 +511,7 @@ async function handlePreSend(opts: {
     parent: parent?._id,
     character: impersonating,
     bot: isEvent ? true : false,
+    dryrun: !!user?.admin && active.chat.userId !== user?.userId,
   })
 
   if (res.result) {

@@ -10,11 +10,14 @@ import { X } from 'lucide-solid'
 import { createDebounce } from '/web/shared/util'
 import { InlineRangeInput } from '/web/shared/RangeInput'
 import { FONT_FACES } from '/common/types/ui'
+import { Toggle } from 'web/shared/Toggle'
+import { pageStore } from 'web/store/page'
 
 const themeOptions = UI.UI_THEME.map((color) => ({ label: color, value: color }))
 
 export const ThemeUISettings: Component = (props) => {
   const state = userStore((s) => ({ ui: s.ui, current: s.current, background: s.background }))
+  const page = pageStore((s) => ({ flags: s.flags }))
 
   const [tryCustomUI, unsubCustomUi] = createDebounce((update: Partial<UI.CustomUI>) => {
     userStore.tryCustomUI(update)
@@ -134,6 +137,22 @@ export const ThemeUISettings: Component = (props) => {
         items={fonts()}
         value={state.ui.font}
         onChange={(item) => userStore.saveUI({ font: item.value as any })}
+      />
+      <Select
+        label="Content Alignment"
+        helperText="Alignment of main content area"
+        items={[
+          { label: 'Left', value: 'left' },
+          { label: 'Center', value: 'center' },
+        ]}
+        onChange={(item) => userStore.saveUI({ contentAlign: item.value as any })}
+        value={state.ui.contentAlign || 'center'}
+      />
+      <Toggle
+        label="Enable Sagas Preview"
+        helperText={`Show the link to the deprecated _Sagas_ feature in the menu`}
+        value={page.flags.sagas}
+        onChange={(ev) => pageStore.flag('sagas', ev)}
       />
     </>
   )

@@ -6,9 +6,48 @@ import type { GenerateRequestV2 } from '/srv/adapter/type'
 
 export const PING_INTERVAL_MS = 30000
 
+export function stopResponse(opts: { text: string; author: string; stops: string[] }) {
+  let generated = opts.text
+
+  if (opts.author) {
+    generated = generated.split(`${opts.author}:`).join('').trim()
+  }
+
+  let index = -1
+  let trimmed = opts.stops.reduce((prev, endToken) => {
+    const idx = generated.indexOf(endToken)
+
+    if (idx === -1) return prev
+
+    const text = generated.slice(0, idx)
+    if (index === -1 || idx < index) {
+      index = idx
+      return text
+    }
+
+    return prev
+  }, '')
+
+  return trimmed || generated
+}
+
+export function uniqueBy<T>(list: T[], key: keyof T) {
+  const set = new Set<any>()
+  const next: T[] = []
+
+  for (const item of list) {
+    if (!set.has(item[key])) {
+      next.push(item)
+      set.add(item[key])
+    }
+  }
+
+  return next
+}
+
 // this is an edited and inverted ver of https://stackoverflow.com/a/70385497
 export function incompleteJson(data: string) {
-  if (data.startsWith('{') && !data.endsWith('}')) return true
+  if (data?.startsWith('{') && !data.endsWith('}')) return true
   try {
     const parsed = JSON.parse(data)
     if (parsed && typeof parsed === 'object') {
@@ -53,16 +92,28 @@ export function parseEvent(msg: string) {
 
 export function getMimeTypeBase64(base64: string) {
   const [start, encode] = base64.split(';')
-  if (!start.startsWith('data:')) return { mimeType: 'image/jpeg', data: base64 }
+  if (!start?.startsWith('data:')) return { mimeType: 'image/jpeg', data: base64 }
 
   return { mimeType: start.slice(5), data: encode.replace('base64,', '') }
 }
 
+/** Update or append an item in a list */
 export function replace<T extends { _id: string }>(id: string, list: T[], item: Partial<T>) {
   return list.map((li) => (li._id === id ? { ...li, ...item } : li))
 }
 
-export function updateList<T extends { _id: string }>(original: T[], incoming: T[]) {
+/**
+ * Updates items in an array.
+ *
+ * **Does not append new entries**
+ * @param original
+ * @param incoming
+ * @returns
+ */
+export function updateList<T extends { _id: string }>(
+  original: T[],
+  incoming: Array<Partial<T> & { _id: string }>
+) {
   const map = toMap(incoming)
   const next: T[] = []
 
@@ -195,7 +246,7 @@ export function toDuration(valueSecs: number, full?: boolean) {
 
   if (full) {
     return [`${days}d`, `${hours}h`, `${minutes}m`, `${seconds}s`]
-      .filter((time) => !time.startsWith('0'))
+      .filter((time) => !time?.startsWith('0'))
       .join(':')
   }
 
@@ -322,7 +373,7 @@ export function slugify(str: string) {
 
 export function cleanPrompt(prompt: string) {
   const next = prompt
-    .replace(/[^0-9a-z_\-,\s\.\(\)\[\]]/gi, '')
+    .replace(/[^0-9a-z_\-,\s\.\(\)\[\]]\:/gi, '')
     .trim()
     .split('\n')
     .map((line) => line.trim())
@@ -394,7 +445,7 @@ export function getBotName(
   const charId = msg.characterId || ''
   if (!charId) return replyAs?.name || main.name
 
-  if (charId.startsWith('temp-')) {
+  if (charId?.startsWith('temp-')) {
     const temp = chat.tempCharacters?.[charId]
     if (!temp) return main.name
     return temp.name

@@ -114,6 +114,11 @@ export const KNOWN_PROVIDERS: Record<string, ProviderDefinition> = {
     url: `https://integrate.api.nvidia.com/v1`,
     formats: [{ type: 'format', value: 'openai-chatv2' }],
   },
+  orcarouter: {
+    name: 'OrcaRouter',
+    url: 'https://api.orcarouter.ai/v1',
+    formats: [{ type: 'format', value: 'openai-chatv2' }],
+  },
 }
 
 export const KNOWN_SELF_HOST: Record<string, ProviderDefinition> = {
@@ -142,7 +147,7 @@ export const KNOWN_SELF_HOST: Record<string, ProviderDefinition> = {
 
 export const CUSTOM_PROVIDERS: Record<string, ProviderDefinition> = {
   'openai-chatv2': {
-    name: 'OpenAI Compat',
+    name: 'OpenAI Compatible',
     formats: [
       {
         type: 'format',
@@ -198,12 +203,28 @@ export type ProviderFormat =
 
 export type ProviderSubFormat = { value: string; name: string }
 
+type OpenAICompatPayload = {
+  model: string
+  stop: string[]
+  messages: Array<{ role: string; content: string }>
+  stream: boolean
+  temperature: number
+  top_p: number
+  max_tokens: number
+  reasoning_effort?: string
+  presence_penalty?: number
+  frequency_penalty?: number
+}
+
 export type ProviderDefinition = {
   name: string
   url?: string
   // service?: AIAdapter
   // format?: ThirdPartyFormat
   formats?: ProviderFormat[]
+
+  /** WIP, not yet implemented: Provider specific adjustments to the OpenAI-compatible payload just before dispatching */
+  payload?: (payload: OpenAICompatPayload) => any
 }
 
 type ProviderCategory = 'custom' | 'known' | 'self' | 'agnai'

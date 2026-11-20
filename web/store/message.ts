@@ -131,8 +131,12 @@ export const msgStore = createStore<MsgState>(
     msgStore.setState(initState)
   })
 
-  events.on(EVENTS.init, (init) => {
+  events.on(EVENTS.init, async (init) => {
     msgStore.setState({ imagesSaved: init.config.imagesSaved })
+    const cached = await storage.userCacheGet(`message-attachments`)
+    if (cached) {
+      msgStore.setState({ attachments: cached })
+    }
   })
 
   events.on(EVENTS.clearMsgs, (chatId: string) => {
@@ -483,8 +487,7 @@ export const msgStore = createStore<MsgState>(
       if (imgWaiting) return
 
       const messageId = opts.sourceMsgId || msgs.slice(-1)[0]._id
-      const messageImagePromt =
-        messageId && !opts.prompt ? getMessageImagePrompt(messageId) : undefined
+      const summaryPrompt = messageId && !opts.prompt ? getMessageImagePrompt(messageId) : undefined
 
       yield {
         hordeStatus: undefined,
@@ -501,7 +504,7 @@ export const msgStore = createStore<MsgState>(
         {
           messageId,
           chatId: activeChatId,
-          prompt: opts.prompt || messageImagePromt,
+          prompt: opts.prompt || summaryPrompt,
           append: opts.append,
           source: 'summary',
         },
@@ -581,10 +584,10 @@ async function handleImage(body: {
   const { msgs, imagesSaved, activeChatId } = msgStore.getState()
 
   const isImageUrl =
-    image.startsWith('/asset') ||
-    image.startsWith('asset/') ||
-    image.endsWith('png') ||
-    image.endsWith('jpg') ||
+    image?.startsWith('/asset') ||
+    image?.startsWith('asset/') ||
+    image?.endsWith('png') ||
+    image?.endsWith('jpg') ||
     image.endsWith('jpeg')
 
   if (!imagesSaved && isImageUrl) {
@@ -596,7 +599,7 @@ async function handleImage(body: {
   }
 
   if (!isImageUrl) {
-    image = image.startsWith('data') ? image : `data:image/png;base64,${image}`
+    image = image?.startsWith('data') ? image : `data:image/png;base64,${image}`
   }
 
   const cacheId = imagesSaved ? '' : `cache:${requestId}`
@@ -725,6 +728,11 @@ msgStore.subscribe((curr, prev) => {
     console.log(error.stack)
   }
   debug('chat-id')('changed %s --> %s', from, to)
+})
+
+msgStore.subscribe(async (curr, prev) => {
+  if (prev.attachments === curr.attachments) return
+  await storage.userCacheSet(`message-attachments`, curr.attachments)
 })
 
 function onCharacterMessageReceived(msg: AppSchema.ChatMessage) {

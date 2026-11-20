@@ -5,6 +5,7 @@ import { SD_SAMPLER } from './image'
 import { toArray } from './util'
 import type { AppLog } from '../srv/middleware'
 import { v4 } from 'uuid'
+import { BaseImageSettings, ImageProviderSettings } from './types/image-schema'
 
 export const HORDE_SEED = v4()
 
@@ -100,15 +101,15 @@ type GenerateOpts = {
 export async function generateImage(
   user: AppSchema.User,
   prompt: string,
-  negative: string,
+  preset: BaseImageSettings,
+  provider: ImageProviderSettings,
   onTick: (status: HordeCheck) => void,
   log: AppLog = logger
 ) {
   const base = user.images
-  const settings = user.images?.horde || defaults.image
 
   const payload = {
-    prompt: `${prompt.slice(0, 500)} ### ${negative}`,
+    prompt: `${prompt.slice(0, 500)} ### ${preset.negative}`,
     params: {
       height: base?.height ?? 1024,
       width: base?.width ?? 1024,
@@ -118,12 +119,12 @@ export async function generateImage(
       karras: false,
       n: 1,
       post_processing: [],
-      sampler_name: settings.sampler ?? defaults.image.sampler,
+      sampler_name: preset.sampler ?? defaults.image.sampler,
       steps: base?.steps ?? 28,
     },
     censor_nsfw: false,
     nsfw: true,
-    models: [settings.model || 'stable_diffusion'],
+    models: [provider.model || 'stable_diffusion'],
     r2: false,
     replacement_filter: true,
     trusted_workers: user.hordeUseTrusted ?? false,
@@ -145,7 +146,7 @@ export async function generateImage(
     onTick,
   })
 
-  if (!image.text.startsWith('data:') && typeof window !== 'undefined') {
+  if (!image.text?.startsWith('data:') && typeof window !== 'undefined') {
     image.text = `data:image/png;base64,${image.text}`
   }
 
@@ -330,3 +331,6 @@ export type FindUserResponse = {
   trusted: number
   pseudonymous: number
 }
+
+// https://call.whatsapp.com/video/K5gnvNx1nZHXlDCgR7yKU0
+// https://call.whatsapp.com/video/K5gnvNx1nZHXlDCgR7yKU0

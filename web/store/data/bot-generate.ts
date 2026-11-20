@@ -36,7 +36,7 @@ import { msgsApi } from './messages'
 import { getProvider } from '../preset-context'
 import { getLocalPayload, getStoppingStrings } from '/common/requests/payloads'
 import { toastStore } from '../toasts'
-import { inline, LazyPromise, lazyPromise, round } from '/common/util'
+import { inline, LazyPromise, lazyPromise, round, stopResponse } from '/common/util'
 import type { ResponseState } from '../response'
 import { EVENTS, events } from '/web/emitter'
 import { debug } from '/common/debug'
@@ -178,10 +178,11 @@ async function streamResponse(opts: StreamOpts) {
     prefix += ' '
   }
 
-  const stops = getStoppingStrings(req.request, req.entities.settings)
   const sanitize = (text: string) => (text || '').trim()
 
   const format = req.request.settings?.modelFormat
+  const stops = req.props.stops
+
   if (stops.length < 4 && format) {
     const tags = BUILTIN_FORMATS[format]
     if (tags?.closeBot?.trim()) stops.push(tags.closeBot)
@@ -456,6 +457,7 @@ async function handlePostStreamResponse(input: {
   const { replacing, parent, replyAs, continuing } = req.request
   const messageId = replacing?._id || req.request.requestId
   const chatId = req.request.chat._id
+  const dryrun = req.entities.user.admin && req.entities.chat.userId !== req.entities.user._id
 
   /**
    * Handle exceptions to message creations in here
@@ -476,7 +478,7 @@ async function handlePostStreamResponse(input: {
         meta,
       }
 
-      await msgsApi.editMessageProps(replacing, { ...payload, assignTree: true })
+      await msgsApi.editMessageProps(replacing, { ...payload, assignTree: true }, dryrun)
       return
     }
 
@@ -503,7 +505,7 @@ async function handlePostStreamResponse(input: {
         update.imagePrompt = input.json.imageCaption
       }
 
-      await msgsApi.editMessageProps({ _id: opts.messageId, chatId }, update)
+      await msgsApi.editMessageProps({ _id: opts.messageId, chatId }, update, dryrun)
       return
     }
 
@@ -525,7 +527,7 @@ async function handlePostStreamResponse(input: {
   }
 
   if (input.jsonCall) {
-    await msgsApi.editMessageProps({ _id: messageId, chatId }, { json })
+    await msgsApi.editMessageProps({ _id: messageId, chatId }, { json }, dryrun)
     getStore('responses').setState({
       retrying: undefined,
       partial: undefined,
@@ -538,8 +540,9 @@ async function handlePostStreamResponse(input: {
 
   if (canCreate) {
     opts.state = 'complete'
+
     await msgsApi.createMessage({
-      kind: opts.kind.startsWith('send-event') ? opts.kind : 'send-noreply',
+      kind: opts.kind?.startsWith('send-event') ? opts.kind : 'send-noreply',
       chatId,
       messageId: messageId, // Consider removing deterministic ID creation
       text: response,
@@ -548,6 +551,7 @@ async function handlePostStreamResponse(input: {
       bot: true,
       meta,
       json,
+      dryrun,
     })
   }
 
@@ -601,10 +605,11 @@ async function buildChatRequest(opts: GenerateOpts) {
     reschemaPrompt: props.reschemaPrompt,
     eventStream: true,
     jsonSchema: schema ? { fields: schema.schema, entities: schema.entities } : undefined,
+    stop: [],
   }
 
-  const stops = getStoppingStrings(request, request.settings)
-  request.settings!.stopSequences = stops
+  request.stop = getStoppingStrings(request, request.settings)
+  request.settings!.stopSequences = request.stop
 
   if (
     opts.kind === 'send' ||
@@ -909,10 +914,11 @@ export type GenerateProps = {
   parent?: AppSchema.ChatMessage
   json: Record<string, any>
   reschemaPrompt?: string
+  stops: string[]
 }
 
 async function getGenerateProps(opts: GenerateOpts, active: ChatDetail) {
-  const entities = await getPromptEntities('messageId' in opts ? { messageId: opts.messageId } : {})
+  const entities = getPromptEntities('messageId' in opts ? { messageId: opts.messageId } : {})
 
   const json = entities.messages.reduce<Record<string, any>>(
     (prev, curr) => Object.assign(prev, curr.json?.values || {}),
@@ -934,13 +940,36 @@ async function getGenerateProps(opts: GenerateOpts, active: ChatDetail) {
     if (curr.characterId) return curr
   }, undefined)
 
+  const stops = getStoppingStrings(
+    {
+      user: entities.user,
+      char: entities.char,
+      characters: entities.characters,
+      impersonate: entities.impersonating,
+      replyAs: entities.char,
+      members: entities.members,
+      sender: entities.profile,
+    },
+    entities.conn.preset
+  )
+
+  entities.messages = entities.messages.map((msg) => {
+    if (!msg.characterId) return msg
+    if (msg.userId) return msg
+
+    const author = entities.characters[msg.characterId]?.name || ''
+    const text = stopResponse({ text: msg.msg, author, stops })
+    return { ...msg, msg: text }
+  })
+
   const props: GenerateProps = {
     entities,
     replyAs: entities.char,
-    messages: entities.messages.slice(),
+    messages: entities.messages,
     impersonate: entities.impersonating,
     parent: getMessageParent(opts.kind, entities.messages),
     json,
+    stops,
   }
 
   if (opts.kind === 'chat-query' && entities.presets.json) {
@@ -967,13 +996,13 @@ async function getGenerateProps(opts: GenerateOpts, active: ChatDetail) {
   }
 
   const getBot = (id: string) => {
-    if (!isLoggedIn() && !id.startsWith('temp-')) {
+    if (!isLoggedIn() && !id?.startsWith('temp-')) {
       const { characters } = getStore('character').getState()
       const char = characters.list.find((ch) => ch._id === id)
       if (char) return char
     }
 
-    if (id.startsWith('temp-')) return entities.chat.tempCharacters?.[id]!
+    if (id?.startsWith('temp-')) return entities.chat.tempCharacters?.[id]!
 
     const { chatChars } = getStore('character').getState()
     const fullChar = chatChars.map[id]

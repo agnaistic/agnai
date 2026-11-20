@@ -274,13 +274,13 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
 
   body.api_key = key
 
-  const stripped = body.messages ? stripImageContent(body.messages) : null
+  const stripped = body.messages?.length ? stripImageContent(body.messages) : null
 
   yield { prompt: stripped || prompt }
 
   log.debug({ ...body, prompt: null, messages: null, imageData: null }, 'Agnaistic payload')
 
-  log.debug(`Prompt:\n${body.messages ? JSON.stringify(stripped, null, 2) : prompt}`)
+  log.debug(`Prompt:\n${body.messages?.length ? JSON.stringify(stripped, null, 2) : prompt}`)
 
   const [submodel, override = ''] = subPreset.subModel.split(',')
 

@@ -1,6 +1,6 @@
-import { Document } from 'mongodb'
 import { store } from '../../db'
 import { errors, handle } from '../wrap'
+import { uniqueBy } from '/common/util'
 
 export const getCharacterChats = handle(async (req) => {
   const character = await store.characters.getCharacter(req.userId!, req.params.id)
@@ -12,15 +12,26 @@ export const getCharacterChats = handle(async (req) => {
   return { character, chats: list }
 })
 
-export const getChatDetail = handle(async ({ userId, params, query }) => {
+export const getChatDetail = handle(async ({ userId, params, query, user, authed }) => {
   const id = params.id
   const detail = await store.chats.getChat(id, query.impersonating as string)
 
   if (!detail) throw errors.NotFound
 
-  const canView = await store.chats.canViewChat(userId, detail.chat)
+  const canView = user?.admin ? true : await store.chats.canViewChat(userId, detail.chat)
   if (!canView) {
     throw errors.Forbidden
+  }
+
+  /** Progessively migrate all chat and character image settings to image presets */
+  if (detail.chat.userId === userId) {
+    await store.users.migrateImageSettings(authed!, 'chat', detail.chat)
+
+    for (const char of detail.characters) {
+      if (!char.imageSettings) continue
+      if (char.userId !== userId) continue
+      await store.users.migrateImageSettings(authed!, 'character', char)
+    }
   }
 
   const [members, active] = await Promise.all([
@@ -31,15 +42,19 @@ export const getChatDetail = handle(async ({ userId, params, query }) => {
   const character = detail.characters.find((ch) => ch._id === detail.chat.characterId)
 
   const messages = await store.msgs.getChatMessages(detail.chat)
-  // await store.chats.createChatTree(detail.chat)
 
   return { messages, character, members, active, ...detail }
 })
 
 export const getAllChats = handle(async (req) => {
   const chats = await store.chats.getAllChats(req.userId!, !!req.query.shallow)
-  const charIds = getCharacterIds(chats)
-  const characters = await store.characters.getCharacterList(Array.from(charIds), req.userId!)
+
+  const characters = uniqueBy(
+    chats
+      .filter((ch) => !!ch.character && ch.character?.userId === req.userId)
+      .map((ch) => ch.character),
+    '_id'
+  )
 
   if (!!req.query.shallow) {
     return { characters }
@@ -47,17 +62,3 @@ export const getAllChats = handle(async (req) => {
 
   return { chats, characters }
 })
-
-function getCharacterIds(chats: Document[]) {
-  const charIds = new Set<string>()
-
-  for (const chat of chats) {
-    charIds.add(chat.characterId)
-
-    for (const [id, enabled] of Object.entries(chat.characters || {})) {
-      if (enabled) charIds.add(id)
-    }
-  }
-
-  return Array.from(charIds)
-}

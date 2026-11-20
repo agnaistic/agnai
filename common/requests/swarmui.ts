@@ -178,16 +178,12 @@ async function generateImage(req: ImageRequestOpts, events?: { signal?: AbortCon
 }
 
 async function processImage(baseUrl: string | undefined, imagePath: string) {
-  const image = await fetch(getUrl({ host: baseUrl, path: imagePath, getter: true }), {
-    headers: { accept: 'image/png' },
+  const image = await fetchImage(baseUrl, imagePath).then(async (blob) => {
+    const buf = await blob.arrayBuffer()
+    const buffer = Buffer.from(buf)
+    const base64 = `data:image/png;base64,` + buffer.toString('base64')
+    return { content: base64, blob, buffer }
   })
-    .then((res) => res.blob())
-    .then(async (blob) => {
-      const buf = await blob.arrayBuffer()
-      const buffer = Buffer.from(buf)
-      const base64 = `data:image/png;base64,` + buffer.toString('base64')
-      return { content: base64, blob, buffer }
-    })
 
   const file = new File([image.blob], `swarm_${Date.now()}.png`, { type: image.blob.type })
   return { content: image.content, file, buffer: image.buffer }
@@ -200,11 +196,25 @@ async function processBase64(base64: string) {
   return { base64: full, file }
 }
 
+async function fetchImage(baseUrl: string | undefined, imagePath: string) {
+  if (imagePath.startsWith('data:')) {
+    const fetched = await fetch(imagePath).then((res) => res.blob())
+    return fetched
+  }
+
+  const image = await fetch(getUrl({ host: baseUrl, path: imagePath, getter: true }), {
+    headers: { accept: 'image/png' },
+  }).then((res) => res.blob())
+  return image
+}
+
 async function getPayload(req: ImageRequestOpts) {
   const session_id = await getSessionId(req.provider.url)
   const payload: any = {
     session_id,
     prompt: req.prompt,
+    automaticvae: true,
+    modelspecificenhancements: true,
     negativeprompt: req.negative || '',
     cfgscale: `${req.settings?.cfg || 5}`,
     steps: `${req.settings?.steps || 20}`,
@@ -226,7 +236,7 @@ async function getPayload(req: ImageRequestOpts) {
 
     if (loras.length) {
       payload.loras = loras.join(',')
-      payload.loraweighs = weights.join(',')
+      payload.loraweights = weights.join(',')
     }
   }
 
@@ -235,7 +245,7 @@ async function getPayload(req: ImageRequestOpts) {
 
 function getUrl(opts: { host?: string; path: string; getter?: boolean }) {
   const affix = opts.getter ? '' : '/API'
-  const prefix = opts.path.startsWith('/') ? affix : `${affix}/`
+  const prefix = opts.path?.startsWith('/') ? affix : `${affix}/`
   const host = opts.host || 'http://localhost:7801'
 
   return `${host}${prefix}${opts.path}`

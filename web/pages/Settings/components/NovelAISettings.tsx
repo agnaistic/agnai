@@ -4,8 +4,8 @@ import { userStore } from '../../../store'
 import Button from '../../../shared/Button'
 import Select from '../../../shared/Select'
 import Divider from '/web/shared/Divider'
-import { SetStoreFunction } from 'solid-js/store/types/store'
 import { UserSettings } from '../util'
+import { SetStoreFunction } from 'solid-js/store'
 
 const NovelAISettings: Component<{
   state: UserSettings

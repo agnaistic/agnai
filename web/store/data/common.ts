@@ -34,44 +34,42 @@ export function getInferencePreset(
   return preset || fallback?.preset || {}
 }
 
-export async function getImagePromptEntities(messageId?: string) {
-  const entities = await getPromptEntities({ messageId })
-  const source = entities.chat.imageSource || 'settings'
+export function getImagePromptEntities(messageId?: string) {
+  const entities = getPromptEntities({ messageId })
+  const source = messageId && entities.chat.imageSource ? entities.chat.imageSource : 'settings'
 
-  let summary = ''
   let presetId = ''
 
   switch (source) {
     case 'settings': {
-      summary = entities.user.images?.summaryPrompt || ''
-      presetId = entities.user.images?.summaryPresetId || entities.user.summaryPreset || ''
+      presetId = entities.user.imagePresetId || ''
       break
     }
 
     case 'last-character': // <-- Is this correct?
     case 'main-character': {
-      summary = entities.char.imageSettings?.summaryPrompt || ''
-      presetId = entities.char.imageSettings?.summaryPresetId || ''
+      presetId = entities.char.imagePresetId || ''
       break
     }
 
     case 'chat': {
-      summary = entities.chat.imageSettings?.summaryPrompt || ''
-      presetId = entities.chat.imageSettings?.summaryPresetId || ''
+      presetId = entities.chat.imagePresetId || ''
       break
     }
   }
 
-  if (!presetId) return { entities, summary, preset: undefined }
+  if (!presetId) return { entities, summary: '', preset: entities.settings }
 
+  const imgPreset = entities.user.imagePresets?.find((p) => p._id === presetId)
   const preset = getStore('presets')
     .getState()
-    .presets.find((p) => p._id === presetId)
+    .presets.find((p) => p._id === imgPreset?.summaryPresetId)
+  const summary = imgPreset?.summaryPrompt || ''
 
-  return { entities, summary, preset }
+  return { entities, summary, preset: preset || entities.settings, imgPreset }
 }
 
-export async function getPromptEntities(opts?: { messageId?: string }): Promise<PromptEntities> {
+export function getPromptEntities(opts?: { messageId?: string }): PromptEntities {
   const promptState = getStore('prompt').getState()
 
   const props = {
@@ -204,11 +202,12 @@ function getChatAttachments(
 
 function getAuthedPromptEntities(opts?: { messageId?: string }) {
   const { details, chatProfiles: members, lastChatId } = getStore('chat').getState()
-  const active = details[lastChatId]
-  if (!active) return
 
   const { profile, user } = getStore('user').getState()
   if (!profile || !user) return
+
+  const active = details[lastChatId]
+  if (!active) return
 
   const chat = active.chat
   const char = active.char

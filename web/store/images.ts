@@ -75,7 +75,7 @@ export const imageStore = createStore<ImageState>('image', {
       return { showImage: { src: opts.src, options: opts.actions || [], onClose: opts.onClose } }
     },
     showMessageImages(prev, opts: { id: string; position?: number }) {
-      if (prev.showImage) return
+      // if (prev.showImage) return
 
       return {
         showImage: {

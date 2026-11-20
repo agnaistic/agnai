@@ -1,5 +1,4 @@
 import 'module-alias/register'
-import { prepareTokenizers } from './tokenize'
 import lt from 'localtunnel'
 import * as os from 'os'
 import throng from 'throng'
@@ -32,7 +31,6 @@ export async function start() {
     logger.error({ msg: ex?.message, err: ex, stack: ex.stack }, 'Unhandled rejection')
   })
 
-  prepareTokenizers()
   await Promise.allSettled([initDb(), initMessageBus()])
   await Promise.allSettled([prepSubscriptionCache(true), prepTierCache(true)])
 
@@ -43,7 +41,7 @@ export async function start() {
   server.listen(config.port, config.host, async () => {
     logger.info(
       { port: config.port, version: pkg.version },
-      `Server started http://127.0.0.1:${config.port} (Listening: ${config.host})`
+      `Server started http://127.0.0.1:${config.port} (Listening: ${config.host}) | Node.js ${process.version}`
     )
 
     if (config.publicTunnel) {

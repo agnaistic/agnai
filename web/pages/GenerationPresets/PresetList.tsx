@@ -1,6 +1,6 @@
-import { A, useNavigate, useSearchParams } from '@solidjs/router'
+import { A, useLocation, useNavigate } from '@solidjs/router'
 import { Copy, Download, Import, Plus, Trash } from 'lucide-solid'
-import { Component, createMemo, createSignal, For, onMount, Show } from 'solid-js'
+import { Component, createMemo, createSignal, For, Match, onMount, Show, Switch } from 'solid-js'
 import Button from '../../shared/Button'
 import Modal, { ConfirmModal } from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
@@ -13,22 +13,19 @@ import { validateBody } from '/common/valid'
 import { Page } from '/web/Layout'
 import TextInput from '/web/shared/TextInput'
 import { ProviderList } from './ProviderList'
-import { useStrictTabs } from '/web/shared/Tabs'
 import Divider from '/web/shared/Divider'
 
 const PresetList: Component = () => {
   setComponentPageTitle('Presets')
 
-  const [params] = useSearchParams()
-
+  const loc = useLocation()
   const nav = useNavigate()
+
   const state = presetStore((s) => ({
     presets: s.presets
       .map((pre) => ({ ...pre, label: `[${getServiceName(pre.service)}] ${pre.name}` }))
       .sort(sortByLabel),
   }))
-
-  const tabs = useStrictTabs(['presets', 'providers'] as const, +(params.preset_tab || '0'))
 
   const self = userStore((s) => ({ user: s.user }))
 
@@ -57,104 +54,105 @@ const PresetList: Component = () => {
 
   return (
     <Page>
-      <PageHeader title={capitalize(tabs.current())} />
+      <PageHeader title={capitalize(loc.pathname.slice(1))} />
       <div class="flex gap-1">
         <Button
           size="sm"
-          schema={tabs.current() === 'presets' ? 'primary' : 'secondary'}
-          onClick={() => tabs.set('presets')}
+          schema={loc.pathname.toLowerCase() === '/presets' ? 'primary' : 'secondary'}
+          onClick={() => nav('/presets')}
         >
           Presets
         </Button>
 
         <Button
           size="sm"
-          schema={tabs.current() === 'providers' ? 'primary' : 'secondary'}
-          onClick={() => tabs.set('providers')}
+          schema={loc.pathname.toLowerCase() === '/providers' ? 'primary' : 'secondary'}
+          onClick={() => nav('/providers')}
         >
           Providers
         </Button>
       </div>
       <Divider class="!my-2" />
 
-      <Show when={tabs.current() === 'providers'}>
-        <ProviderList />
-      </Show>
+      <Switch>
+        <Match when={loc.pathname === '/providers'}>
+          <ProviderList />
+        </Match>
 
-      <div
-        class="flex flex-col items-center gap-2"
-        classList={{ hidden: tabs.current() !== 'presets' }}
-      >
-        <div class="flex w-full justify-between">
-          <div>
-            <TextInput
-              placeholder="Filter..."
-              onChange={(ev) => setFilter(ev.currentTarget.value)}
-            />
-          </div>
-          <div class="flex w-full justify-end gap-2">
-            <Button href="/presets/new">
-              <Plus />
-              New
-            </Button>
-
-            <Button onClick={() => setImporting(true)}>
-              <Import size={20} /> Import
-            </Button>
-          </div>
-        </div>
-
-        <For each={presets()}>
-          {(preset) => {
-            const label = getPresetLabel(preset)
-            return (
-              <div
-                class="flex w-full items-center gap-1 rounded-xl py-1 "
-                classList={{
-                  'bg-800 hover:bg-[var(--bg-600)]': self.user?.defaultPreset !== preset._id,
-                  'bg-[var(--hl-800)] hover:bg-[var(--hl-600)]':
-                    self.user?.defaultPreset === preset._id,
-                }}
-              >
-                <A href={`/presets/${preset._id}`} class=" flex w-full">
-                  <div class="ml-4 flex w-full flex-col items-start">
-                    <div>
-                      <div>{preset.name}</div>
-                      <div class="mr-1 text-xs text-[var(--text-600)]">
-                        {label.category} | {label.prefix}
-                      </div>
-                    </div>
-                  </div>
-                </A>
-                <Button
-                  schema="clear"
-                  size="sm"
-                  onClick={() => exportPreset(preset)}
-                  class="icon-button"
-                >
-                  <Download size={20} />
+        <Match when>
+          <div class="flex flex-col items-center gap-2">
+            <div class="flex w-full justify-between">
+              <div>
+                <TextInput
+                  placeholder="Filter..."
+                  onChange={(ev) => setFilter(ev.currentTarget.value)}
+                />
+              </div>
+              <div class="flex w-full justify-end gap-2">
+                <Button href="/presets/new">
+                  <Plus />
+                  New
                 </Button>
-                <Button
-                  schema="clear"
-                  size="sm"
-                  onClick={() => nav(`/presets/new?preset=${preset._id}`)}
-                  class="icon-button"
-                >
-                  <Copy size={20} />
-                </Button>
-                <Button
-                  schema="clear"
-                  size="sm"
-                  onClick={() => setDeleting(preset._id)}
-                  class="icon-button"
-                >
-                  <Trash size={20} />
+
+                <Button onClick={() => setImporting(true)}>
+                  <Import size={20} /> Import
                 </Button>
               </div>
-            )
-          }}
-        </For>
-      </div>
+            </div>
+
+            <For each={presets()}>
+              {(preset) => {
+                const label = getPresetLabel(preset)
+                return (
+                  <div
+                    class="flex w-full items-center gap-1 rounded-xl py-1 "
+                    classList={{
+                      'bg-800 hover:bg-[var(--bg-600)]': self.user?.defaultPreset !== preset._id,
+                      'bg-[var(--hl-800)] hover:bg-[var(--hl-600)]':
+                        self.user?.defaultPreset === preset._id,
+                    }}
+                  >
+                    <A href={`/presets/${preset._id}`} class=" flex w-full">
+                      <div class="ml-4 flex w-full flex-col items-start">
+                        <div>
+                          <div>{preset.name}</div>
+                          <div class="mr-1 text-xs text-[var(--text-600)]">
+                            {label.category} | {label.prefix}
+                          </div>
+                        </div>
+                      </div>
+                    </A>
+                    <Button
+                      schema="clear"
+                      size="sm"
+                      onClick={() => exportPreset(preset)}
+                      class="icon-button"
+                    >
+                      <Download size={20} />
+                    </Button>
+                    <Button
+                      schema="clear"
+                      size="sm"
+                      onClick={() => nav(`/presets/new?preset=${preset._id}`)}
+                      class="icon-button"
+                    >
+                      <Copy size={20} />
+                    </Button>
+                    <Button
+                      schema="clear"
+                      size="sm"
+                      onClick={() => setDeleting(preset._id)}
+                      class="icon-button"
+                    >
+                      <Trash size={20} />
+                    </Button>
+                  </div>
+                )
+              }}
+            </For>
+          </div>
+        </Match>
+      </Switch>
 
       <Show when={importing()}>
         <ImportPreset success={() => nav(`/presets/new`)} close={() => setImporting(false)} />

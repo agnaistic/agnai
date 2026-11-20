@@ -4,7 +4,6 @@ import { reset, setRand, toBotMsg, toChar, toChat, toProfile, toUser, toUserMsg 
 import { buildPromptPlaceholders } from '/common/prompt'
 import { TemplateOpts, parseTemplate } from '/common/template-parser'
 import { AppSchema } from '/common/types'
-import { getTokenCounter } from '/srv/tokenize'
 import { UserEmbed } from '/common/types/memory'
 
 const chars = [toChar('Robot'), toChar('Otherbot'), toChar('Thirdbot')]
@@ -163,8 +162,7 @@ async function getParseOpts(
       userEmbeds: [],
       resolvedScenario: overChar.scenario,
     },
-    lines,
-    getTokenCounter('openai', 'turbo')
+    lines
   )
 
   const base: TemplateOpts = {

@@ -263,6 +263,7 @@ const UserNavigation: Component = () => {
   }))
 
   const guidance = createMemo(() => {
+    if (!page.flags.sagas) return false
     const usable = menu.config.subs.some((sub) => sub.guidance)
     if (!usable) return false
 

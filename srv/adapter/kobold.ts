@@ -68,7 +68,7 @@ export const handleThirdParty: ModelAdapter = async function* (opts) {
 
   const start = Date.now()
   const stream = await dispatch(opts, body)
-  yield { prompt: body.messages ? stripImageContent(body.messages) : body.prompt }
+  yield { prompt: body.messages?.length ? stripImageContent(body.messages) : body.prompt }
 
   let accum = ''
   let wait = 0
@@ -187,7 +187,7 @@ async function dispatch(opts: AdapterProps, body: any) {
     case 'ollama': {
       body.messages = opts.messages
       body.prompt = undefined
-      const url = body.messages ? `${baseURL}/chat/completions` : `${baseURL}/completions`
+      const url = body.messages?.length ? `${baseURL}/chat/completions` : `${baseURL}/completions`
       return opts.gen.streamResponse
         ? streamGenerator({ ...base, url, format: opts.gen.thirdPartyFormat })
         : fullCompletion({ ...base, url, service: opts.gen.thirdPartyFormat })
@@ -401,12 +401,21 @@ const fullCompletion: CompletionGenerator<any> = async function* (opts) {
     return
   }
 
-  if ('choices' in resp.body) {
-    const first = resp.body.choices[0]
+  let body = resp.body
+  if (typeof body === 'string') {
+    try {
+      const json = body.slice(body.indexOf('{'))
+      body = JSON.parse(json)
+    } catch (ex) {}
+  }
+
+  const choices = body?.choices || body?.data?.choices
+  if (choices?.length) {
+    const first = choices[0]
     const text = first.message ? first.message.content : first.text
 
     const gens: string[] = []
-    for (const choice of resp.body.choices) {
+    for (const choice of choices) {
       if (!choice.index || choice.index === 0) continue
       const text = choice.message ? choice.message.content : choice.text
       gens.push(text)
@@ -420,7 +429,7 @@ const fullCompletion: CompletionGenerator<any> = async function* (opts) {
     return
   }
 
-  const text = resp.body.results?.[0]?.text as string
+  const text = body.results?.[0]?.text as string
 
   if (text) {
     yield { tokens: text }
@@ -472,10 +481,10 @@ async function validateModel(opts: AdapterProps, baseURL: string, payload: any, 
       if (low.includes(':')) {
         const [name] = m.name.split(':')
         if (name === paylow) return true
-        if (name.startsWith(paylow)) return true
+        if (name?.startsWith(paylow)) return true
       }
 
-      return low.startsWith(paylow)
+      return low?.startsWith(paylow)
     })
     if (!match) {
       payload.model = models[0].name

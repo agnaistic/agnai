@@ -23,11 +23,6 @@ export function extractReasoning(
 
   if (!open || !close) return { thoughts: [], content }
 
-  const len = {
-    open: open.length,
-    close: close.length,
-  }
-
   const thoughts: string[] = []
 
   if (!content) return { thoughts, content }
@@ -35,6 +30,18 @@ export function extractReasoning(
   const init = {
     start: content.indexOf(open),
     end: content.indexOf(close),
+    open,
+    close,
+  }
+
+  if (init.start === -1 && open !== defaults.open) {
+    init.start = content.indexOf(defaults.open)
+    init.open = defaults.open
+  }
+
+  if (init.end === -1 && close !== defaults.close) {
+    init.end = content.indexOf(defaults.close)
+    init.close = defaults.close
   }
 
   // No thoughts, skip everything
@@ -50,20 +57,32 @@ export function extractReasoning(
     let start = content.indexOf(open)
     let end = content.indexOf(close)
 
-    if (open !== defaults.open) start = content.indexOf(defaults.open)
-    if (close !== defaults.close) end = content.indexOf(defaults.close)
+    const used = {
+      start: open,
+      end: close,
+    }
+
+    if (open !== defaults.open && start === -1) {
+      start = content.indexOf(defaults.open)
+      used.start = defaults.open
+    }
+
+    if (close !== defaults.close && end === -1) {
+      end = content.indexOf(defaults.close)
+      used.end = defaults.close
+    }
 
     // Both present, but end comes before start
     if (start > -1 && end > -1 && start > end) {
       let pre = content.slice(0, end)
 
-      let thought = content.slice(start + len.open)
-      const nextEnd = thought.indexOf(close)
+      let thought = content.slice(start + used.start.length)
+      const nextEnd = thought.indexOf(used.end)
 
       // There is another end tag
       if (nextEnd > -1) {
         const innerThought = thought.slice(0, nextEnd)
-        const post = thought.slice(nextEnd + len.close)
+        const post = thought.slice(nextEnd + used.end.length)
         content = `${pre.trim()}\n${post.trim()}`
         thought = innerThought
         thoughts.push(thought)
@@ -77,8 +96,8 @@ export function extractReasoning(
     // Both tags present
     if (start > -1 && end > -1) {
       const pre = content.slice(0, start)
-      const post = content.slice(end + len.close)
-      const thought = content.slice(start + len.open, end)
+      const post = content.slice(end + used.end.length)
+      const thought = content.slice(start + used.start.length, end)
       thoughts.push(thought)
 
       // Case 1. Only display pre-thought text
@@ -102,7 +121,7 @@ export function extractReasoning(
     // Only opening tag
     if (start > -1) {
       const pre = content.slice(0, start)
-      const thought = content.slice(start + len.open)
+      const thought = content.slice(start + used.start.length)
 
       content = pre
       thoughts.push(thought)
@@ -111,7 +130,7 @@ export function extractReasoning(
 
     // Only closing tag
     if (end > -1) {
-      const post = content.slice(end + len.close)
+      const post = content.slice(end + used.end.length)
       const thought = content.slice(0, end)
       thoughts.push(thought)
       content = post

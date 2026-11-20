@@ -3,7 +3,7 @@
     "strict": true,
     "target": "ES2022",
     "module": "nodenext",
-    "incremental": true,
+    // "incremental": true,
     "moduleResolution": "nodenext",
     "noEmit": false,
     "allowSyntheticDefaultImports": true,
@@ -12,7 +12,6 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "sourceMap": true,
-    "baseUrl": ".",
     "paths": {
       "/srv/*": ["./srv/*"],
       "/common/*": ["./common/*"]

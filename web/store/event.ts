@@ -223,8 +223,8 @@ function executeEvent(chat: AppSchema.Chat, event: AppSchema.ScenarioEvent) {
 function updateChatScenarioStates(chat: AppSchema.Chat, assigns: string[]) {
   const chatStates = chat.scenarioStates || []
   if (assigns.length) {
-    const add = assigns.filter((s) => !s.startsWith('!'))
-    const remove = assigns.filter((s) => s.startsWith('!')).map((s) => s.slice(1))
+    const add = assigns.filter((s) => !s?.startsWith('!'))
+    const remove = assigns.filter((s) => s?.startsWith('!')).map((s) => s.slice(1))
     const updatedStates = Array.from(
       new Set(chatStates.filter((s) => !remove.includes(s)).concat(add))
     )

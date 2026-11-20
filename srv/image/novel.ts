@@ -11,7 +11,7 @@ const baseUrl = `https://image.novelai.net/ai`
 
 const defaultSettings: NovelSettings = {
   type: 'novel',
-  model: NOVEL_IMAGE_MODEL.Anime_v4_Curated,
+  model: NOVEL_IMAGE_MODEL.Anime_v5_Full,
   sampler: NOVEL_SAMPLER['DPM++ 2M'],
   ucPreset: '0',
   qualityTags: true,
@@ -48,18 +48,21 @@ type NovelImageRequest = {
   }
 }
 
-export const handleNovelImage: ImageAdapter = async ({ user, prompt, negative }, log, guestId) => {
+export const handleNovelImage: ImageAdapter = async (
+  { user, prompt, negative, settings, provider },
+  log,
+  guestId
+) => {
   const base = user.images
-  const settings = user.images?.novel || defaultSettings
 
-  const ucPreset = +(settings.ucPreset || defaultSettings.ucPreset)
+  const ucPreset = +(provider.ucPreset || defaultSettings.ucPreset)
   const ucNegative = UC_PRESETS[ucPreset] || ''
 
   const key = getNovelApiKey(user, !!guestId)
 
   let input = [formatImagePrompt(prompt)]
 
-  if (settings.qualityTags ?? true) {
+  if (provider.qualityTags ?? true) {
     input.push(QUALITY_TAGS)
   }
 
@@ -69,7 +72,7 @@ export const handleNovelImage: ImageAdapter = async ({ user, prompt, negative },
   const payload: NovelImageRequest = {
     action: 'generate',
     input: finalPrompt,
-    model: settings.model ?? NOVEL_IMAGE_MODEL.Anime_v4_Curated,
+    model: provider.model ?? NOVEL_IMAGE_MODEL.Anime_v4_Curated,
     parameters: {
       autoSmea: false,
       add_original_image: false,
@@ -119,6 +122,12 @@ export const handleNovelImage: ImageAdapter = async ({ user, prompt, negative },
         result.statusCode
       })`
     )
+  }
+
+  if (result.body.images?.length) {
+    const base64 = result.body.images[0].image
+    const buffer = Buffer.from(base64, 'base64')
+    return { ext: 'png', content: buffer }
   }
 
   const zip = new Zip(result.body).getEntries()

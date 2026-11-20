@@ -16,7 +16,7 @@ import { getUserSubscriptionTier } from '/common/util'
 import { command } from '../domains'
 import { getRegisteredAdapters } from '../adapter/register'
 import { NOVEL_MODELS } from '/common/presets/novel'
-import { ImageProviderSettings } from '/common/types/image-schema'
+import { ImagePresetSettings, ImageProviderSettings } from '/common/types/image-schema'
 
 export type NewUser = {
   username: string
@@ -46,6 +46,25 @@ export async function ensureInitialUser() {
   )
 
   logger.info(config.init, 'Created initial user')
+}
+
+export async function deleteImagePreset(opts: { userId: string; presetId: string }) {
+  await db('user').updateOne(
+    { _id: opts.userId },
+    {
+      $pull: {
+        imagePresets: { _id: opts.presetId },
+      },
+    },
+    {}
+  )
+
+  const next = await getUser(opts.userId)
+  if (!next) {
+    throw new Error('Invalid user')
+  }
+
+  return toSafeUser(next)
 }
 
 export async function deleteUserProvider(opts: { userId: string; providerId: string }) {
@@ -318,7 +337,51 @@ export async function createUser(newUser: NewUser, admin?: boolean) {
   return { profile, token, user: toSafeUser(user) }
 }
 
-export async function upsertImageProvider(user: AppSchema.User, provider: ImageProviderSettings) {
+export async function upsertImageSettings(
+  user: AppSchema.User,
+  settings: { preset?: ImagePresetSettings; provider?: ImageProviderSettings }
+) {
+  const { preset, provider } = settings
+
+  const updates: {
+    user: Partial<AppSchema.User>
+    preset?: ImagePresetSettings
+    provider?: ImageProviderSettings
+  } = { user: {} }
+
+  if (preset) {
+    const presets = patchImagePresets(user, preset)
+    updates.preset = preset
+    updates.user.imagePresets = presets
+  }
+
+  if (provider) {
+    const providers = patchImageProviders(user, provider)
+    updates.provider = provider
+    updates.user.imageProviders = providers
+  }
+
+  await db('user').updateOne({ _id: user._id }, { $set: updates.user })
+  return updates
+}
+
+function patchImagePresets(user: AppSchema.User, preset: ImagePresetSettings) {
+  if (!preset._id) {
+    preset._id = v4()
+  }
+
+  const presets = user.imagePresets || []
+  const isUpdate = presets.some((p) => p._id === preset._id)
+
+  const next = isUpdate
+    ? presets.map((p) => (p._id === preset._id ? { ...p, ...preset } : p))
+    : presets.concat(preset)
+
+  user.imagePresets = next
+  return next
+}
+
+function patchImageProviders(user: AppSchema.User, provider: ImageProviderSettings) {
   if (!provider._id) {
     provider._id = v4()
   }
@@ -330,9 +393,8 @@ export async function upsertImageProvider(user: AppSchema.User, provider: ImageP
     ? providers.map((prv) => (prv._id === provider._id ? { ...prv, ...provider } : prv))
     : providers.concat(provider)
 
-  await db('user').updateOne({ _id: user._id }, { $set: { imageProviders: next } })
   user.imageProviders = next
-  return user
+  return next
 }
 
 export async function createAccessToken(username: string, user: AppSchema.User) {
@@ -623,7 +685,7 @@ export function toSafeUser(user: AppSchema.User, seed?: string) {
 
   if (user.providers) {
     for (const prov of user.providers) {
-      if (prov.provider.startsWith('self-') && prov.key) {
+      if (prov.provider?.startsWith('self-') && prov.key) {
         prov.userKey = decryptText(prov.key, true)
       }
 
@@ -657,4 +719,80 @@ export function toSafeUser(user: AppSchema.User, seed?: string) {
   }
 
   return user
+}
+
+export async function migrateImageSettings(
+  user: AppSchema.User,
+  type: 'chat' | 'character',
+  entity: AppSchema.Chat | AppSchema.Character
+) {
+  if (!user) return
+  if (!entity) return
+  if (!entity.imageSettings) return
+
+  const providerId = entity.imageProviderId || user.imageProviderId
+  const provider = user.imageProviders?.find((p) => p._id === providerId)
+
+  const cfg = entity.imageSettings
+  const preset: ImagePresetSettings = {
+    _id: v4(),
+    imageProviderId: providerId || '',
+    cfg: cfg.cfg,
+    width: cfg.width,
+    height: cfg.height,
+    steps: cfg.steps,
+    negative: cfg.negative,
+    suffix: cfg.suffix,
+    prefix: cfg.prefix,
+    summariseChat: true,
+    summaryPrompt: cfg.summaryPrompt,
+    autofix: cfg.autofix ?? true,
+    name: `${type === 'character' ? entity.name : 'Migrated Chat'} preset`,
+    sampler: cfg.sampler,
+    scheduler: cfg.scheduler,
+    seed: cfg.seed ?? 0,
+    models: {},
+    clipSkip: cfg.clipSkip ?? 0,
+    summaryPresetId: cfg.summaryPresetId,
+  }
+
+  if (provider) {
+    preset.models![provider._id] = provider.model
+  }
+
+  const presets = user.imagePresets || []
+  presets.push(preset)
+
+  await db('user').updateOne({ _id: user._id }, { $set: { imagePresets: presets } })
+
+  if (type === 'chat') {
+    await db('chat').updateOne(
+      { _id: entity._id },
+      {
+        $set: {
+          imagePresetId: preset._id,
+          imageSettings: null as any,
+          imageProviderId: null as any,
+        },
+      }
+    )
+  } else {
+    await db('character').updateOne(
+      { _id: entity._id },
+      {
+        $set: {
+          imagePresetId: preset._id,
+          imageSettings: null as any,
+          imageProviderId: null as any,
+        },
+      }
+    )
+  }
+
+  user.imagePresets = presets
+  entity.imagePresetId = preset._id
+  entity.imageProviderId = undefined
+  entity.imageSettings = undefined
+
+  return preset
 }

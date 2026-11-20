@@ -16,7 +16,6 @@ import { EMBED_MODELS_OPTS } from '/web/store/embeddings'
 import { Copy } from '/web/shared/Copy'
 import { usePresetContext } from '/web/store/preset-context'
 import { ModeGenSettings } from '/web/shared/Mode/ModeGenSettings'
-import { Pencil } from 'lucide-solid'
 
 const AISettings: Component<{
   state: UserSettings
@@ -75,11 +74,6 @@ const AISettings: Component<{
     return true
   })
 
-  const openPreset = (id: string) => {
-    setEditPreset(id)
-    presetSetters.load(id)
-  }
-
   return (
     <>
       <FormLabel
@@ -125,10 +119,9 @@ const AISettings: Component<{
               selected={props.state.chargenPreset}
               setPresetId={(ev) => props.setter('chargenPreset', ev)}
               noneOption={{ label: 'Use Server Default', value: '' }}
+              editable={{ title: 'Edit Bot Field Preset' }}
+              downloadable={false}
             />
-            <Button disabled={!props.state.chargenPreset}>
-              <Pencil size={20} onClick={() => openPreset(props.state.chargenPreset || '')} />
-            </Button>
           </div>
 
           <div class="flex items-end gap-2">
@@ -138,15 +131,9 @@ const AISettings: Component<{
               selected={props.state.summaryPreset || state.user?.images?.summaryPresetId}
               setPresetId={(ev) => props.setter('summaryPreset', ev)}
               noneOption={{ label: 'Use Active Chat Preset', value: '' }}
+              editable={{ title: 'Edit Summary Preset' }}
+              downloadable={false}
             />
-            <Button disabled={!props.state.summaryPreset && !state.user?.images?.summaryPresetId}>
-              <Pencil
-                size={20}
-                onClick={() =>
-                  openPreset(props.state.summaryPreset || state.user?.images?.summaryPresetId || '')
-                }
-              />
-            </Button>
           </div>
 
           <div class="flex items-end gap-2">
@@ -156,10 +143,9 @@ const AISettings: Component<{
               selected={props.state.jsonPreset}
               setPresetId={(ev) => props.setter('jsonPreset', ev)}
               noneOption={{ label: 'Use Active Chat Preset', value: '' }}
+              editable={{ title: 'Edit JSON Schema Preset' }}
+              downloadable={false}
             />
-            <Button disabled={!props.state.jsonPreset}>
-              <Pencil size={20} onClick={() => openPreset(props.state.jsonPreset || '')} />
-            </Button>
           </div>
         </div>
       </Card>

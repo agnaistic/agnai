@@ -21,6 +21,10 @@ const [css, hooks] = createHooks(recommended)
 
 export { hooks, css }
 
+export type Require<T extends object, U extends keyof T> = Omit<T, U> & {
+  [key in U]-?: NonNullable<T[U]>
+}
+
 export type ExtractProps<TComponent> = TComponent extends Component<infer TProps>
   ? TProps
   : TComponent
@@ -138,6 +142,9 @@ export function createEmitter<T extends string>(...events: T[]) {
   return { emit, on, off } as ComponentEventEmitter<T>
 }
 
+/**
+ * Automatically calls JSON.parse() on data
+ */
 async function userCacheGet<T = any>(key: string) {
   const prop = getUserCacheKey(key)
   if (!prop) return
@@ -153,9 +160,10 @@ async function userCacheGet<T = any>(key: string) {
   return json as T
 }
 
+/**
+ * Automatically calls JSON.stringify() on data
+ */
 async function userCacheSet(key: string, data: any) {
-  if (!isLoggedIn()) return
-
   const prop = getUserCacheKey(key)
   if (!prop) return
 
@@ -164,7 +172,10 @@ async function userCacheSet(key: string, data: any) {
 }
 
 function getUserCacheKey(key: string) {
-  if (!isLoggedIn()) return
+  if (!isLoggedIn()) {
+    return `user-anon_${key}`
+  }
+
   const userId = getUserId()
   if (!userId) return
   return `user-${userId}_${key}`
@@ -182,7 +193,7 @@ export function tryParseImport(content: string) {
     return json
   } catch (ex) {}
 
-  if (content.startsWith('data:')) {
+  if (content?.startsWith('data:')) {
     try {
       const index = content.indexOf(',')
       const data = decodeURIComponent(content.slice(index + 1))
@@ -358,8 +369,8 @@ export function getAssetPrefix() {
 }
 
 export function isBase64(file: string) {
-  if (file.startsWith('/') || file.startsWith('http')) return false
-  if (file.startsWith('data:')) return true
+  if (file?.startsWith('/') || file?.startsWith('http')) return false
+  if (file?.startsWith('data:')) return true
 
   return file.length > 500
 }

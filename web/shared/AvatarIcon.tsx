@@ -3,7 +3,7 @@ import { Component, createEffect, createSignal, JSX, Match, Show, Switch } from 
 import { imageStore } from '../store'
 import { getAssetUrl } from './util'
 import './avatar.css'
-import { LucideProps } from 'lucide-solid/dist/types/types'
+import { LucideProps } from 'lucide-solid'
 import { AppSchema, UI } from '/common/types'
 import AvatarContainer from './Avatar/Container'
 import { FullSprite } from '/common/types/sprite'

@@ -5,6 +5,7 @@ import {
   MessageCircle,
   MoreHorizontal,
   PlusCircle,
+  ScanFaceIcon,
   Send,
   StopCircle,
   X,
@@ -58,6 +59,7 @@ import { extractReasoning } from '/common/reasoning'
 import { usePresetContext } from '/web/store/preset-context'
 import { debug } from '/common/debug'
 import { Pill } from '/web/shared/Card'
+import { EmojiEntry, EmojiPicker, searchEmojis } from './EmojiPicker'
 
 export type SendFunc = (opts: {
   msg: string
@@ -65,6 +67,9 @@ export type SendFunc = (opts: {
   onSuccess?: () => void
   onError?: (err?: string) => void
 }) => void
+
+/** Maximum number of emoji matches shown in the ":" quick search */
+const MAX_QUICK_EMOJIS = 6
 
 const InputBar: Component<{
   chat: AppSchema.Chat
@@ -125,6 +130,61 @@ const InputBar: Component<{
   const [dragging, setDragging] = createSignal(false)
   const mob = useMobileDetect()
 
+  // ":" quick emoji search (WhatsApp/Discord style)
+  // The ":query" text is typed directly in the message input; the panel tracks the
+  // ":token" next to the caret. null = inactive. The caret can move inside the token
+  // without reindexing, so arrow navigation stays stable.
+  const [emojiToken, setEmojiToken] = createSignal<{ start: number; query: string } | null>(null)
+  const [emojiIndex, setEmojiIndex] = createSignal(0)
+  // Start offset of a token the user explicitly dismissed with Escape
+  const [emojiDismissedAt, setEmojiDismissedAt] = createSignal(-1)
+
+  const emojiMatches = createMemo(() => {
+    const token = emojiToken()
+    if (!token) return [] as EmojiEntry[]
+    return searchEmojis(token.query, MAX_QUICK_EMOJIS)
+  })
+
+  // Re-evaluate the ":token" before the caret (runs on every input and caret change)
+  const parseEmojiToken = () => {
+    if (!ref) return
+    const caret = ref.selectionStart ?? ref.value.length
+    const match = /(^|[^\w:]):(\w*)$/.exec(ref.value.slice(0, caret))
+    if (!match) {
+      // No ":token" at the caret: close the panel and clear any dismissal
+      setEmojiToken(null)
+      setEmojiDismissedAt(-1)
+      return
+    }
+    const start = caret - match[2].length - 1
+    if (start === emojiDismissedAt()) {
+      // This token was dismissed with Escape: leave it as plain text
+      setEmojiToken(null)
+      return
+    }
+    setEmojiToken({ start, query: match[2] })
+  }
+
+  const pickEmoji = (emoji?: string) => {
+    const token = emojiToken()
+    setEmojiToken(null)
+    setEmojiDismissedAt(-1)
+    if (!emoji || !token || !ref) return
+
+    // Replace the ":query" token with the selected emoji
+    const caret = ref.selectionStart ?? ref.value.length
+    const next = `${ref.value.slice(0, token.start)}${emoji}${ref.value.slice(caret)}`
+    const caretNext = token.start + emoji.length
+    setText(next)
+    saveDraft(next)
+
+    queueMicrotask(() => {
+      if (!ref) return
+      ref.focus()
+      ref.setSelectionRange(caretNext, caretNext, 'none')
+    })
+  }
+
   const completeOpts = createMemo(() => {
     const list = ctx.activeBots.map((char) => ({ label: char.name, value: char._id }))
     return list
@@ -146,6 +206,25 @@ const InputBar: Component<{
     )
   }
 
+  const insertEmoji = (emoji: string) => {
+    const prev = ref?.value ?? text()
+    const start = ref?.selectionStart ?? prev.length
+    const end = ref?.selectionEnd ?? prev.length
+    const next = `${prev.slice(0, start)}${emoji}${prev.slice(end)}`
+    const caret = start + emoji.length
+
+    setText(next)
+    saveDraft(next)
+
+    // TextInput writes the signal value back into the textarea, which drops the caret at the end.
+    // Restore it after that sync so consecutive picks land where the user expects.
+    queueMicrotask(() => {
+      if (!ref) return
+      ref.focus()
+      ref.setSelectionRange(caret, caret, 'none')
+    })
+  }
+
   const placeholder = createMemo(() => {
     if (props.ooc) return 'Send a message... (OOC)'
     if (ctx.replyAs) return `Send a message to ${ctx.allBots[ctx.replyAs]?.name}...`
@@ -161,6 +240,7 @@ const InputBar: Component<{
     const value = ref.value || ''
     setText(ref.value || '')
     saveDraft(value)
+    parseEmojiToken()
   }
 
   const [send] = createDebounce(() => {
@@ -267,36 +347,44 @@ const InputBar: Component<{
     await attach(files.map((f) => f.file))
   }
 
+  const onCapture = (image: string) => {
+    msgStore.addAttachment(props.chat._id, [{ type: 'image', image }])
+  }
+
   const attach = async (files: File[]) => {
-    setMenu(false)
-    const toAttach: MsgAttachment[] = []
+    try {
+      setMenu(false)
+      const toAttach: MsgAttachment[] = []
 
-    for (const file of files) {
-      const ext = file.name.split('.').slice(-1)[0].toLowerCase()
-      const isAllowed = ALLOWED_TYPES.has(ext)
-      if (!isAllowed) {
-        toastStore.warn(`Invalid file type: Must be an image`)
-        return
+      for (const file of files) {
+        const ext = file.name.split('.').slice(-1)[0].toLowerCase()
+        const isAllowed = ALLOWED_TYPES.has(ext)
+        if (!isAllowed) {
+          toastStore.warn(`Invalid file type: Must be an image`)
+          return
+        }
+
+        if (file.size > 1024 * 1024 * 1024) {
+          toastStore.warn(`Attachment exceeds size limit (1MB)`)
+          return
+        }
+
+        const proc = await imageApi.processImageFile(file)
+        const resized = await resizeImage(proc, { type: 'fit', max: 768 })
+        debug('resize')(
+          'Orig: %sx%s, New: %sx%s',
+          resized.original.w,
+          resized.original.h,
+          resized.w,
+          resized.h
+        )
+        toAttach.push({ type: 'image', image: resized.content })
       }
 
-      if (file.size > 1024 * 1024 * 1024) {
-        toastStore.warn(`Attachment exceeds size limit (1MB)`)
-        return
-      }
-
-      const proc = await imageApi.processImageFile(file)
-      const resized = await resizeImage(proc, { type: 'fit', max: 768 })
-      debug('resize')(
-        'Orig: %sx%s, New: %sx%s',
-        resized.original.w,
-        resized.original.h,
-        resized.w,
-        resized.h
-      )
-      toAttach.push({ type: 'image', image: resized.content })
+      msgStore.addAttachment(props.chat._id, toAttach)
+    } catch (ex: any) {
+      toastStore.error(`Failed to attach`, { stack: ex.stack })
     }
-
-    msgStore.addAttachment(props.chat._id, toAttach)
   }
 
   return (
@@ -390,6 +478,33 @@ const InputBar: Component<{
             offset={44}
           />
         </Show>
+        <Show when={!!emojiToken()}>
+          <div class="bg-800 absolute bottom-full left-0 z-50 mb-1 flex items-center gap-1 rounded-md border-[1px] border-[var(--bg-600)] p-2">
+            <Show
+              when={emojiMatches().length}
+              fallback={<div class="text-400 px-1 py-1 text-sm">No matching emojis</div>}
+            >
+              <For each={emojiMatches()}>
+                {([emoji, name], i) => (
+                  <button
+                    type="button"
+                    title={name}
+                    class="cursor-pointer rounded-md p-1 text-xl leading-none"
+                    classList={{
+                      'bg-[var(--bg-600)]': i() === emojiIndex(),
+                      'hover:bg-[var(--bg-700)]': i() !== emojiIndex(),
+                    }}
+                    onClick={() => pickEmoji(emoji)}
+                    onMouseDown={(ev) => ev.preventDefault()}
+                  >
+                    {emoji}
+                  </button>
+                )}
+              </For>
+            </Show>
+          </div>
+        </Show>
+        <EmojiPicker onSelect={insertEmoji} />
         <TextInput
           fieldName="chatInput"
           isMultiline
@@ -402,6 +517,36 @@ const InputBar: Component<{
           classList={{ 'blur-md': dragging() }}
           class="input-bar max-h-[120px] min-h-[40px] rounded-r-none !border-0 !outline-0 hover:bg-[var(--bg-800)] active:bg-[var(--bg-800)]"
           onKeyDown={(ev) => {
+            const token = emojiToken()
+
+            // Quick emoji search is active: only intercept navigation / selection keys.
+            // Regular typing, backspace, space... go into the message and re-parse the token.
+            if (token) {
+              const matches = emojiMatches()
+
+              if (ev.key === 'Escape') {
+                setEmojiDismissedAt(token.start)
+                setEmojiToken(null)
+                return
+              }
+              if (ev.key === 'ArrowLeft' && emojiIndex() > 0) {
+                setEmojiIndex((i) => i - 1)
+                ev.preventDefault()
+                return
+              }
+              if (ev.key === 'ArrowRight' && emojiIndex() < matches.length - 1) {
+                setEmojiIndex((i) => i + 1)
+                ev.preventDefault()
+                return
+              }
+              if (ev.key === 'Enter' && !ev.shiftKey && matches.length) {
+                pickEmoji(matches[emojiIndex()]?.[0])
+                ev.preventDefault()
+                return
+              }
+              // No matches: Enter falls through to normal send behavior
+            }
+
             if (ev.key === '@') {
               setComplete(true)
             }
@@ -415,6 +560,8 @@ const InputBar: Component<{
           }}
           onChange={updateText}
           textarea={{
+            onBlur: () => setEmojiToken(null),
+            onSelect: () => parseEmojiToken(),
             onDragOver: (ev) => {
               console.log('on-drag-over', ev.dataTransfer?.files?.[0]?.size)
               setDragging(true)
@@ -438,6 +585,7 @@ const InputBar: Component<{
             },
           }}
         />
+
         <Button
           schema="clear"
           onClick={onMoreClick}
@@ -530,6 +678,14 @@ const InputBar: Component<{
                 Attach Image
               </LabelButton>
             </Show>
+            <Button
+              schema="secondary"
+              class="w-full"
+              onClick={() => pageStore.openCapture((res) => onCapture(res.image))}
+            >
+              <ScanFaceIcon size={18} />
+              Attach from Camera
+            </Button>
           </div>
         </DropMenu>
         <Switch>

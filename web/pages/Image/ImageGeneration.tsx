@@ -56,6 +56,7 @@ export const GenerateImageModal: Component = () => {
     if (!chat.chatId) return
     getStore('responses').generateImagePrompt({
       chatId: chat.chatId!,
+      messageId: '',
       onSummary: (summary) => setters.update('prompt', summary),
       onTick: (res, state) => (state === 'partial' ? setters.update('prompt', res) : null),
     })

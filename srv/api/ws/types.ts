@@ -1,6 +1,6 @@
-import * as WebSocket from 'ws'
+import type * as ws from 'ws'
 
-export type AppSocket = WebSocket & {
+export type AppSocket = ws.WebSocket & {
   uid: string
   isAlive: boolean
   misses: number

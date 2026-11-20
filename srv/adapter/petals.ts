@@ -71,7 +71,7 @@ export const handlePetals: ModelAdapter = async function* (opts) {
 
 function generateStream(url: string, model: string, opts: AdapterProps, body: PetalRequest) {
   url = url.toLocaleLowerCase().replace('https:', 'wss:').replace('http:', 'ws:')
-  if (!url.startsWith('ws')) {
+  if (!url?.startsWith('ws')) {
     url = `ws://${url}`
   }
 

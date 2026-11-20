@@ -451,13 +451,24 @@ function processError(json: any) {
     json?.error?.metadata?.raw
 
   // Generic errors
-  const msg = json?.error?.message || json?.message
+  let msg = json?.error?.message || json?.message
+  const errorIsObject = typeof msg === 'object'
+  if (errorIsObject) {
+    msg = JSON.stringify(msg)
+  }
 
   if (!providerError && !msg) {
     return
   }
 
-  const finalMsg = [msg, providerError].filter((m) => !!m).join(' - ')
+  const parts = [msg, providerError].filter((m) => !!m)
+
+  // Place the error object at the end to make for user readability in the UI
+  if (errorIsObject) {
+    parts.reverse()
+  }
+
+  const finalMsg = parts.join(' - ')
 
   return { message: finalMsg }
 }

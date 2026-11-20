@@ -143,7 +143,7 @@ export function joinUrl(base: string, path: string) {
     base = base.slice(0, -1)
   }
 
-  if (path.startsWith('/')) {
+  if (path?.startsWith('/')) {
     path = path.slice(1)
   }
 

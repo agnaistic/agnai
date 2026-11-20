@@ -18,7 +18,7 @@ import { RootModal } from './Modal'
 import { ComponentSubscriber, createDebounce, PartialListener } from './util'
 import TextInput from './TextInput'
 
-export type OptionAction = { comp: (props: { optionValue: string }) => JSX.Element }
+export type OptionAction = { comp: (props: CustomOption & { optionValue: string }) => JSX.Element }
 
 export type CustomOption = {
   label: string | JSX.Element
@@ -28,6 +28,7 @@ export type CustomOption = {
 
 export const CustomSelect: Component<{
   buttonLabel?: string | JSX.Element | ((opt: CustomOption) => JSX.Element | string)
+  forceButton?: boolean
   onSelect: (opt: CustomOption) => void
   options?: CustomOption[]
   categories?: Array<{ name: string; options: CustomOption[] }>
@@ -64,6 +65,8 @@ export const CustomSelect: Component<{
   actions?: OptionAction[]
   searchInit?: string
   searchText?: (input: string) => void
+
+  onOpen?: () => void
 }> = (props) => {
   const [open, setOpen] = createSignal(false)
   const [filter, setFilter] = createSignal(props.searchInit ?? '')
@@ -99,6 +102,7 @@ export const CustomSelect: Component<{
       () => {
         const isOpening = open()
         if (isOpening) {
+          props.onOpen?.()
           setFilter(props.searchInit ?? '')
         }
       }
@@ -112,12 +116,25 @@ export const CustomSelect: Component<{
 
   const buttonLabel = createMemo(() => {
     const opt = props.selected
+    const content =
+      typeof props.buttonLabel === 'function' ? props.buttonLabel(opt) : props.buttonLabel
 
-    if (typeof props.buttonLabel !== 'function') {
-      return props.buttonLabel
+    if (props.forceButton || typeof content === 'string') {
+      return (
+        <Button
+          schema={props.schema}
+          size={props.size}
+          alignLeft
+          onClick={() => setOpen(true)}
+          // class="w-fit max-w-fit"
+          disabled={props.disabled}
+        >
+          {content}
+        </Button>
+      )
     }
 
-    return props.buttonLabel(opt)
+    return content
   })
 
   const [updateFiltering, unsub] = createDebounce(() => {
@@ -215,18 +232,7 @@ export const CustomSelect: Component<{
         <FormLabel label={props.label} helperText={props.helperText} />
 
         <div class="flex gap-1">
-          <Show when={props.buttonLabel}>
-            <Button
-              schema={props.schema}
-              size={props.size}
-              alignLeft
-              onClick={() => setOpen(true)}
-              // class="w-fit max-w-fit"
-              disabled={props.disabled}
-            >
-              {buttonLabel()}
-            </Button>
-          </Show>
+          <Show when={props.buttonLabel}>{buttonLabel()}</Show>
           {props.children}
         </div>
       </div>
@@ -333,7 +339,13 @@ const OptionList: Component<{
                     <div class="font-bold">{option.label}</div>
                   </div>
                   <For each={props.actions || []}>
-                    {(action) => action.comp({ optionValue: option.value })}
+                    {(action) =>
+                      action.comp({
+                        optionValue: option.value,
+                        label: option.label,
+                        value: option.value,
+                      })
+                    }
                   </For>
                 </div>
               )}

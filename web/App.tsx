@@ -46,6 +46,7 @@ import { ResetPasswordPage } from './pages/Login/ResetPassword'
 import { api } from './store/api'
 import { GlobalFileInput } from './shared/GlobalFileInput'
 import { pageStore } from './store'
+import { PresetModal } from './shared/PresetSelect'
 
 const App: Component = () => {
   const state = userStore((s) => ({ user: s.user, loggedIn: s.loggedIn }))
@@ -68,6 +69,10 @@ const App: Component = () => {
       <Route path="/chat/:id" component={ChatDetail} />
       <Route path={['/info', '/']} component={HomePage} />
       <Route path="/presets/:id" component={lazy(() => import('./pages/GenerationPresets'))} />
+      <Route
+        path="/providers"
+        component={lazy(() => import('./pages/GenerationPresets/PresetList'))}
+      />
       <Route
         path="/presets"
         component={lazy(() => import('./pages/GenerationPresets/PresetList'))}
@@ -132,7 +137,7 @@ const Layout: Component<{ children?: any }> = (props) => {
     confirm: s.confirm,
     showImpersonate: s.showImpersonate,
   }))
-  const state = userStore((s) => ({ ui: s.ui, banned: s.banned }))
+  const state = userStore((s) => ({ ui: s.ui, banned: s.banned, user: !!s.user }))
   const cfg = settingStore((s) => ({
     init: s.init,
     initLoading: s.initLoading,
@@ -161,6 +166,11 @@ const Layout: Component<{ children?: any }> = (props) => {
 
   const bgStyles = useCharacterBg('layout')
 
+  const alignment = createMemo(() => {
+    if (!state.ui.contentAlign || state.ui.contentAlign === 'center') return 'mx-auto'
+    return 'sm:ml-2'
+  })
+
   return (
     <ContextProvider>
       <style>{css}</style>
@@ -180,9 +190,11 @@ const Layout: Component<{ children?: any }> = (props) => {
             style={{ ...bgStyles(), 'scrollbar-gutter': 'stable' }}
           >
             <div
-              class={`mx-auto h-full min-h-full ${isChat() ? maxW() : 'max-w-8xl'}`}
+              class={`h-full min-h-full ${isChat() ? maxW() : 'max-w-8xl'} ${alignment()}`}
               classList={{
                 'content-background': !isChat(),
+                // 'mx-auto': !state.ui.contentAlign || state.ui.contentAlign !== 'left',
+                // 'sm:ml-2': state.ui.contentAlign === 'left',
               }}
             >
               <Switch>
@@ -234,18 +246,23 @@ const Layout: Component<{ children?: any }> = (props) => {
           </main>
         </div>
       </div>
-      <Notifications />
-      <ImpersonateModal
-        show={page.showImpersonate}
-        close={() => pageStore.toggleImpersonate(false)}
-      />
       <InfoModal />
-      <ProfileModal />
       <BannedModal />
       <GlobalFileInput />
-      <ImageModal />
-      <ImageSettingsModal />
-      <SettingsModal />
+
+      <Show when={state.user}>
+        <ImpersonateModal
+          show={page.showImpersonate}
+          close={() => pageStore.toggleImpersonate(false)}
+        />
+        <Notifications />
+        <ProfileModal />
+        <ImageModal />
+        <ImageSettingsModal />
+        <SettingsModal />
+        <PresetModal />
+      </Show>
+
       <div
         class="absolute bottom-0 left-0 right-0 top-0 z-10 h-[100vh] w-full bg-black bg-opacity-20 sm:hidden"
         classList={{ hidden: !page.showMenu }}

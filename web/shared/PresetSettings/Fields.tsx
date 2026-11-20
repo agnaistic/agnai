@@ -43,8 +43,8 @@ export const ResponseLength: Field<{
       label="Response Length"
       helperText="Maximum length of the response. Measured in 'tokens'"
       min={16}
-      max={2048}
-      step={1}
+      max={8096}
+      step={64}
       value={props.state.maxTokens}
       disabled={props.state.disabled}
       onChange={(val) => props.setters.setState('maxTokens', val)}
@@ -265,7 +265,7 @@ export const Temperature: Field = (props) => {
         helperText="Creativity: Randomness of sampling. High values can increase creativity, but may make text less sensible. Lower values will make text more predictable."
         min={0.1}
         max={props.state.presetMode === 'simple' ? 1.5 : 10}
-        step={0.01}
+        step={0.05}
         value={props.state.temp}
         disabled={props.state.disabled}
         aiSetting={'temp'}

@@ -76,7 +76,8 @@
     "up": "docker compose -p agnai up -d",
     "deps": "npx --yes pnpm@10 install --lockfile",
     "web": "parcel web/index.html --no-cache",
-    "api": "tsc -p api.tsconfig.json --watch"
+    "api": "tsc -p api.tsconfig.json --watch",
+    "typetask": "tsc -p tsconfig.json --noEmit -w"
   },
   "dependencies": {
     "@agnai/sentencepiece-js": "^1.1.1",
@@ -179,7 +180,7 @@
     "jwt-decode": "^4.0.0",
     "libsodium-wrappers-sumo": "^0.7.11",
     "localforage": "^1.10.0",
-    "lucide-solid": "0.534.0",
+    "lucide-solid": "1.66.0",
     "mocha": "^10.2.0",
     "mocha-chai-jest-snapshot": "^1.1.4",
     "nodemon": "^3.0.1",
@@ -206,7 +207,7 @@
     "string_decoder": "^1.3.0",
     "tailwindcss": "^3.3.2",
     "tty-browserify": "^0.0.1",
-    "typescript": "^5.8.2",
+    "typescript": "7.0.2",
     "url": "^0.11.1",
     "util": "^0.12.3",
     "values.js": "^2.1.1",

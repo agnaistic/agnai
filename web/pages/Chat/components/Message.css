@@ -31,6 +31,29 @@ qem {
   border: none; /* necessary for the screenshot feature or we see weird white borders */
 }
 
+.rendered-markdown .showdown-spoiler {
+  background-color: #000 !important;
+  color: #000 !important;
+  padding: 0 3px;
+  cursor: pointer;
+  user-select: none;
+  border: 1px solid transparent;
+}
+
+.showdown-spoiler-opacity {
+  opacity: 0;
+}
+
+.showdown-spoiler-opacity.revealed {
+  opacity: 100;
+}
+
+.rendered-markdown .showdown-spoiler.revealed {
+  background-color: transparent;
+  color: inherit !important;
+  border: 1px dotted #888;
+}
+
 .rendered-markdown p:not(:last-child) {
   margin-bottom: 0.4em; /* ensure <p> els are visually separated by empty line */
 }

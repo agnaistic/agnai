@@ -180,6 +180,8 @@ export interface GenSettings {
 
   skipRoleMerging?: boolean
   postUserRole?: boolean
+  alternateRoles?: boolean
+
   disableNameStops?: boolean
   earlyStopping?: boolean
   stopSequences?: string[]

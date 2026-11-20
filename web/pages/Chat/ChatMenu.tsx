@@ -24,7 +24,6 @@ import { ThirdPartyModel } from '/web/shared/PresetSettings/ThirdPartyModel'
 import { PresetProvider } from '../Settings/Provider'
 import { createEmitter } from '/web/shared/util'
 import { usePresetContext } from '/web/store/preset-context'
-import { getStore } from '/web/store/create'
 
 type NavProps = {
   ctx: ChatContext
@@ -86,7 +85,7 @@ const ChatNav: Component<NavProps> = (props) => {
   const openProviders = createEmitter('open')
 
   const openMessageImages = () => {
-    const last = getStore('messages').getState().msgs.slice(-1)[0]
+    const last = props.ctx.messages.viewing.slice(-1)[0]
 
     if (!last) {
       imageStore.openImageGen()

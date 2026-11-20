@@ -8,7 +8,10 @@ import { getSubscriptionModelLimits } from '/common/util'
 import { ContextSize, ModelFormat, ResponseLength, Temperature } from './Fields'
 import { PresetTabProps } from '/web/store/preset-context'
 
-export const MODEL_FORMATS = Object.keys(BUILTIN_FORMATS).map((label) => ({ label, value: label }))
+export const MODEL_FORMATS = Object.keys(BUILTIN_FORMATS).map((label) => ({
+  label: label === 'None' ? `None (Chat Completions)` : label,
+  value: label,
+}))
 
 export const GeneralSettings: Component<PresetTabProps> = (props) => {
   const user = userStore((s) => ({ user: s.user, userLevel: s.userLevel }))

@@ -82,6 +82,16 @@ export function usePresetOptions() {
   return options
 }
 
+export function createKeyHook(callback: (ev: KeyboardEvent) => void) {
+  onMount(() => {
+    document.addEventListener('keydown', callback)
+  })
+
+  onCleanup(() => {
+    document.removeEventListener('keydown', callback)
+  })
+}
+
 export function useWindowSize(): {
   width: Accessor<number>
   height: Accessor<number>

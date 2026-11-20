@@ -5,8 +5,8 @@ import { AppSchema, TokenCounter } from './types'
 import { findLast } from './util'
 import { GenerateRequestV2 } from '/srv/adapter/type'
 
-export async function toChatMessages(req: GenerateRequestV2, counter: TokenCounter) {
-  const assembled = await assemblePrompt(req, counter, true)
+export async function toChatMessages(req: GenerateRequestV2, counter?: TokenCounter) {
+  const assembled = await assemblePrompt(req, counter)
 
   const { sections } = assembled
   const {
@@ -16,7 +16,7 @@ export async function toChatMessages(req: GenerateRequestV2, counter: TokenCount
 
   const prefill = (req.parts.prefill || '').trim()
 
-  const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: any }> = []
+  let messages: Array<{ role: 'system' | 'user' | 'assistant'; content: any }> = []
   const systemPrompt = strictSystem.join('').trim().replace(/\n\n+/g, '\n\n')
   const postSystem = post_system.join('').trim().replace(/\n\n+/g, '\n\n')
 
@@ -124,12 +124,17 @@ export async function toChatMessages(req: GenerateRequestV2, counter: TokenCount
     messages.push({ role, content: `${postContent}${prefill}` })
   }
 
-  if (req.settings?.skipRoleMerging) {
+  if (req.settings?.skipRoleMerging && !req.settings.alternateRoles) {
     return { messages, assembled }
   }
 
-  const mergedMsgs = ensureMessagesAlternate(messages)
-  const mergedBlocks = ensureMessagesAlternate(assembled.blocks)
+  if (req.settings?.alternateRoles) {
+    messages = validateFirstMessageIsUser(messages)
+  }
+
+  let mergedMsgs = ensureMessagesAlternate(messages)
+  let mergedBlocks = ensureMessagesAlternate(assembled.blocks)
+
   return {
     messages: mergedMsgs,
     assembled: {
@@ -156,6 +161,21 @@ function getAttachments(req: Pick<GenerateRequestV2, 'attachments'>, id: string 
 
   if (messages.length) return messages
   return
+}
+
+function validateFirstMessageIsUser(messages: any[]) {
+  const roles = {
+    one: messages[0]?.role,
+    two: messages[1]?.role,
+  }
+
+  if (!roles.one || roles.one === 'user') return messages
+  if (roles.one === 'system' && roles.two === 'assistant') {
+    const next = [messages[0], { role: 'user', content: '...' }, ...messages.slice(1)]
+    return next
+  }
+
+  return messages
 }
 
 export function stripImageContent(messages: any[]) {

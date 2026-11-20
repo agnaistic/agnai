@@ -10,6 +10,7 @@ const msgInlineLabels: Record<UI.MessageOption, string> = {
   visible: 'Visibility',
   'gen-image': 'Gen Image',
   'gen-json': 'Gen JSON',
+  camera: 'Attach from Camera',
 }
 
 export function toInlineList(opts: UI.UISettings['msgOptsInline']) {

@@ -165,7 +165,7 @@ export const updateMessageProps = handle(async ({ body, params, userId }) => {
 
   const update: Partial<AppSchema.ChatMessage> = {}
 
-  if (body.imagePrompt) update.imagePrompt = body.imagePrompt
+  if (body.imagePrompt !== undefined) update.imagePrompt = body.imagePrompt
   if (body.msg) update.msg = body.msg
   if (body.extras) update.extras = body.extras
   if (body.retries) update.retries = body.retries
