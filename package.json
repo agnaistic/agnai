@@ -10,6 +10,11 @@
   },
   "browserslist": "> 0.1%, not ie 11",
   "homepage": "https://github.com/agnaistic/agnai/issues",
+  "pnpm": {
+    "overrides": {
+      "jwa": "^2.0.1"
+    }
+  },
   "files": [
     "poetry.lock",
     "pyproject.toml",
@@ -85,7 +90,7 @@
     "@aws-sdk/client-s3": "^3.309.0",
     "@css-hooks/solid": "^1.0.1",
     "@dqbd/tiktoken": "^1.0.21",
-    "@google/genai": "^1.7.0",
+    "@google/genai": "^3.3.0",
     "@thisbeyond/solid-dnd": "^0.7.5",
     "adm-zip": "^0.5.10",
     "bcryptjs": "^2.4.3",
@@ -102,7 +107,7 @@
     "gpt-3-encoder": "^1.1.4",
     "iconv-lite": "0.6.3",
     "js-tiktoken": "^1.0.14",
-    "jsonwebtoken": "^9.0.0",
+    "jsonwebtoken": "^9.0.3",
     "jszip": "^3.10.1",
     "localtunnel": "^2.0.2",
     "minimist": "^1.2.8",
@@ -181,7 +186,7 @@
     "libsodium-wrappers-sumo": "^0.7.11",
     "localforage": "^1.10.0",
     "lucide-solid": "1.66.0",
-    "mocha": "^10.2.0",
+    "mocha": "^12.0.3",
     "mocha-chai-jest-snapshot": "^1.1.4",
     "nodemon": "^3.0.1",
     "parcel": "^2.13.3",
