@@ -203,12 +203,28 @@ export type ProviderFormat =
 
 export type ProviderSubFormat = { value: string; name: string }
 
+type OpenAICompatPayload = {
+  model: string
+  stop: string[]
+  messages: Array<{ role: string; content: string }>
+  stream: boolean
+  temperature: number
+  top_p: number
+  max_tokens: number
+  reasoning_effort?: string
+  presence_penalty?: number
+  frequency_penalty?: number
+}
+
 export type ProviderDefinition = {
   name: string
   url?: string
   // service?: AIAdapter
   // format?: ThirdPartyFormat
   formats?: ProviderFormat[]
+
+  /** WIP, not yet implemented: Provider specific adjustments to the OpenAI-compatible payload just before dispatching */
+  payload?: (payload: OpenAICompatPayload) => any
 }
 
 type ProviderCategory = 'custom' | 'known' | 'self' | 'agnai'
