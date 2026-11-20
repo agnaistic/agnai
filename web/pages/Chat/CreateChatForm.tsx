@@ -53,7 +53,6 @@ const CreateChatForm: Component<{
   close?: () => void
   charId?: string
 }> = (props) => {
-  let ref: any
   const params = useParams()
   const nav = useNavigate()
 
