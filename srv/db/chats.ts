@@ -172,10 +172,7 @@ export async function canViewChat(senderId: string, chat: AppSchema.Chat) {
   return !!membership
 }
 
-export async function getAllChats(
-  userId: string,
-  shallow?: boolean
-): Promise<Array<AppSchema.Chat & { character: AppSchema.Character }>> {
+export async function getAllChats(userId: string, shallow?: boolean) {
   const memberships = await db('chat-member').find({ userId }).toArray()
 
   const project = {
@@ -209,14 +206,10 @@ export async function getAllChats(
 
   const charIds = Array.from(new Set(chats.map((ch) => ch.characterId)).keys())
 
-  const chars = (await db('character')
+  const characters = (await db('character')
     .find({ $or: [{ userId }, { _id: { $in: charIds } }] })
     .project(project)
     .toArray()) as AppSchema.Character[]
-
-  const map = toMap(chars)
-
-  const list = chats.map((ch) => ({ ...ch, character: map[ch.characterId] }))
 
   if (config.ui.chatCounts) {
     const counts = (await db('chat')
@@ -251,12 +244,12 @@ export async function getAllChats(
 
     const map = new Map(counts.map((item) => [item._id, item.messageCount]))
 
-    for (const item of list) {
+    for (const item of chats) {
       item.messageCount = map.get(item._id) ?? -1
     }
   }
 
-  return list
+  return { chats, characters }
 }
 
 export async function getActiveMembers(chatId: string) {

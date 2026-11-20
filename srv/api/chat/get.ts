@@ -47,18 +47,13 @@ export const getChatDetail = handle(async ({ userId, params, query, user, authed
 })
 
 export const getAllChats = handle(async (req) => {
-  const chats = await store.chats.getAllChats(req.userId!, !!req.query.shallow)
+  const all = await store.chats.getAllChats(req.userId!, !!req.query.shallow)
 
-  const characters = uniqueBy(
-    chats
-      .filter((ch) => !!ch.character && ch.character?.userId === req.userId)
-      .map((ch) => ch.character),
-    '_id'
-  )
+  const characters = uniqueBy(all.characters, '_id')
 
   if (!!req.query.shallow) {
     return { characters }
   }
 
-  return { chats, characters }
+  return { chats: all.chats, characters }
 })
