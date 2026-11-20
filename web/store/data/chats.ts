@@ -3,7 +3,7 @@ import { v4 } from 'uuid'
 import { AppSchema } from '../../../common/types/schema'
 import { api, isLoggedIn } from '../api'
 import { loadItem, localApi, saveChats } from './storage'
-import { replace } from '/common/util'
+import { replace, toMap } from '/common/util'
 import { getStore } from '../create'
 import { parseTemplate } from '/common/template-parser'
 
@@ -245,6 +245,15 @@ export async function getAllChats(shallow?: boolean) {
       '/chat',
       query
     )
+
+    if (res.result?.chats) {
+      const map = toMap(res.result.characters)
+
+      for (const chat of res.result.chats) {
+        chat.character = map[chat.characterId]
+      }
+    }
+
     return res
   }
 
