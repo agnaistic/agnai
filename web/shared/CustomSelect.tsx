@@ -336,7 +336,11 @@ const OptionList: Component<{
                       }
                     }}
                   >
-                    <div class="font-bold">{option.label}</div>
+                    {typeof option.label === 'string' ? (
+                      <div class="font-bold">{option.label}</div>
+                    ) : (
+                      option.label
+                    )}
                   </div>
                   <For each={props.actions || []}>
                     {(action) =>

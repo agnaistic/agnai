@@ -1,4 +1,4 @@
-import { Component, For, Show, createMemo } from 'solid-js'
+import { Component, For, Match, Show, Switch, createMemo } from 'solid-js'
 import { settingStore, toastStore, userStore } from '/web/store'
 import { CustomSelect } from '../CustomSelect'
 import { getSubscriptionModelLimits } from '/common/util'
@@ -8,7 +8,7 @@ import {
   SubscriptionTier,
 } from '/common/types/presets'
 import { SubCTA } from '/web/Navigation'
-import { createEmitter } from '../util'
+import { createEmitter, InvokeEmitter } from '../util'
 import { useAppContext } from '/web/store/context'
 import { AppSchema } from '/common/types'
 import { Pill } from '../Card'
@@ -58,7 +58,8 @@ export const AgnaisticSettings: Component<{
     // presetStore.updatePreset(props.state._id, { providerModels: next })
   }
 
-  const emitter = createEmitter('close')
+  const emitter = createEmitter('close', 'open')
+  emitter.emit.open
 
   const label = createMemo(() => {
     const id =
@@ -83,6 +84,8 @@ export const AgnaisticSettings: Component<{
         requires={opt.requires}
         tiers={state.tiers}
         page={props.page}
+        emitter={emitter.emit.open}
+        button
       />
     )
   })
@@ -110,6 +113,7 @@ export const AgnaisticSettings: Component<{
             fallback()
           }
           closeSub={emitter.on}
+          openSub={emitter.on}
         />
       </div>
     </Show>
@@ -157,6 +161,7 @@ export const ModelList: Component<{ show: boolean; close: () => void }> = (props
                         sub={model.sub}
                         tier={model.tierName}
                         limit={model.limit}
+                        emitter={undefined}
                       />
                     </div>
                   )}
@@ -263,6 +268,7 @@ function useModelCategories() {
             tier={tier || 'Staff'}
             requires={requires}
             tiers={state.tiers}
+            emitter={undefined}
           />
         ),
       })
@@ -300,6 +306,8 @@ const ModelLabel: Component<{
   nodesc?: boolean
   tiers: AppSchema.SubscriptionTier[]
   page?: string
+  emitter: InvokeEmitter | undefined
+  button?: boolean
 }> = (props) => {
   const context = createMemo(() =>
     props.limit ? props.limit.maxContextLength : props.sub.preset.maxContextLength!
@@ -360,8 +368,8 @@ const ModelLabel: Component<{
     return pills
   })
 
-  return (
-    <Button class="flex flex-col items-start" size="sm">
+  const Content = (
+    <>
       <div class="flex items-center justify-between gap-1">
         <div class="min-w-fit font-bold">{props.sub.name}</div>
         <div class="text-700 flex flex-wrap gap-1 text-xs">
@@ -381,6 +389,23 @@ const ModelLabel: Component<{
       <Show when={props.disabled}>
         <div class="text-700 text-xs">Requires {props.requires}</div>
       </Show>
-    </Button>
+    </>
+  )
+
+  return (
+    <Switch>
+      <Match when={props.button}>
+        <Button
+          class="flex w-full flex-col items-start"
+          size="sm"
+          onClick={() => props.emitter?.()}
+        >
+          {Content}
+        </Button>
+      </Match>
+      <Match when>
+        <div class="flex w-full flex-col items-start">{Content}</div>
+      </Match>
+    </Switch>
   )
 }
