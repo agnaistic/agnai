@@ -210,7 +210,7 @@ export async function getAllChats(
   const charIds = Array.from(new Set(chats.map((ch) => ch.characterId)).keys())
 
   const chars = (await db('character')
-    .find({ _id: { $in: charIds } })
+    .find({ $or: [{ userId }, { _id: { $in: charIds } }] })
     .project(project)
     .toArray()) as AppSchema.Character[]
 
