@@ -562,17 +562,15 @@ const EditPreset: Component<{
         </>
       }
     >
-      <form>
-        <Select
-          label="Preset"
-          helperText="Select a preset to start editing. If you are currently editing a preset, it won't be in the list."
-          value={id()}
-          onChange={(ev) => setId(ev.value)}
-          items={state.subs
-            .filter((pre) => pre._id !== params.id)
-            .map((pre) => ({ label: pre.name, value: pre._id }))}
-        />
-      </form>
+      <Select
+        label="Preset"
+        helperText="Select a preset to start editing. If you are currently editing a preset, it won't be in the list."
+        value={id()}
+        onChange={(ev) => setId(ev.value)}
+        items={state.subs
+          .filter((pre) => pre._id !== params.id)
+          .map((pre) => ({ label: pre.name, value: pre._id }))}
+      />
     </Modal>
   )
 }

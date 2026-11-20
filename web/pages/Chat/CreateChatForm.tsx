@@ -216,7 +216,7 @@ const CreateChatForm: Component<{
           </div>
         }
       />
-      <form ref={ref}>
+      <div>
         <div class="mb-2 text-sm">
           Optionally modify some of the conversation context. You can override other aspects of the
           character's persona from the conversation after it is created.
@@ -374,7 +374,7 @@ const CreateChatForm: Component<{
             <div class="flex w-full justify-end gap-2">{footer}</div>
           </Card>
         </Show>
-      </form>
+      </div>
     </Page>
   )
 }

@@ -317,7 +317,6 @@ const AddCharacter: Component<{ setView: (view: View) => {} }> = (props) => {
 }
 
 const InviteUser: Component<{ setView: (view: View) => {} }> = (props) => {
-  let ref: any
   const state = chatStore((s) => ({ active: s.details[s.lastChatId] }))
 
   const [userId, setUserId] = createSignal('')
@@ -335,7 +334,7 @@ const InviteUser: Component<{ setView: (view: View) => {} }> = (props) => {
 
   return (
     <>
-      <form ref={ref} class="flex w-full max-w-full flex-col gap-2">
+      <div class="flex w-full max-w-full flex-col gap-2">
         <TextInput
           class="text-sm"
           label="Invite User"
@@ -350,7 +349,7 @@ const InviteUser: Component<{ setView: (view: View) => {} }> = (props) => {
             Send Invite
           </Button>
         </div>
-      </form>
+      </div>
     </>
   )
 }

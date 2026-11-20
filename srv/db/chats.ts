@@ -198,6 +198,7 @@ export async function getAllChats(
     imageSource: 1,
     treeLeafId: 1,
     favorite: 1,
+    folder: 1,
   }
 
   const chats = await db('chat')

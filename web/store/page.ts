@@ -86,6 +86,10 @@ export const pageStore = createStore<PageState>('page', {
       }
     },
 
+    closeAttach() {
+      return { attach: undefined }
+    },
+
     info(_, title: string, content: JSX.Element | string) {
       return { info: { content, title } }
     },
