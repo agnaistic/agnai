@@ -15,6 +15,7 @@ import { Pill } from '../Card'
 import { RootModal } from '../Modal'
 import { PresetFuncs, ContextPreset } from '/web/store/preset-context'
 import Button from '../Button'
+import { ImageIcon } from 'lucide-solid'
 
 const MODEL_NAMES = new Map<string, string>()
 
@@ -371,11 +372,18 @@ const ModelLabel: Component<{
   const Content = (
     <>
       <div class="flex items-center justify-between gap-1">
-        <div class="min-w-fit font-bold">{props.sub.name}</div>
-        <div class="text-700 flex flex-wrap gap-1 text-xs">
+        <div class="min-w-fit font-bold">{props.sub.name} </div>
+        <div class="text-700 flex flex-wrap items-center gap-1 text-xs">
           <Show
             when={maxes().length && !props.page}
-            fallback={<>{Math.round(context() / 1000)}K</>}
+            fallback={
+              <>
+                <Show when={props.sub.preset.subVisionModel}>
+                  <ImageIcon size={12} />
+                </Show>
+                {Math.round(context() / 1000)}K{' '}
+              </>
+            }
           >
             <For each={maxes()}>{(max) => <>{max}</>}</For>
           </Show>
