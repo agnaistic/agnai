@@ -179,6 +179,8 @@ export async function getAllChats(userId: string, shallow?: boolean) {
     userId: 1,
     name: 1,
     avatar: 1,
+    description: 1,
+    appearance: 1,
     characterId: 1,
     characters: 1,
     createdAt: 1,
@@ -195,6 +197,7 @@ export async function getAllChats(userId: string, shallow?: boolean) {
     treeLeafId: 1,
     favorite: 1,
     folder: 1,
+    tags: 1,
   }
 
   const chats = await db('chat')
