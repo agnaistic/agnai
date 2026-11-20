@@ -25,7 +25,7 @@ export async function obtainManagerLock(handler: Handler) {
       { upsert: true }
     )
 
-  if (result.value?.sessionId === sessionId) {
+  if (result?.sessionId === sessionId) {
     logger.info(`Started event handler: ${handler.name}`)
     handler.start()
 
