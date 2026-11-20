@@ -178,56 +178,6 @@ export async function getAllChats(
 ): Promise<Array<AppSchema.Chat & { character: AppSchema.Character }>> {
   const memberships = await db('chat-member').find({ userId }).toArray()
 
-  if (config.ui.chatCounts) {
-    const list = await db('chat')
-      .aggregate([
-        {
-          $match: {
-            $or: [{ userId }, { _id: { $in: memberships.map((mem) => mem.chatId) } }],
-          },
-        },
-        {
-          $lookup: {
-            from: 'character',
-            localField: 'characterId',
-            foreignField: '_id',
-            as: 'character',
-          },
-        },
-        {
-          $lookup: {
-            from: 'chat-message',
-            localField: '_id',
-            foreignField: 'chatId',
-            as: 'chatMessages',
-          },
-        },
-        {
-          $addFields: {
-            messageCount: { $size: '$chatMessages' },
-          },
-        },
-        { $unwind: { path: '$character' } },
-        {
-          $project: {
-            _id: 1,
-            userId: 1,
-            name: 1,
-            characterId: 1,
-            characters: 1,
-            createdAt: 1,
-            updatedAt: 1,
-            messageCount: 1,
-            genPreset: 1,
-            'character.name': 1,
-          },
-        },
-      ])
-      .toArray()
-
-    return list as Array<AppSchema.Chat & { character: AppSchema.Character; messageCount: number }>
-  }
-
   const project = {
     _id: 1,
     userId: 1,
@@ -247,6 +197,7 @@ export async function getAllChats(
     imagePresetId: 1,
     imageSource: 1,
     treeLeafId: 1,
+    favorite: 1,
   }
 
   const chats = await db('chat')
@@ -265,6 +216,45 @@ export async function getAllChats(
   const map = toMap(chars)
 
   const list = chats.map((ch) => ({ ...ch, character: map[ch.characterId] }))
+
+  if (config.ui.chatCounts) {
+    const counts = (await db('chat')
+      .aggregate([
+        {
+          $match: {
+            $or: [{ userId }, { _id: { $in: memberships.map((mem) => mem.chatId) } }],
+          },
+        },
+        {
+          $lookup: {
+            from: 'chat-message',
+            localField: '_id',
+            foreignField: 'chatId',
+            as: 'chatMessages',
+          },
+        },
+        {
+          $addFields: {
+            messageCount: { $size: '$chatMessages' },
+          },
+        },
+        // { $unwind: { path: '$chat' } },
+        {
+          $project: {
+            _id: 1,
+            messageCount: 1,
+          },
+        },
+      ])
+      .toArray()) as Array<{ _id: string; messageCount: number }>
+
+    const map = new Map(counts.map((item) => [item._id, item.messageCount]))
+
+    for (const item of list) {
+      item.messageCount = map.get(item._id) ?? -1
+    }
+  }
+
   return list
 }
 
