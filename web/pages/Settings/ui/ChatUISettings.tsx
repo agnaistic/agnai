@@ -44,6 +44,12 @@ export const ChatUISettings: Component = (props) => {
         onChange={(next) => userStore.saveUI({ trimSentences: next })}
       />
       <Toggle
+        label="Hide Emoji Picker"
+        fieldName="hideEmojiPicker"
+        value={state.ui.hideEmojiPicker ?? false}
+        onChange={(next) => userStore.saveUI({ hideEmojiPicker: next })}
+      />
+      <Toggle
         label="Expand Reasoning by Default"
         helperText="Reasoning thoughts are collapsed by default. Enable this to expand them by default."
         fieldName="expandReasoning"

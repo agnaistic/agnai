@@ -322,6 +322,8 @@ export const NovelSettings: Component<{
           items={[
             { label: 'Heavy', value: '0' },
             { label: 'Light', value: '1' },
+            { label: 'Human Focus', value: '3' },
+            { label: 'Furry Focus', value: '4' },
             { label: 'None', value: '2' },
           ]}
           value={props.ctx.edit.provider.ucPreset || '0'}

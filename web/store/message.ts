@@ -482,12 +482,15 @@ export const msgStore = createStore<MsgState>(
         onError?: (error: string) => void
         onPrompt?: (prompt: string) => void
         onTick?: TickHandler
+        recaption?: boolean
       }
     ) {
       if (imgWaiting) return
 
       const messageId = opts.sourceMsgId || msgs.slice(-1)[0]._id
       const summaryPrompt = messageId && !opts.prompt ? getMessageImagePrompt(messageId) : undefined
+
+      const signal = new AbortController()
 
       yield {
         hordeStatus: undefined,
@@ -496,7 +499,7 @@ export const msgStore = createStore<MsgState>(
           characterId: activeCharId,
           pos: 1,
           messageId,
-          signal: new AbortController(),
+          signal: signal,
         },
       }
 
@@ -504,7 +507,7 @@ export const msgStore = createStore<MsgState>(
         {
           messageId,
           chatId: activeChatId,
-          prompt: opts.prompt || summaryPrompt,
+          prompt: opts.recaption ? '' : opts.prompt || summaryPrompt,
           append: opts.append,
           source: 'summary',
         },

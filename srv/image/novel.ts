@@ -1,7 +1,7 @@
 import Zip from 'adm-zip'
 import needle from 'needle'
 import { ImageAdapter } from './types'
-import { NOVEL_IMAGE_MODEL, NOVEL_SAMPLER } from '../../common/image'
+import { NOVEL_IMAGE_MODEL, NOVEL_SAMPLER, NOVEL_SAMPLER_REV } from '../../common/image'
 import { NovelSettings } from '../../common/types/image-schema'
 import { formatImagePrompt, joinImagePrompts } from '/common/util'
 import { AppSchema } from '/common/types'
@@ -25,36 +25,11 @@ const UC_PRESETS: Record<number, string> = {
 
 const QUALITY_TAGS = 'no text, best quality, very aesthetic, absurdres'
 
-type NovelImageRequest = {
-  action: 'generate'
-  input: string
-  model: string
-  parameters: {
-    height: number
-    width: number
-    n_samples: number
-    negative_prompt: string
-    ucPreset: number
-    qualityToggle: boolean
-
-    sampler: string
-    seed: number
-
-    /** Sampling steps */
-    steps: number
-    /** CFG scale */
-    scale: number
-    [key: string]: any
-  }
-}
-
 export const handleNovelImage: ImageAdapter = async (
   { user, prompt, negative, settings, provider },
   log,
   guestId
 ) => {
-  const base = user.images
-
   const ucPreset = +(provider.ucPreset || defaultSettings.ucPreset)
   const ucNegative = UC_PRESETS[ucPreset] || ''
 
@@ -69,15 +44,16 @@ export const handleNovelImage: ImageAdapter = async (
   const finalPrompt = joinImagePrompts(input)
   const finalNegative = joinImagePrompts([negative, ucNegative])
 
-  const payload: NovelImageRequest = {
+  const payload = {
     action: 'generate',
     input: finalPrompt,
-    model: provider.model ?? NOVEL_IMAGE_MODEL.Anime_v4_Curated,
+    model: provider.model ?? NOVEL_IMAGE_MODEL.Anime_v5_Full,
     parameters: {
+      params_version: 4,
       autoSmea: false,
       add_original_image: false,
-      height: base?.height ?? 384,
-      width: base?.width ?? 384,
+      height: settings?.height ?? 1024,
+      width: settings?.width ?? 1024,
       characterPrompts: [],
       dynamic_thresholding: false,
       noise_schedule: 'karras',
@@ -86,17 +62,28 @@ export const handleNovelImage: ImageAdapter = async (
       uc: '',
       n_samples: 1,
       negative_prompt: finalNegative,
-      params_version: 3,
-      sampler: settings.sampler ?? NOVEL_SAMPLER['DPM++ 2M'],
-      scale: base?.cfg ?? 9,
+      sampler: provider.sampler ?? NOVEL_SAMPLER['Euler Ancestral'],
+      scale: settings?.cfg ?? 9,
       seed: Math.trunc(Math.random() * 1_000_000_000),
-      steps: base?.steps ?? 28,
+      steps: settings?.steps ?? 28,
       // Unsure what to do with these two values
-      ucPreset,
+      ucPresetId:
+        ucPreset === 0
+          ? 'heavy'
+          : ucPreset === 1
+          ? 'light'
+          : ucPreset === 3
+          ? 'humanFocus'
+          : ucPreset === 4
+          ? 'furryFocus'
+          : 'none',
       legacy: false,
       legacy_uc: false,
       legacy_v3_extend: false,
       qualityToggle: true,
+      straight_alpha: true,
+      tag_hint_qt: 1,
+      tag_hint_uc_preset: 4,
 
       v4_negative_prompt: {
         legacy_uc: false,
@@ -109,6 +96,11 @@ export const handleNovelImage: ImageAdapter = async (
       },
     },
   }
+
+  if (payload.parameters.sampler in NOVEL_SAMPLER_REV === false) {
+    payload.parameters.sampler = NOVEL_SAMPLER['Euler Ancestral']
+  }
+
   const result = await needle('post', `${baseUrl}/generate-image`, payload, {
     json: true,
     headers: {
