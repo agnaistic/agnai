@@ -10,8 +10,8 @@ import { X } from 'lucide-solid'
 import { createDebounce } from '/web/shared/util'
 import { InlineRangeInput } from '/web/shared/RangeInput'
 import { FONT_FACES } from '/common/types/ui'
-import { Toggle } from 'web/shared/Toggle'
-import { pageStore } from 'web/store/page'
+import { Toggle } from '/web/shared/Toggle'
+import { pageStore } from '/web/store/page'
 
 const themeOptions = UI.UI_THEME.map((color) => ({ label: color, value: color }))
 

@@ -37,7 +37,7 @@ import { useProviderList } from '../Provider/hooks'
 import { Card, Pill } from '/web/shared/Card'
 import { InlineRangeInput } from '/web/shared/RangeInput'
 import { ConditionalModal } from '/web/shared/Modal'
-import Accordian from 'web/shared/Accordian'
+import Accordian from '/web/shared/Accordian'
 import { ImageModel } from './ImageModel'
 
 export const SelectImageProvider: Component<{

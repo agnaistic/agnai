@@ -1,7 +1,8 @@
 import { EmoteType, FullSprite, SpriteAttr, SpriteBody, emotions } from '/common/types/sprite'
 import { randomElement } from '/common/util'
+import manifestJson from './sprites/manifest.json'
 
-export const manifest = require('./sprites/manifest.json') as Manifest
+export const manifest = manifestJson as Manifest
 
 export const attributes: SpriteAttr[] = [
   'back_hair',

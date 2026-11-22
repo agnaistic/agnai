@@ -1,9 +1,0 @@
-{
-  "plugins": [],
-  "presets": ["solid"],
-  "env": {
-    "development": {
-      "presets": ["babel-preset-solid"]
-    }
-  }
-}

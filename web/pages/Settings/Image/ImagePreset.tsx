@@ -1,15 +1,15 @@
 import { Component, createMemo, createSignal } from 'solid-js'
 import { createStore } from 'solid-js/store'
 import { ImageContext } from './image-context'
-import { ImagePresetSettings, ImageProviderSettings } from 'common/types/image-schema'
-import { userStore } from 'web/store'
-import { CustomOption, CustomSelect } from 'web/shared/CustomSelect'
-import Modal, { ConfirmModal } from 'web/shared/Modal'
-import { getStore } from 'web/store/create'
+import { ImagePresetSettings, ImageProviderSettings } from '/common/types/image-schema'
+import { userStore } from '/web/store'
+import { CustomOption, CustomSelect } from '/web/shared/CustomSelect'
+import Modal, { ConfirmModal } from '/web/shared/Modal'
+import { getStore } from '/web/store/create'
 import { TrashIcon } from 'lucide-solid'
-import TextInput from 'web/shared/TextInput'
+import TextInput from '/web/shared/TextInput'
 import { SelectImageProvider } from './ImageProvider'
-import Button from 'web/shared/Button'
+import Button from '/web/shared/Button'
 
 type ImagePreset = {
   _id: string

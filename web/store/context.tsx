@@ -17,7 +17,7 @@ import { pageStore } from './page'
 import { ResponseState, responseStore } from './response'
 import { imageStore } from './images'
 import { getStoppingStrings } from '/common/requests/payloads'
-import { ImageContextProvider } from 'web/pages/Settings/Image/image-context'
+import { ImageContextProvider } from '/web/pages/Settings/Image/image-context'
 
 export type ChatContext = {
   appReady: boolean

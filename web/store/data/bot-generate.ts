@@ -28,6 +28,7 @@ import { BUILTIN_FORMATS, replaceTags } from '/common/presets/templates'
 import { getServiceTempConfig } from '/web/shared/adapter'
 import { getActiveBots } from '/web/pages/Chat/util'
 import iconv from 'iconv-lite'
+import * as nodeStream from 'stream'
 import { genApi } from './inference'
 import { localEmit } from '../socket'
 import { getProviderConnection } from '/common/providers'
@@ -44,7 +45,7 @@ import { formatJsonSchemaVars, prepareJsonSchema } from '/common/guidance/json-s
 import { getJsonSchema } from '/web/shared/util'
 import { ResponseSchema } from '/common/types/library'
 
-iconv.enableStreamingAPI(require('stream'))
+iconv.enableStreamingAPI(nodeStream as Parameters<typeof iconv.enableStreamingAPI>[0])
 
 registerTemplateLocator((id: string) => {
   const list = getStore('presets').getState().templates

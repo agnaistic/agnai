@@ -7,7 +7,7 @@ import { storage } from '/web/shared/util'
 import { HORDE_SEED } from '/common/horde-gen'
 import { AIAdapter } from '/common/adapters'
 import { v4 } from 'uuid'
-import { ImagePresetSettings, ImageProviderSettings } from 'common/types/image-schema'
+import { ImagePresetSettings, ImageProviderSettings } from '/common/types/image-schema'
 
 export type InitEntities = {
   profile: AppSchema.Profile
