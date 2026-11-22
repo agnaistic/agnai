@@ -100,7 +100,8 @@ export type UISettings = {
   /** 0 -> 1. 0 = transparent. 1 = opaque */
   msgOpacity: number
   mobileSendOnEnter: boolean
-  msgOptsInline: { [key in MessageOption]: { outer: boolean; pos: number } }
+  msgOptsInline: { [key in MessageOption]: { outer: boolean; pos: number; hide?: boolean } }
+  hideEmojiPicker: boolean
 
   viewMode?: 'split' | 'standard' | 'background' | 'background-contain' | 'background-cover'
   viewHeight?: number
@@ -205,4 +206,5 @@ export const defaultUIsettings: UISettings = {
     'gen-json': { outer: false, pos: 3.81 },
     camera: { outer: false, pos: 6.1 },
   },
+  hideEmojiPicker: false,
 }

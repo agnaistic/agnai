@@ -390,7 +390,11 @@ const ModelLabel: Component<{
         </div>
       </div>
       <Show when={!props.disabled && !props.nodesc}>
-        <div class="text-700 text-xs">
+        <div class="text-700 flex items-center text-xs">
+          <Show when={props.sub.preset.subVisionModel}>
+            <ImageIcon size={12} />
+            &nbsp;
+          </Show>
           {tokens()} tokens{props.sub.preset.description ? `, ${props.sub.preset.description}` : ''}
         </div>
       </Show>

@@ -377,6 +377,7 @@ const ChatDetail: Component = () => {
         ev.preventDefault()
         const id = ctx.messages.path.slice(-1)[0]?._id
         msgStore.createImage({
+          recaption: true,
           onImage: () =>
             imageStore.showMessageImages({
               id,

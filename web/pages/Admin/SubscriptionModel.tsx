@@ -58,6 +58,7 @@ const tokenizers = [
   { label: 'Qwen2', value: 'qwen2' },
   { label: 'Qwen3', value: 'qwen3' },
   { label: 'Gemma', value: 'gemma' },
+  { label: 'DeepSeek', value: 'deepseek' },
 ]
 
 export const SubscriptionModel: Component = () => {

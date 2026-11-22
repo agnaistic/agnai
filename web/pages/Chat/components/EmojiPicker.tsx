@@ -327,6 +327,7 @@ export const EMOJI_GROUPS: { label: string; emojis: EmojiEntry[] }[] = [
       ['👂', 'ear'],
       ['👃', 'nose'],
       ['👄', 'mouth'],
+      ['🫦', 'biting lip'],
       ['💋', 'kiss mark'],
       ['🧠', 'brain'],
       ['🦴', 'bone'],

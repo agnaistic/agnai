@@ -1,8 +1,24 @@
+import { debug } from './debug'
 import { AsyncEncoder } from './types'
-import { EncoderType } from '/srv/tokenize'
 // @ts-ignore
 import { embedApi } from '/web/store/embeddings'
 import type * as HF from '@huggingface/transformers'
+
+export type EncoderType =
+  | 'novel'
+  | 'novel-modern'
+  | 'llama'
+  | 'llama3'
+  | 'claude'
+  | 'turbo'
+  | 'mistral'
+  | 'yi'
+  | 'cohere'
+  | 'qwen2'
+  | 'qwen3'
+  | 'gemma'
+  | 'glm'
+  | 'deepseek'
 
 const DEFAULT_ENCODER: AsyncEncoder = {
   name: 'default',
@@ -22,6 +38,7 @@ const encoderModels: { [encoder in EncoderType]?: string } = {
   mistral: 'mistralai/Mistral-Medium-3.5-128B',
   turbo: 'openai/gpt-oss-20b',
   glm: 'zai-org/GLM-5.3',
+  deepseek: 'deepseek-ai/DeepSeek-V4-Pro',
 }
 
 const encoders: Record<string, AsyncEncoder> = {}
@@ -43,14 +60,6 @@ export async function tokenize(text: string) {
 
 export async function getEncoder(encoder?: string) {
   return getActiveEncoder().count
-  // if (!encoder) {
-  //   return (text: string) => embedApi.encode(text).then((res: number[]) => res.length)
-  // }
-
-  // const match = encoders[encoder]
-  // if (!match) return (text: string) => embedApi.encode(text).then((res: number[]) => res.length)
-
-  // return match.count
 }
 
 export async function countTokens(text: string) {
@@ -59,6 +68,7 @@ export async function countTokens(text: string) {
 }
 
 export async function prepareTokenizer(encoder: string) {
+  debug('xformers')('preparing tokenizer: %s', encoder)
   ACTIVE_TOKENIZER = encoder
 
   if (encoders[encoder]) {
@@ -91,7 +101,8 @@ export async function prepareTokenizer(encoder: string) {
     },
   }
 
-  console.log(`[encoder] ${encoder} ready`)
+  const test = tokenizer.encode('test')
+  debug('xformers')('tokenizer prepared: %s | test: %s', encoder, test.join(','))
 }
 
 function isValidEncoder(encoder: string): encoder is EncoderType {

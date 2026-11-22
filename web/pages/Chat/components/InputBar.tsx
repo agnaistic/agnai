@@ -504,7 +504,11 @@ const InputBar: Component<{
             </Show>
           </div>
         </Show>
-        <EmojiPicker onSelect={insertEmoji} />
+
+        <Show when={!user.ui.hideEmojiPicker}>
+          <EmojiPicker onSelect={insertEmoji} />
+        </Show>
+
         <TextInput
           fieldName="chatInput"
           isMultiline
