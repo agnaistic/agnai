@@ -363,6 +363,14 @@ function patchPayload(opts: AdapterProps, body: any, messages: CompletionItem<st
       body.stop = undefined
       return
     }
+
+    case 'known-spicyapi': {
+      // SpicyAPI takes the OpenAI `reasoning_effort` field, not an OpenRouter-style `reasoning` object
+      if (opts.gen.reasoning?.enabled && opts.gen.reasoning.effort !== 'custom') {
+        body.reasoning_effort = opts.gen.reasoning.effort || 'low'
+      }
+      return
+    }
   }
 
   if (modelNeedsUserRoleLast(opts, model)) {
