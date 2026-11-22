@@ -729,6 +729,7 @@ export async function migrateImageSettings(
   if (!user) return
   if (!entity) return
   if (!entity.imageSettings) return
+  if (!entity.imageProviderId) return
 
   const providerId = entity.imageProviderId || user.imageProviderId
   const provider = user.imageProviders?.find((p) => p._id === providerId)
