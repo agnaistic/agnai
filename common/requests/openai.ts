@@ -1,4 +1,3 @@
-import needle from 'needle'
 import { streamGenerator } from './stream'
 import { PayloadOpts } from './types'
 import { joinUrl } from './util'
@@ -156,24 +155,22 @@ export async function requestFullCompletion(
   signal: AbortController
 ) {
   try {
-    const resp = await needle('post', url, JSON.stringify(body), {
-      json: true,
-      signal: signal.signal,
-      response_timeout: 0,
-      read_timeout: 0,
-      open_timeout: 90000,
+    const resp = await fetch(url, {
+      method: 'post',
       headers,
-    }).catch((err) => ({ error: err }))
+      signal: signal.signal,
+    })
+
+    const json = await resp.json().catch((err) => ({ error: err }))
 
     if ('error' in resp) {
-      return { error: `Local request failed: ${resp.error?.message || resp.error}` }
+      return { error: `Local request failed: ${json.error?.message || resp.error}` }
     }
 
-    if (resp.statusCode && resp.statusCode >= 400) {
-      const msg =
-        resp.body?.error?.message || resp.body.message || resp.statusMessage || 'Unknown error'
+    if (resp.status && resp.status >= 400) {
+      const msg = json.error?.message || json.message || resp.statusText || 'Unknown error'
 
-      return { error: `Local request failed (${resp.statusCode}): ${msg}` }
+      return { error: `Local request failed (${resp.status}): ${msg}` }
     }
 
     return resp.body

@@ -2,7 +2,9 @@ const path = require('path')
 const fs = require('fs')
 
 const inject = process.env.INJECT_SCRIPT
-console.log('Injecting:', !!inject)
+const sha = process.argv.slice(2)[0] || process.env.GITHUB_SHA
+
+console.log('Injecting:', !!inject, ' | SHA: ', sha)
 
 const tags = ['<meta inject="">', '<meta inject>', '<meta inject="" />']
 const indexFile = path.resolve(__dirname, '../dist/index.html')
@@ -11,7 +13,7 @@ const outFile = path.resolve(__dirname, '../dist/index.html')
 let content = fs
   .readFileSync(indexFile)
   .toString()
-  .replace('{{unknown}}",', process.env.GITHUB_SHA + '";')
+  .replace('{{unknown}}",', sha + '";')
 
 if (inject) {
   for (const tag of tags) {

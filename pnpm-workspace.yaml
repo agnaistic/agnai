@@ -1,0 +1,12 @@
+allowBuilds:
+  '@google/genai': true
+  '@parcel/watcher': false
+  '@scarf/scarf': true
+  exifreader: true
+  onnxruntime-node: false
+  protobufjs: true
+  sharp: true
+minimumReleaseAgeExclude:
+  - vite
+overrides:
+  jwa: '^2.0.1'

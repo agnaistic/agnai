@@ -21,7 +21,6 @@ import ImpersonateModal from './pages/Character/ImpersonateModal'
 import ChubRoutes from './pages/Chub'
 import Redirect from './shared/Redirect'
 import Maintenance from './shared/Maintenance'
-import CharacterChats from './pages/Character/ChatList'
 import ChatDetail from './pages/Chat/ChatDetail'
 import Settings, { SettingsModal } from './pages/Settings'
 import ProfilePage, { ProfileModal } from './pages/Profile'
@@ -60,7 +59,7 @@ const App: Component = () => {
       <Route path="/discord" component={() => <Redirect external="https://discord.agnai.chat" />} />
       <ChubRoutes />
       <Route path="/chats/create/:id?" component={() => <CreateChatForm />} />
-      <Route path="/chats" component={CharacterChats} />
+      <Route path="/chats" component={lazy(() => import('./pages/Character/ChatList'))} />
       <Route path="/chat" component={ChatDetail} />
       <Show when={cfg.config.guidanceAccess || state.user?.admin}>
         <Route path="/saga" component={SagaList} />
@@ -96,7 +95,6 @@ const App: Component = () => {
         <Route path="/novel" component={NovelGuide} />
       </Route>
       <Show when={state.loggedIn}>
-        <Route path="/invites" component={lazy(() => import('./pages/Invite/InvitesPage'))} />
         <Show when={state.user?.admin}>
           <Route path="/admin/metrics" component={lazy(() => import('./pages/Admin/Metrics'))} />
 
