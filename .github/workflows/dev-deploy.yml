@@ -46,10 +46,10 @@ jobs:
         env:
           INJECT_SCRIPT: ${{ secrets.INJECT_SCRIPT }}
         run: |
+          # cp dist/index.html dist/original.html
+          node .github/inject.js ${{ github.sha }}
           pnpm run build:server
           pnpm run build:prod
-          cp dist/index.html dist/original.html
-          node .github/inject.js ${{ github.sha }}
 
       - name: Publish to DEV
         uses: shallwefootball/s3-upload-action@master

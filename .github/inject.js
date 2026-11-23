@@ -4,16 +4,15 @@ const fs = require('fs')
 const inject = process.env.INJECT_SCRIPT
 const sha = process.argv.slice(2)[0] || process.env.GITHUB_SHA
 
-console.log('Injecting:', !!inject, ' | SHA: ', sha)
+console.log('Injecting:', !!inject, '| SHA:', sha)
 
 const tags = ['<meta inject="">', '<meta inject>', '<meta inject="" />']
-const indexFile = path.resolve(__dirname, '../dist/index.html')
-const outFile = path.resolve(__dirname, '../dist/index.html')
+const indexFile = path.resolve(__dirname, '../web/index.html')
 
-let content = fs
-  .readFileSync(indexFile)
-  .toString()
-  .replace('{{unknown}}",', sha + '";')
+const precontent = fs.readFileSync(indexFile).toString()
+let content = precontent.replace('{{unknown}}",', sha + '";')
+
+console.log(`Changed: ${precontent.trim() !== content.trim()}`)
 
 if (inject) {
   for (const tag of tags) {
@@ -23,4 +22,4 @@ if (inject) {
   }
 }
 
-fs.writeFileSync(outFile, content)
+fs.writeFileSync(indexFile, content)
