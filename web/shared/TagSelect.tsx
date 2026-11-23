@@ -119,7 +119,7 @@ const TagSelect: Component<{
                 </Show>
                 <For each={filteredTags()}>
                   {(option) => (
-                    <div
+                    <button
                       class="bg-700 flex w-full cursor-pointer flex-row items-center justify-between gap-4 rounded-xl px-2 py-1"
                       onClick={() => toggle(option.tag)}
                     >
@@ -148,7 +148,7 @@ const TagSelect: Component<{
                           <span>({option.count})</span>
                         </span>
                       </div>
-                    </div>
+                    </button>
                   )}
                 </For>
               </div>

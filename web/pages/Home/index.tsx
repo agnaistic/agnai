@@ -208,7 +208,7 @@ const RecentChats: Component<{ emitter: ComponentEventEmitter<'loaded'> }> = (pr
         <For each={state.last}>
           {({ chat, char }, index) => (
             <>
-              <div
+              <button
                 role="link"
                 aria-label={`Chat with ${char.name}, ${elapsedSince(chat.updatedAt)} ago ${
                   chat.name
@@ -250,7 +250,7 @@ const RecentChats: Component<{ emitter: ComponentEventEmitter<'loaded'> }> = (pr
                     {/* </div> */}
                   </div>
                 </div>
-              </div>
+              </button>
 
               <div
                 role="link"

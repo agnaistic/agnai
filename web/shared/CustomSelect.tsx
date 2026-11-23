@@ -320,7 +320,7 @@ const OptionList: Component<{
             <For each={props.options}>
               {(option) => (
                 <div class="flex w-full gap-1">
-                  <div
+                  <button
                     classList={{
                       'bg-[var(--hl-800)]': props.selected === option.value,
                       'bg-700': !option.disabled && props.selected !== option.value,
@@ -341,7 +341,7 @@ const OptionList: Component<{
                     ) : (
                       option.label
                     )}
-                  </div>
+                  </button>
                   <For each={props.actions || []}>
                     {(action) =>
                       action.comp({

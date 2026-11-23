@@ -58,7 +58,7 @@ const Character: Component<CardProps> = (props) => {
   const [opts, setOpts] = createSignal(false)
   const nav = useNavigate()
 
-  let itemMenu!: HTMLDivElement
+  let itemMenu!: HTMLButtonElement
   let ref: any
 
   const size = 20
@@ -161,12 +161,13 @@ const Character: Component<CardProps> = (props) => {
           </Switch>
         </div>
         <div class="float-left ml-[3px] mt-[-224px]">
-          <div
+          <button
+            aria-label="Download Character"
             class="cursor-pointer rounded-md border-[1px] border-[var(--bg-400)] bg-[var(--bg-700)] p-[2px]"
             onClick={props.download}
           >
             <Download size={size} />
-          </div>
+          </button>
         </div>
         {/* hacky positioning shenanigans are necessary as opposed to using an
             absolute positioning because if any of the DropMenu parent is
@@ -175,16 +176,16 @@ const Character: Component<CardProps> = (props) => {
         <div
           class="float-right mr-[3px] mt-[-224px] flex justify-end"
           onClick={() => {
-            console.log('show')
             setOpts(true)
           }}
         >
-          <div
+          <button
+            aria-label="Character Menu"
             class="rounded-md border-[1px] border-[var(--bg-400)] bg-[var(--bg-700)] p-[2px]"
             ref={itemMenu}
           >
             <Menu size={size} class="icon-button" color="var(--bg-100)" />
-          </div>
+          </button>
           <DropMenu
             show={opts()}
             close={() => setOpts(false)}

@@ -536,12 +536,20 @@ const Message: Component<MessageProps> = (props) => {
 
                 <Match when={edit()}>
                   <div class="cancel-edit-btn mr-4 flex items-center gap-4 text-sm">
-                    <div class="icon-button text-red-500" onClick={cancelEdit}>
+                    <button
+                      class="icon-button text-red-500"
+                      aria-label="Edit: Cancel Message"
+                      onClick={cancelEdit}
+                    >
                       <X size={22} />
-                    </div>
-                    <div class="confirm-edit-btn icon-button text-green-500" onClick={saveEdit}>
+                    </button>
+                    <button
+                      class="confirm-edit-btn icon-button text-green-500"
+                      aria-label="Edit: Save Message"
+                      onClick={saveEdit}
+                    >
                       <Check size={22} />
-                    </div>
+                    </button>
                   </div>
                 </Match>
 
@@ -959,7 +967,7 @@ const MessageOptions: Component<{
         }}
       </For>
 
-      <div
+      <button
         class="flex items-center"
         classList={{ 'tour-message-opts': props.index === 0 }}
         onClick={() => props.showMore[1](true)}
@@ -969,7 +977,7 @@ const MessageOptions: Component<{
         }}
       >
         <MoreHorizontal class="icon-button" />
-      </div>
+      </button>
 
       <Show when={showInner()}>
         <DropMenu

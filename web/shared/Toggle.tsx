@@ -30,6 +30,13 @@ export const Toggle: Component<{
     props.onChange?.(checked)
   }
 
+  const change = () => {
+    if (props.disabled) return
+    const next = !ref.checked
+    ref.checked = next
+    props.onChange?.(next)
+  }
+
   const justify = createMemo(() =>
     props.vertLabel ? 'justify-center' : props.reverse ? 'sm:justify-start' : 'sm:justify-between'
   )
@@ -74,7 +81,10 @@ export const Toggle: Component<{
           onChange={onChange}
           disabled={props.disabled}
         />
-        <div class={`toggle-switch ${props.disabled ? 'toggle-disabled' : ''}`}></div>
+        <button
+          onClick={change}
+          class={`toggle-switch ${props.disabled ? 'toggle-disabled' : ''}`}
+        ></button>
       </label>
       <Show when={props.reverse && (props.label || props.helperText || props.helperMarkdown)}>
         <FormLabel

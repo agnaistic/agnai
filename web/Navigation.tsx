@@ -570,7 +570,7 @@ const Item: Component<{
       classList={{ 'min-h-[2.25rem]': !props.class?.includes('h-') }}
     >
       <Show when={!props.href}>
-        <div
+        <button
           class={`flex h-full cursor-pointer items-center justify-start gap-4 rounded-lg px-2 hover:bg-[var(--bg-700)] ${
             props.class || ''
           }`}
@@ -584,7 +584,7 @@ const Item: Component<{
           aria-label={props.ariaLabel}
         >
           {props.children}
-        </div>
+        </button>
       </Show>
       <Show when={props.href}>
         <A

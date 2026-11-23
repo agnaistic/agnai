@@ -1,6 +1,15 @@
 import ChevronDown from 'lucide-solid/icons/chevron-down'
 import ChevronUp from 'lucide-solid/icons/chevron-up'
-import { Component, createEffect, createMemo, createSignal, on, Show } from 'solid-js'
+import {
+  Component,
+  createEffect,
+  createMemo,
+  createSignal,
+  on,
+  onCleanup,
+  onMount,
+  Show,
+} from 'solid-js'
 import { useEffect } from './hooks'
 import { v4 } from 'uuid'
 
@@ -152,56 +161,67 @@ export const DropMenu: Component<{
     )
   )
 
-  useEffect(() => {
-    const handler = (event: MouseEvent | TouchEvent) => {
-      if (!opened()) return
-      if (!container) return
+  const close = () => {
+    setOpened(false)
 
-      let dropdown: HTMLElement | null = event.target as HTMLElement
+    if (props.show) {
+      props.close()
+    }
+  }
 
-      do {
-        if (!dropdown) break
-        const id = dropdown.dataset?.id
-        if (!id) {
-          dropdown = dropdown.parentElement
-          continue
-        }
+  const handler = (event: MouseEvent | TouchEvent | KeyboardEvent) => {
+    if (!opened()) return
+    if (!container) return
 
-        if (!id.startsWith('dropdown-')) {
-          dropdown = dropdown.parentElement
-          continue
-        }
+    let dropdown: HTMLElement | null = event.target as HTMLElement
 
-        break
-      } while (true)
-
-      // If we are inside a dropdown then we simply won't close
-      if (dropdown) {
-        return
-      }
-
-      if (
-        event.target instanceof Element &&
-        !container.contains(event.target) &&
-        event.target !== container
-      ) {
-        event.preventDefault()
-        event.stopPropagation()
-        setOpened(false)
-
-        if (props.show) {
-          props.close()
-        }
-      }
+    if ('key' in event) {
+      if (event.key === 'Escape') close()
+      return
     }
 
+    do {
+      if (!dropdown) break
+      const id = dropdown.dataset?.id
+      if (!id) {
+        dropdown = dropdown.parentElement
+        continue
+      }
+
+      if (!id.startsWith('dropdown-')) {
+        dropdown = dropdown.parentElement
+        continue
+      }
+
+      break
+    } while (true)
+
+    // If we are inside a dropdown then we simply won't close
+    if (dropdown) {
+      return
+    }
+
+    if (
+      event.target instanceof Element &&
+      !container.contains(event.target) &&
+      event.target !== container
+    ) {
+      event.preventDefault()
+      event.stopPropagation()
+      close()
+    }
+  }
+
+  onMount(() => {
     window.addEventListener('click', handler)
     window.addEventListener('touchend', handler)
+    window.addEventListener('keydown', handler)
+  })
 
-    return () => {
-      window.removeEventListener('click', handler)
-      window.removeEventListener('touchend', handler)
-    }
+  onCleanup(() => {
+    window.removeEventListener('click', handler)
+    window.removeEventListener('touchend', handler)
+    window.removeEventListener('keydown', handler)
   })
 
   const classes = createMemo(() => {
