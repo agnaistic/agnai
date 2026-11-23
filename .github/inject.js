@@ -10,7 +10,7 @@ const tags = ['<meta inject="">', '<meta inject>', '<meta inject="" />']
 const indexFile = path.resolve(__dirname, '../web/index.html')
 
 const precontent = fs.readFileSync(indexFile).toString()
-let content = precontent.replace('{{unknown}}",', sha + '";')
+let content = precontent.replace('{{unknown}}', sha)
 
 console.log(`Changed: ${precontent.trim() !== content.trim()}`)
 
