@@ -10,7 +10,6 @@ import {
   onMount,
   Show,
 } from 'solid-js'
-import { useEffect } from './hooks'
 import { v4 } from 'uuid'
 
 export type Horz = 'left' | 'right'
