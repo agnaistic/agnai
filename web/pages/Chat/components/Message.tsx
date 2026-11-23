@@ -200,7 +200,6 @@ const Message: Component<MessageProps> = (props) => {
 
       const json = getJsonUpdate(ctx, autoDefs?.schema, {
         ...message.json.values,
-        response: props.content,
       })
       display = json?.json.response || display
     }
@@ -1388,6 +1387,7 @@ function getMessageContent(
 
 function getJsonUpdate(ctx: ChatContext, def: AppSchema.Character['json'], json: any) {
   if (!def) return
+
   const hydration = hydrateTemplate(def, json, {
     char: ctx.char!,
     replyAs: ctx.char,

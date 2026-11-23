@@ -308,7 +308,7 @@ function formatPlaceholder(varname: string, entity: 'user' | 'char', entityName:
   }
 }
 
-export function getSchemaAliases(fields: JsonField[]) {
+export function getSchemaAliases(fields: JsonField[], ents?: StructureEntities) {
   const aliases: Record<string, string> = {}
 
   if (!fields || !Array.isArray(fields)) return aliases
@@ -317,6 +317,11 @@ export function getSchemaAliases(fields: JsonField[]) {
     if (field.alias) {
       aliases[field.alias] = field.name
     }
+  }
+
+  if (ents?.char) {
+    const name = `${typeof ents.char === 'string' ? ents.char : ents.char.name}'s response`
+    aliases.response = name
   }
 
   return aliases

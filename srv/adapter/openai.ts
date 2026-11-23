@@ -96,7 +96,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   //   body.frequency_penalty = gen.frequencyPenalty ?? defaultPresets.openai.frequencyPenalty
   // }
 
-  if (opts.jsonSchema) {
+  if (opts.jsonSchema?.fields) {
     const base: any = {}
 
     const responseName = opts.replyAs?.name || opts.char?.name
@@ -105,7 +105,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
       base[field] = { type: 'string' }
     }
 
-    const fields = opts.jsonSchema.reduce((prev: any, field: JsonField) => {
+    const fields = opts.jsonSchema.fields.reduce((prev: any, field: JsonField) => {
       const { disabled, name, type, ...rest } = field
       prev[field.name] = {
         type: type.type,
