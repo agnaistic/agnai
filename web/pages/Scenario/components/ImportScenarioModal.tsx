@@ -1,5 +1,7 @@
 import { Component, createMemo, createSignal, For, Show } from 'solid-js'
-import { Check, Upload, X } from 'lucide-solid'
+import Check from 'lucide-solid/icons/check'
+import Upload from 'lucide-solid/icons/upload'
+import X from 'lucide-solid/icons/x'
 import { AppSchema, NewScenario } from '/common/types'
 import Button from '../../../shared/Button'
 import FileInput, { FileInputResult, getFileAsString } from '../../../shared/FileInput'

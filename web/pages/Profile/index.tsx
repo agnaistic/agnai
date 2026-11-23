@@ -1,4 +1,7 @@
-import { AlertTriangle, Download, Save, X } from 'lucide-solid'
+import AlertTriangle from 'lucide-solid/icons/triangle-alert'
+import Download from 'lucide-solid/icons/download'
+import Save from 'lucide-solid/icons/save'
+import X from 'lucide-solid/icons/x'
 import {
   Component,
   Match,

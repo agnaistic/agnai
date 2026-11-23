@@ -1,4 +1,6 @@
-import { ChevronDown, ChevronUp, X } from 'lucide-solid'
+import ChevronDown from 'lucide-solid/icons/chevron-down'
+import ChevronUp from 'lucide-solid/icons/chevron-up'
+import X from 'lucide-solid/icons/x'
 import { Component, createMemo, createSignal, For, Show } from 'solid-js'
 import TextInput from './TextInput'
 

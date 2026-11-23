@@ -17,7 +17,10 @@ import {
   userStore,
 } from '../../store'
 import { A, useNavigate } from '@solidjs/router'
-import { AlertTriangle, MoveRight, Plus, Settings } from 'lucide-solid'
+import AlertTriangle from 'lucide-solid/icons/triangle-alert'
+import MoveRight from 'lucide-solid/icons/move-right'
+import Plus from 'lucide-solid/icons/plus'
+import Settings from 'lucide-solid/icons/settings'
 import { Card, Pill, SolidCard, TitleCard } from '/web/shared/Card'
 import Modal from '/web/shared/Modal'
 import AvatarIcon from '/web/shared/AvatarIcon'

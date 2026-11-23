@@ -8,7 +8,14 @@ import {
   onMount,
   Show,
 } from 'solid-js'
-import { Plus, Save, X, Import, Download, SlidersVertical, Dices, Image } from 'lucide-solid'
+import Plus from 'lucide-solid/icons/plus'
+import Save from 'lucide-solid/icons/save'
+import X from 'lucide-solid/icons/x'
+import Import from 'lucide-solid/icons/import'
+import Download from 'lucide-solid/icons/download'
+import SlidersVertical from 'lucide-solid/icons/sliders-vertical'
+import Dices from 'lucide-solid/icons/dices'
+import Image from 'lucide-solid/icons/image'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
 import TextInput, { ButtonInput } from '../../shared/TextInput'

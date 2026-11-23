@@ -1,7 +1,7 @@
 import { Component, createMemo } from 'solid-js'
 import { ImageContext } from './image-context'
 import { CustomSelect } from '/web/shared/CustomSelect'
-import { RefreshCcw } from 'lucide-solid'
+import RefreshCcw from 'lucide-solid/icons/refresh-ccw'
 import Button from '/web/shared/Button'
 
 export const ImageModel: Component<{

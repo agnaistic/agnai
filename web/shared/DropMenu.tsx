@@ -1,4 +1,5 @@
-import { ChevronDown, ChevronUp } from 'lucide-solid'
+import ChevronDown from 'lucide-solid/icons/chevron-down'
+import ChevronUp from 'lucide-solid/icons/chevron-up'
 import { Component, createEffect, createMemo, createSignal, on, Show } from 'solid-js'
 import { useEffect } from './hooks'
 import { v4 } from 'uuid'

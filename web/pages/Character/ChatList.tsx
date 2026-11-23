@@ -9,7 +9,12 @@ import {
   quickCreateChat,
 } from '../../store'
 import PageHeader from '../../shared/PageHeader'
-import { Edit, Import, Plus, Trash, SortAsc, SortDesc } from 'lucide-solid'
+import Edit from 'lucide-solid/icons/square-pen'
+import Import from 'lucide-solid/icons/import'
+import Plus from 'lucide-solid/icons/plus'
+import Trash from 'lucide-solid/icons/trash'
+import SortAsc from 'lucide-solid/icons/arrow-up-narrow-wide'
+import SortDesc from 'lucide-solid/icons/arrow-down-wide-narrow'
 import ImportChatModal from './ImportChat'
 import { setComponentPageTitle, toDuration } from '../../shared/util'
 import { ConfirmModal } from '../../shared/Modal'

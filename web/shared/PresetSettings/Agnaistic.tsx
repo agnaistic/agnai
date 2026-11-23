@@ -15,7 +15,7 @@ import { Pill } from '../Card'
 import { RootModal } from '../Modal'
 import { PresetFuncs, ContextPreset } from '/web/store/preset-context'
 import Button from '../Button'
-import { ImageIcon } from 'lucide-solid'
+import ImageIcon from 'lucide-solid/icons/image'
 
 const MODEL_NAMES = new Map<string, string>()
 

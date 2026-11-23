@@ -1,4 +1,4 @@
-import { LoaderCircle } from 'lucide-solid'
+import LoaderCircle from 'lucide-solid/icons/loader-circle'
 import { Component, createMemo } from 'solid-js'
 import { Portal } from 'solid-js/web'
 

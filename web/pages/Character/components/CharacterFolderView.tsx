@@ -10,16 +10,14 @@ import {
   DragOverlay,
 } from '@thisbeyond/solid-dnd'
 
-import {
-  Copy,
-  Download,
-  Edit,
-  GripHorizontal,
-  MessageCircle,
-  MoreHorizontal,
-  Star,
-  Trash,
-} from 'lucide-solid'
+import Copy from 'lucide-solid/icons/copy'
+import Download from 'lucide-solid/icons/download'
+import Edit from 'lucide-solid/icons/square-pen'
+import GripHorizontal from 'lucide-solid/icons/grip-horizontal'
+import MessageCircle from 'lucide-solid/icons/message-circle'
+import MoreHorizontal from 'lucide-solid/icons/ellipsis'
+import Star from 'lucide-solid/icons/star'
+import Trash from 'lucide-solid/icons/trash'
 import { CharacterAvatar } from '/web/shared/AvatarIcon'
 import { A, useNavigate, useSearchParams } from '@solidjs/router'
 import Button from '/web/shared/Button'

@@ -1,6 +1,6 @@
 import { Component } from 'solid-js'
 import { userStore } from '/web/store/user'
-import { Save } from 'lucide-solid'
+import Save from 'lucide-solid/icons/save'
 import Button from '/web/shared/Button'
 import RangeInput, { InlineRangeInput } from '/web/shared/RangeInput'
 import Select from '/web/shared/Select'

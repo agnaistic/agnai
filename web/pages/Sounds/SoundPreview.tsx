@@ -1,6 +1,7 @@
 import { Component, Show, createSignal } from 'solid-js'
 import { Sound } from '/web/shared/Audio/soundpack'
-import { Pause, Play } from 'lucide-solid'
+import Pause from 'lucide-solid/icons/pause'
+import Play from 'lucide-solid/icons/play'
 import Button from '/web/shared/Button'
 import { audioStore } from '/web/store'
 

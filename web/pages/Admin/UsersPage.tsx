@@ -1,4 +1,5 @@
-import { HatGlasses, X } from 'lucide-solid'
+import HatGlasses from 'lucide-solid/icons/hat-glasses'
+import X from 'lucide-solid/icons/x'
 import { Component, createMemo, createSignal, For, onMount, Show } from 'solid-js'
 import Button, { ToggleButton } from '../../shared/Button'
 import Modal from '../../shared/Modal'

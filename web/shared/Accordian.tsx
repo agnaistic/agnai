@@ -1,4 +1,5 @@
-import { ChevronDown, ChevronUp } from 'lucide-solid'
+import ChevronDown from 'lucide-solid/icons/chevron-down'
+import ChevronUp from 'lucide-solid/icons/chevron-up'
 import { Component, createMemo, createSignal, JSX, Show } from 'solid-js'
 
 const Accordian: Component<{

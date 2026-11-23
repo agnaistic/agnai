@@ -6,20 +6,18 @@ import { usePaneManager } from '/web/shared/hooks'
 import { ChatContext } from '/web/store/context'
 import { useSubNav } from '/web/subnav'
 import { Nav, NotificationBell, UserProfile } from '/web/Navigation'
-import {
-  Book,
-  Palette,
-  Settings,
-  Sliders,
-  Users,
-  Map,
-  Download,
-  Trash,
-  RotateCcw,
-  ChevronLeft,
-  Pencil,
-  ImagePlus,
-} from 'lucide-solid'
+import Book from 'lucide-solid/icons/book'
+import Palette from 'lucide-solid/icons/palette'
+import Settings from 'lucide-solid/icons/settings'
+import Sliders from 'lucide-solid/icons/sliders-vertical'
+import Users from 'lucide-solid/icons/users'
+import Map from 'lucide-solid/icons/map'
+import Download from 'lucide-solid/icons/download'
+import Trash from 'lucide-solid/icons/trash'
+import RotateCcw from 'lucide-solid/icons/rotate-ccw'
+import ChevronLeft from 'lucide-solid/icons/chevron-left'
+import Pencil from 'lucide-solid/icons/pencil'
+import ImagePlus from 'lucide-solid/icons/image-plus'
 import { ThirdPartyModel } from '/web/shared/PresetSettings/ThirdPartyModel'
 import { PresetProvider } from '../Settings/Provider'
 import { createEmitter } from '/web/shared/util'

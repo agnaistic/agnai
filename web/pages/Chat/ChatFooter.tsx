@@ -1,5 +1,7 @@
 import { Component, createMemo, createSignal, For, Show } from 'solid-js'
-import { CircleX, Dices, VenetianMask } from 'lucide-solid'
+import CircleX from 'lucide-solid/icons/circle-x'
+import Dices from 'lucide-solid/icons/dices'
+import VenetianMask from 'lucide-solid/icons/venetian-mask'
 import Button from '../../shared/Button'
 import { CharacterPill } from '../../shared/CharacterPill'
 import {

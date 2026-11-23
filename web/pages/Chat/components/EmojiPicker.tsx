@@ -1,4 +1,4 @@
-import { Smile } from 'lucide-solid'
+import Smile from 'lucide-solid/icons/face-slightly-smiling'
 import { Component, For, Show, createMemo, createSignal, onCleanup, onMount } from 'solid-js'
 import { isMobile, useLocalStorage } from '/web/shared/hooks'
 

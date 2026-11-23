@@ -7,7 +7,7 @@ import Button from '/web/shared/Button'
 import { Toggle } from '/web/shared/Toggle'
 import { createStore } from 'solid-js/store'
 import { v4 } from 'uuid'
-import { SaveIcon } from 'lucide-solid'
+import SaveIcon from 'lucide-solid/icons/save'
 import { FeatureAccess } from '/common/types/admin'
 
 export const EmbeddingConfig: Component = () => {

@@ -1,5 +1,5 @@
 import { Component, For, Show, createMemo } from 'solid-js'
-import { Play } from 'lucide-solid'
+import Play from 'lucide-solid/icons/play'
 import Button from '/web/shared/Button'
 import { Card } from '/web/shared/Card'
 import { FormLabel } from '/web/shared/FormLabel'

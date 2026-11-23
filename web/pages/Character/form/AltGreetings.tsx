@@ -1,6 +1,7 @@
 import { Component, Index } from 'solid-js'
 import TextInput from '/web/shared/TextInput'
-import { MinusCircle, Plus } from 'lucide-solid'
+import MinusCircle from 'lucide-solid/icons/circle-minus'
+import Plus from 'lucide-solid/icons/plus'
 import Button from '/web/shared/Button'
 
 export const AlternateGreetingsInput: Component<{

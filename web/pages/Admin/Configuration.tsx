@@ -2,7 +2,7 @@ import { Component, Match, Switch, createEffect, createSignal, on, onMount } fro
 import { adminStore, userStore } from '/web/store'
 import { useNavigate, useSearchParams } from '@solidjs/router'
 import PageHeader from '/web/shared/PageHeader'
-import { SaveIcon } from 'lucide-solid'
+import SaveIcon from 'lucide-solid/icons/save'
 import Button from '/web/shared/Button'
 import { Page } from '/web/Layout'
 import Loading from '/web/shared/Loading'

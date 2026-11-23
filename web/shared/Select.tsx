@@ -1,6 +1,6 @@
 import { Component, JSX, For, createMemo, Show, createEffect, on } from 'solid-js'
 import { FormLabel } from './FormLabel'
-import { ChevronDown } from 'lucide-solid'
+import ChevronDown from 'lucide-solid/icons/chevron-down'
 
 export type Option<T extends string = string> = {
   label: string

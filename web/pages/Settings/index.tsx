@@ -1,5 +1,6 @@
 import { Component, createEffect, createMemo, createSignal, on, onMount } from 'solid-js'
-import { AlertTriangle, Save } from 'lucide-solid'
+import AlertTriangle from 'lucide-solid/icons/triangle-alert'
+import Save from 'lucide-solid/icons/save'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
 import { setComponentPageTitle } from '../../shared/util'

@@ -2,7 +2,7 @@ import { Component, For, Show, createEffect, createMemo, createSignal, on, onMou
 import { FormLabel } from '../FormLabel'
 import { getJsonSchema, toMap } from '../util'
 import { useEffect } from '../hooks'
-import { HelpCircle } from 'lucide-solid'
+import HelpCircle from 'lucide-solid/icons/circle-question-mark'
 import { Card, Pill } from '../Card'
 import Button from '../Button'
 import { parseTemplate } from '/common/template-parser'

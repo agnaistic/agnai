@@ -1,29 +1,27 @@
 import { A, useLocation, useSearchParams } from '@solidjs/router'
-import {
-  Activity,
-  Bell,
-  Book,
-  ChevronLeft,
-  ChevronRight,
-  HeartHandshake,
-  HelpCircle,
-  ImagePlus,
-  LogIn,
-  MailQuestion,
-  Menu,
-  MessageCircle,
-  Moon,
-  Plus,
-  Settings,
-  ShoppingBag,
-  Sliders,
-  Speaker,
-  Sun,
-  Volume2,
-  VolumeX,
-  Wand2,
-  X,
-} from 'lucide-solid'
+import Activity from 'lucide-solid/icons/activity'
+import Bell from 'lucide-solid/icons/bell'
+import Book from 'lucide-solid/icons/book'
+import ChevronLeft from 'lucide-solid/icons/chevron-left'
+import ChevronRight from 'lucide-solid/icons/chevron-right'
+import HeartHandshake from 'lucide-solid/icons/heart-handshake'
+import HelpCircle from 'lucide-solid/icons/circle-question-mark'
+import ImagePlus from 'lucide-solid/icons/image-plus'
+import LogIn from 'lucide-solid/icons/log-in'
+import MailQuestion from 'lucide-solid/icons/mail-question-mark'
+import Menu from 'lucide-solid/icons/menu'
+import MessageCircle from 'lucide-solid/icons/message-circle'
+import Moon from 'lucide-solid/icons/moon'
+import Plus from 'lucide-solid/icons/plus'
+import Settings from 'lucide-solid/icons/settings'
+import ShoppingBag from 'lucide-solid/icons/shopping-bag'
+import Sliders from 'lucide-solid/icons/sliders-vertical'
+import Speaker from 'lucide-solid/icons/speaker'
+import Sun from 'lucide-solid/icons/sun'
+import Volume2 from 'lucide-solid/icons/volume-2'
+import VolumeX from 'lucide-solid/icons/volume-x'
+import Wand2 from 'lucide-solid/icons/wand-sparkles'
+import X from 'lucide-solid/icons/x'
 import {
   Component,
   createEffect,

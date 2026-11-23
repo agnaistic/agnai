@@ -1,4 +1,6 @@
-import { Plus, Sparkles, Trash } from 'lucide-solid'
+import Plus from 'lucide-solid/icons/plus'
+import Sparkles from 'lucide-solid/icons/sparkles'
+import Trash from 'lucide-solid/icons/trash'
 import {
   Component,
   createEffect,

@@ -1,4 +1,5 @@
-import { Save, X } from 'lucide-solid'
+import Save from 'lucide-solid/icons/save'
+import X from 'lucide-solid/icons/x'
 import { Component, createSignal } from 'solid-js'
 import { HordeWorker } from '../../../common/adapters'
 import Button from '../../shared/Button'

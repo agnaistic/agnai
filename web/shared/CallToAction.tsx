@@ -1,7 +1,7 @@
 import { Component, createMemo, createSignal, JSX, Show } from 'solid-js'
 import { ThemeColor } from '/common/types/ui'
 import { getRgbaFromVar, getRootRgb } from './colors'
-import { X } from 'lucide-solid'
+import X from 'lucide-solid/icons/x'
 import { UserType } from '/common/types/admin'
 import { userStore } from '../store'
 

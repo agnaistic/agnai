@@ -1,28 +1,26 @@
 import './Message.css'
 import Purify from 'dompurify'
-import {
-  Check,
-  DownloadCloud,
-  Info,
-  PauseCircle,
-  Pencil,
-  RefreshCw,
-  Repeat1,
-  Terminal,
-  Trash,
-  Delete,
-  X,
-  Zap,
-  Split,
-  MoreHorizontal,
-  ImagePlus,
-  Eye,
-  EyeOff,
-  BracesIcon,
-  ImageUpIcon,
-  ScanFaceIcon,
-  LucideProps,
-} from 'lucide-solid'
+import Check from 'lucide-solid/icons/check'
+import DownloadCloud from 'lucide-solid/icons/cloud-download'
+import Info from 'lucide-solid/icons/info'
+import PauseCircle from 'lucide-solid/icons/circle-pause'
+import Pencil from 'lucide-solid/icons/pencil'
+import RefreshCw from 'lucide-solid/icons/refresh-cw'
+import Repeat1 from 'lucide-solid/icons/repeat-1'
+import Terminal from 'lucide-solid/icons/terminal'
+import Trash from 'lucide-solid/icons/trash'
+import Delete from 'lucide-solid/icons/delete'
+import X from 'lucide-solid/icons/x'
+import Zap from 'lucide-solid/icons/zap'
+import Split from 'lucide-solid/icons/split'
+import MoreHorizontal from 'lucide-solid/icons/ellipsis'
+import ImagePlus from 'lucide-solid/icons/image-plus'
+import Eye from 'lucide-solid/icons/eye'
+import EyeOff from 'lucide-solid/icons/eye-off'
+import BracesIcon from 'lucide-solid/icons/braces'
+import ImageUpIcon from 'lucide-solid/icons/image-up'
+import ScanFaceIcon from 'lucide-solid/icons/scan-face'
+import type { LucideProps } from 'lucide-solid'
 import {
   Accessor,
   Component,

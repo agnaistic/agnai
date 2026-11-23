@@ -1,7 +1,7 @@
 import { For, Index, Match, Switch, createMemo } from 'solid-js'
 import { FormLabel } from './FormLabel'
 import TextInput from './TextInput'
-import { MinusCircle } from 'lucide-solid'
+import MinusCircle from 'lucide-solid/icons/circle-minus'
 import Button from './Button'
 import { isValidServiceSetting } from './util'
 import { InlineRangeInput } from './RangeInput'

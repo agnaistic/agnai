@@ -9,14 +9,12 @@ import TextInput from '/web/shared/TextInput'
 import { useChatPageId, useImageCache } from '/web/shared/hooks'
 import { RelativeSpinner } from '/web/shared/Loading'
 import Button from '/web/shared/Button'
-import {
-  ArrowLeft,
-  ArrowRight,
-  BrushCleaning,
-  CircleStop,
-  SettingsIcon,
-  WandSparkles,
-} from 'lucide-solid'
+import ArrowLeft from 'lucide-solid/icons/arrow-left'
+import ArrowRight from 'lucide-solid/icons/arrow-right'
+import BrushCleaning from 'lucide-solid/icons/brush-cleaning'
+import CircleStop from 'lucide-solid/icons/circle-stop'
+import SettingsIcon from 'lucide-solid/icons/settings'
+import WandSparkles from 'lucide-solid/icons/wand-sparkles'
 import { createEmitter } from '/web/shared/util'
 import { cleanPrompt } from '/common/util'
 

@@ -3,7 +3,8 @@ import { FormLabel } from './FormLabel'
 import { RootModal } from './Modal'
 import TextInput from './TextInput'
 import Button from './Button'
-import { MinusCircle, X } from 'lucide-solid'
+import MinusCircle from 'lucide-solid/icons/circle-minus'
+import X from 'lucide-solid/icons/x'
 
 export const ListInput: Component<{
   label?: string | JSX.Element
