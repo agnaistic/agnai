@@ -361,7 +361,9 @@ export function localSSE(opts: SSEOpts<{ host: string }>) {
       const data = incomplete + chunk
       incomplete = ''
 
-      const messages = data.split(/\r?\n\r?\n/).filter((l) => !!l && l !== ': OPENROUTER PROCESSING')
+      const messages = data
+        .split(/\r?\n\r?\n/)
+        .filter((l) => !!l && l !== ': OPENROUTER PROCESSING')
 
       for (const msg of messages) {
         // If we have an error, we want to retrieve the reason for the error
@@ -492,7 +494,9 @@ export function fetchSSE(opts: SSEOpts) {
       const data = incomplete + chunk
       incomplete = ''
 
-      const messages = data.split(/\r?\n\r?\n/).filter((l) => !!l && l !== ': OPENROUTER PROCESSING')
+      const messages = data
+        .split(/\r?\n\r?\n/)
+        .filter((l) => !!l && l !== ': OPENROUTER PROCESSING')
 
       for (const msg of messages) {
         // If we have an error, we want to retrieve the reason for the error
