@@ -23,12 +23,6 @@ export const Toggle: Component<{
   hide?: boolean
 }> = (props) => {
   let ref: HTMLInputElement
-  const onChange = (ev: Event & { currentTarget: HTMLInputElement }) => {
-    if (props.disabled) return
-    const checked = !!ev.currentTarget.checked
-    ref.checked = checked
-    props.onChange?.(checked)
-  }
 
   const change = () => {
     if (props.disabled) return
@@ -78,7 +72,10 @@ export const Toggle: Component<{
           id={props.fieldName}
           name={props.fieldName}
           checked={props.value}
-          onChange={onChange}
+          onChange={(ev) => {
+            ev.preventDefault()
+          }}
+          // onChange={onChange}
           disabled={props.disabled}
         />
         <button

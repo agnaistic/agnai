@@ -1,6 +1,5 @@
 import { createHooks, recommended } from '@css-hooks/solid'
 import * as lf from 'localforage'
-import { UnwrapBody, Validator, assertValid } from '/common/valid'
 import { AIAdapter, PresetAISettings, ThirdPartyFormat } from '/common/adapters'
 import type { Option } from './Select'
 import { Component, createEffect, createMemo, JSX, onCleanup } from 'solid-js'
@@ -409,41 +408,6 @@ export function setAssetPrefix(prefix: string) {
   assetPrefix = prefix
 }
 
-type Field = HTMLSelectElement | HTMLInputElement
-
-export function getStrictForm<T extends Validator>(
-  evt: Event | HTMLFormElement,
-  body: T,
-  partial?: boolean
-) {
-  evt.preventDefault?.()
-  const target = evt instanceof HTMLFormElement ? evt : (evt.target as HTMLFormElement)
-
-  const disable = enableAll(target)
-  const form = new FormData(target as HTMLFormElement)
-
-  const values = Object.keys(body).reduce((prev, curr) => {
-    const type = body[curr]
-    let value: string | number | boolean | undefined = form.get(curr)?.toString()
-
-    if (type === 'boolean' || type === 'boolean?') {
-      if (value === 'on') value = true
-      if (value === undefined || value === 'off') value = false
-    }
-
-    if ((type === 'number' || type === 'number?') && value !== undefined) {
-      value = +value
-    }
-    prev[curr] = value
-    return prev
-  }, {} as any) as UnwrapBody<T>
-
-  disable()
-
-  assertValid(body, values, partial)
-  return values
-}
-
 export function formatDate(value: string | number | Date) {
   const date = new Date(value)
   const str = date.toString()
@@ -583,28 +547,6 @@ export function uniqueBy<T>(list: T[], key: keyof T) {
   }
 
   return next
-}
-
-/**
- * Disabled form fields cannot be accessed using `form.get` or `form.entries`.
- * To circumvent this, we will enable all fields then disable them once we've accessed the fields
- */
-function enableAll(form: HTMLFormElement) {
-  const elements = form.querySelectorAll('.form-field') as NodeListOf<Field>
-
-  const disabled: Field[] = []
-  for (const ele of elements) {
-    if (ele.disabled) {
-      disabled.push(ele)
-      ele.disabled = false
-    }
-  }
-
-  return () => {
-    for (const ele of disabled) {
-      ele.disabled = true
-    }
-  }
 }
 
 export function capitalize(input: string) {

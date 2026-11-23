@@ -67,7 +67,6 @@ const tokenizers = [
 
 export const SubscriptionModel: Component = () => {
   const { updateTitle } = setComponentPageTitle('Subscription Model')
-  let ref: any
 
   const params = useParams()
   const [query] = useSearchParams()
@@ -204,7 +203,7 @@ export const SubscriptionModel: Component = () => {
         <Match when>
           <div class="flex flex-col gap-2 pb-10">
             <div class="flex flex-col gap-4 p-2">
-              <form ref={ref} onSubmit={onSave} class="flex flex-col gap-4">
+              <div class="flex flex-col gap-4">
                 <div class="flex gap-4">
                   <Show when={presets.subs.length > 1}>
                     <Button onClick={() => setEdit(true)}>Load Preset</Button>
@@ -381,7 +380,7 @@ export const SubscriptionModel: Component = () => {
                     </Button>
                   </Show>
                 </div>
-              </form>
+              </div>
             </div>
           </div>
         </Match>
@@ -402,8 +401,6 @@ export const SubscriptionModel: Component = () => {
 export default SubscriptionModel
 
 const SupercedeModal: Component<{ show: boolean; close: () => void }> = (props) => {
-  let form: any
-
   const params = useParams()
   const nav = useNavigate()
 
@@ -443,15 +440,13 @@ const SupercedeModal: Component<{ show: boolean; close: () => void }> = (props) 
 
   return (
     <Modal show={props.show} close={props.close} title="Replace Subscription" footer={Footer}>
-      <form ref={form}>
-        <Select
-          items={replacements()}
-          fieldName="replacementId"
-          label="Replacement Subscription"
-          helperText="The subscription that will supercede the current subscription"
-          onChange={(ev) => setReplaceId(ev.value)}
-        />
-      </form>
+      <Select
+        items={replacements()}
+        fieldName="replacementId"
+        label="Replacement Subscription"
+        helperText="The subscription that will supercede the current subscription"
+        onChange={(ev) => setReplaceId(ev.value)}
+      />
     </Modal>
   )
 }

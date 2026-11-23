@@ -293,7 +293,7 @@ const ChatSettings: Component<{
   onMount(() => props.footer(Footer))
 
   return (
-    <form class="flex flex-col gap-3">
+    <div class="flex flex-col gap-3">
       <Show when={user.user?.admin}>
         <Card class="text-xs">{state.active?.chat?._id}</Card>
       </Show>
@@ -568,7 +568,7 @@ const ChatSettings: Component<{
           <CharacterDefaultVisibility chat={state.active.chat} participants={lists()} />
         </Show>
       </div>
-    </form>
+    </div>
   )
 }
 

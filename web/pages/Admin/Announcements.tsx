@@ -173,7 +173,7 @@ const Announcement: Component<{}> = (props) => {
     <Page>
       <PageHeader title="Announcement" />
 
-      <form class="flex flex-col gap-2">
+      <div class="flex flex-col gap-2">
         <TextInput fieldName="id" disabled value={params.id} label="ID" />
 
         <TextInput
@@ -244,7 +244,7 @@ const Announcement: Component<{}> = (props) => {
             innerHTML={markdown.makeHtml(state.content)}
           ></div>
         </div>
-      </form>
+      </div>
     </Page>
   )
 }

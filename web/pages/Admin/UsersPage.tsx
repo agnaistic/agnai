@@ -18,7 +18,6 @@ import { AppSchema } from '/common/types'
 import { RelativeSpinner } from '/web/shared/Loading'
 
 const UsersPage: Component = () => {
-  let ref: any
   setComponentPageTitle('Users')
   const state = adminStore((s) => ({ users: s.users }))
   const config = userStore((s) => ({ tiers: s.tiers }))
@@ -63,7 +62,7 @@ const UsersPage: Component = () => {
       </A>
 
       <div class="flex flex-col gap-2 pb-4">
-        <form ref={ref} class="flex justify-between">
+        <div class="flex justify-between">
           <div class="flex flex-wrap gap-2">
             <TextInput
               class="text-xs"
@@ -91,7 +90,8 @@ const UsersPage: Component = () => {
               Search
             </Show>
           </Button>
-        </form>
+        </div>
+
         <For each={state.users}>
           {(user) => (
             <div class="bg-800 flex h-12 flex-row items-center gap-2 rounded-xl hover:bg-[var(--hl-600)]">

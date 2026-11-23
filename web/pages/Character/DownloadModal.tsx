@@ -23,7 +23,6 @@ export const DownloadModal: Component<{
   charId: string
   char?: AppSchema.Character
 }> = (props) => {
-  let ref: any
   const [char, setChar] = createSignal<AppSchema.Character | undefined>(props.char)
 
   createEffect(async () => {
@@ -123,7 +122,7 @@ export const DownloadModal: Component<{
         </>
       }
     >
-      <form ref={ref} class="flex flex-col gap-4">
+      <div class="flex flex-col gap-4">
         <div class="flex flex-col gap-2">
           <Select
             label="Output Format"
@@ -140,7 +139,7 @@ export const DownloadModal: Component<{
             onChange={(item) => setFileType(item.value as CharacterFileType)}
           />
         </div>
-      </form>
+      </div>
     </Modal>
   )
 }

@@ -93,7 +93,7 @@ const EmbedContent: Component = (props) => {
   }
 
   return (
-    <form class="flex flex-col gap-2">
+    <div class="flex flex-col gap-2">
       <Show when={!user.ui.embeddingModel}>
         <SolidCard bg="premium-700">
           You need to enable{' '}
@@ -192,6 +192,6 @@ const EmbedContent: Component = (props) => {
       </Switch>
 
       <Divider />
-    </form>
+    </div>
   )
 }

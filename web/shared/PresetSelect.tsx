@@ -243,7 +243,7 @@ const OptionList: Component<{
     <div class={`flex flex-col gap-2 p-2`}>
       <For each={props.options}>
         {(option) => (
-          <div
+          <button
             classList={{
               'bg-[var(--hl-800)]': props.selected === option.value,
               'bg-700': props.selected !== option.value,
@@ -253,7 +253,7 @@ const OptionList: Component<{
           >
             <span class="text-500 text-xs">{option.provider}</span>
             <div class="font-bold">{option.name}</div>
-          </div>
+          </button>
         )}
       </For>
     </div>

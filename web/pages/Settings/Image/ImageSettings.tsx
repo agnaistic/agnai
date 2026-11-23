@@ -87,7 +87,7 @@ export const ImageSettingsModal = () => {
           </>
         }
       >
-        <form class="flex flex-col gap-4">
+        <div class="flex flex-col gap-4">
           <Switch>
             <Match when={ctx.tab.current() === 'Shared'}>
               <SolidCard type="hl">
@@ -257,7 +257,7 @@ export const ImageSettingsModal = () => {
               Refer to the recommended settings when using Agnaistic image models
             </SolidCard>
           </Show>
-        </form>
+        </div>
       </RootModal>
 
       <Modal

@@ -355,7 +355,7 @@ export const CreateCharacterForm: Component<{
       <Show when={charLoading()}>
         <PageSpinner />
       </Show>
-      <form class="relative text-base">
+      <div class="relative text-base">
         <div class="flex flex-col gap-4">
           <Show when={!isPage}>
             <div> {props.children} </div>
@@ -670,7 +670,7 @@ export const CreateCharacterForm: Component<{
             </Show>
           </div>
         </div>
-      </form>
+      </div>
       <Show when={showBuilder()}>
         <SpriteModal
           body={editor.state.sprite}

@@ -16,8 +16,6 @@ const ChubImportCharModal: Component<{
   char?: NewCharacter
   entity?: ChubEntity
 }> = (props) => {
-  let ref: any
-
   const [char, setChar] = createSignal<NewCharacter>(props.char!)
 
   createEffect(() => {
@@ -66,7 +64,7 @@ const ChubImportCharModal: Component<{
         </div>
       </Show>
       <Show when={props.char}>
-        <form ref={ref}>
+        <div>
           <div class="mb-2 text-sm">
             Optionally modify all the aspects of the character other than the avatar.
           </div>
@@ -147,7 +145,7 @@ const ChubImportCharModal: Component<{
               }}
             />
           </Show>
-        </form>
+        </div>
       </Show>
     </Modal>
   )

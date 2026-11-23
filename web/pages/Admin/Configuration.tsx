@@ -19,7 +19,6 @@ import { EmbeddingConfig } from './Config/Embeddings'
 export { ServerConfiguration as default }
 
 const ServerConfiguration: Component = () => {
-  let form: HTMLFormElement
   const user = userStore((s) => ({ user: s.user }))
   const state = adminStore((s) => ({ config: s.config }))
   const [store, setStore] = createStore<ConfigState & { _id?: string }>(state.config! || {})
@@ -78,7 +77,7 @@ const ServerConfiguration: Component = () => {
         <Match when>
           <Tabs tabs={tab.tabs()} select={tab.select} selected={tab.selected} />
 
-          <form ref={form!} class="flex flex-col gap-2" onSubmit={(ev) => ev.preventDefault()}>
+          <div class="flex flex-col gap-2">
             <div class="flex flex-col gap-2" classList={{ hidden: tab.current() !== 'General' }}>
               <General state={store} setters={setStore} />
             </div>
@@ -98,7 +97,7 @@ const ServerConfiguration: Component = () => {
                 <SaveIcon /> Save
               </Button>
             </div>
-          </form>
+          </div>
         </Match>
       </Switch>
     </Page>

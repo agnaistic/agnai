@@ -168,7 +168,7 @@ const TemplateModal: Component<{
       close={props.close}
       footer={Footer}
     >
-      <form class="flex flex-col gap-4 text-sm">
+      <div class="flex flex-col gap-4 text-sm">
         <TextInput
           placeholder="Name"
           label="Name"
@@ -182,7 +182,7 @@ const TemplateModal: Component<{
           minHeight={100}
           showHelp
         />
-      </form>
+      </div>
     </RootModal>
   )
 }

@@ -31,7 +31,6 @@ const init: AppSchema.ScenarioBook = {
 }
 
 const CreateScenario: Component = () => {
-  let ref: any
   const params = useParams<{ editId: string }>()
   const nav = useNavigate()
   const scenarios = scenarioStore((x) => ({
@@ -109,7 +108,7 @@ const CreateScenario: Component = () => {
 
       <div class="text-lg font-bold">Scenario Details</div>
 
-      <form class="flex flex-col gap-4" ref={ref}>
+      <div class="flex flex-col gap-4">
         <TextInput
           required
           label="Name"
@@ -158,7 +157,7 @@ const CreateScenario: Component = () => {
           state={state}
           setter={(next) => setState('entries', next)}
         />
-      </form>
+      </div>
 
       <ConfirmModal
         show={!!showDelete()}
