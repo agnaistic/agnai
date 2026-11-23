@@ -1,7 +1,6 @@
 import Cookies from 'js-cookie'
 import { EVENTS, events } from '../emitter'
 import { jwtDecode } from 'jwt-decode'
-import needle from 'needle'
 import { parseSearchQuery, tryParse, incompleteJson, parseEvent } from '/common/util'
 import { debug } from '/common/debug'
 import type { TickHandler } from '/common/prompt'
@@ -201,19 +200,124 @@ type SSEOpts<T = {}> = T & {
   onTick?: TickHandler
 }
 
-export function localSSE(opts: SSEOpts<{ host: string }>) {
-  const resp = needle.post(joinUrl(opts.host, opts.path), JSON.stringify(opts.body), {
-    parse: false,
-    signal: opts.signal?.signal,
-    open_timeout: 0,
-    read_timeout: 0,
-    headers: {
-      ...opts.headers,
-      Accept: 'text/event-stream',
-      'Content-Type': 'application/json',
-    },
-  })
+async function sseRequest(opts: {
+  url: string
+  body: any
+  headers: any
+  signal?: AbortController
+  openTimeout?: number
+  readTimeout?: number
+  onStatus: (statusCode: number) => void
+  onData: (chunk: string) => boolean | void
+  onEnd: () => void
+  onAbort: () => void
+  onError: (err: any) => void
+}) {
+  const controller = new AbortController()
+  const external = opts.signal?.signal
+  let aborted = false
+  let timedOut = false
 
+  const abort = () => {
+    aborted = true
+    controller.abort()
+  }
+
+  if (external) {
+    if (external.aborted) {
+      opts.onAbort()
+      return
+    }
+    external.addEventListener('abort', abort, { once: true })
+  }
+
+  let timer: ReturnType<typeof setTimeout> | undefined
+
+  const withTimeout = async <T>(promise: Promise<T>, ms: number) => {
+    if (!ms) return promise
+    try {
+      return await Promise.race([
+        promise,
+        new Promise<never>((_, reject) => {
+          timer = setTimeout(() => {
+            timedOut = true
+            abort()
+            reject(new Error('timeout'))
+          }, ms)
+        }),
+      ])
+    } finally {
+      if (timer) clearTimeout(timer)
+      timer = undefined
+    }
+  }
+
+  const cleanup = () => {
+    if (timer) clearTimeout(timer)
+    if (external) external.removeEventListener('abort', abort)
+  }
+
+  try {
+    const res = await withTimeout(
+      fetch(opts.url, {
+        method: 'post',
+        body: JSON.stringify(opts.body),
+        signal: controller.signal,
+        headers: {
+          ...opts.headers,
+          Accept: 'text/event-stream',
+          'Content-Type': 'application/json',
+        },
+      }),
+      opts.openTimeout || 0
+    )
+
+    opts.onStatus(res.status)
+
+    if (!res.body) {
+      opts.onEnd()
+      return cleanup()
+    }
+
+    const reader = res.body.getReader()
+    const decoder = new TextDecoder()
+
+    for (;;) {
+      const result = await withTimeout(reader.read(), opts.readTimeout || 0)
+
+      if (result.done) {
+        opts.onEnd()
+        break
+      }
+
+      if (!result.value) continue
+
+      if (opts.onData(decoder.decode(result.value, { stream: true })) === true) {
+        await reader.cancel().catch(() => undefined)
+        break
+      }
+    }
+
+    cleanup()
+  } catch (err: any) {
+    if (timer) clearTimeout(timer)
+    if (external) external.removeEventListener('abort', abort)
+
+    if (timedOut || (aborted && !external?.aborted)) {
+      opts.onError('Network request failed')
+      return
+    }
+
+    if (err?.name === 'AbortError' || external?.aborted) {
+      opts.onAbort()
+      return
+    }
+
+    opts.onError(err)
+  }
+}
+
+export function localSSE(opts: SSEOpts<{ host: string }>) {
   let accum = ''
   let error = ''
   let incomplete = ''
@@ -221,82 +325,97 @@ export function localSSE(opts: SSEOpts<{ host: string }>) {
   let meta: any = {}
   let done = false
 
-  handleNonData(
-    opts,
-    resp,
-    (err) => {
-      error = err
+  sseRequest({
+    url: joinUrl(opts.host, opts.path),
+    body: opts.body,
+    headers: opts.headers,
+    signal: opts.signal,
+    openTimeout: 0,
+    readTimeout: 0,
+    onStatus: (statusCode) => {
+      debug('sse')('code %s', statusCode)
+      if (statusCode > 201) {
+        error = `Streaming request failed with status code ${statusCode}`
+        return
+      }
+      opts.onTick?.(`${statusCode}`, 'headers')
     },
-    () => {
+    onEnd: () => {
+      if (done) return
+      opts.onTick?.(joinThoughtTokens(accum, thoughts), 'done')
+      opts.onDone?.()
+    },
+    onAbort: () => {
       if (done) return
       done = true
       opts.onTick?.(joinThoughtTokens(accum, thoughts), 'done')
       opts.onDone?.()
-    }
-  )
+    },
+    onError: (err) => {
+      const message =
+        typeof err === 'string' ? err : `Streaming request failed: ${err?.message || err}`
+      opts.onError?.(message)
+      opts.onTick?.(message, 'error')
+    },
+    onData: (chunk) => {
+      const data = incomplete + chunk
+      incomplete = ''
 
-  resp.on('done', () => {
-    if (done) return
-    opts.onTick?.(joinThoughtTokens(accum, thoughts), 'done')
-    opts.onDone?.()
-  })
+      const messages = data.split(/\r?\n\r?\n/).filter((l) => !!l && l !== ': OPENROUTER PROCESSING')
 
-  resp.on('data', (chunk: Buffer) => {
-    const data = incomplete + chunk.toString()
-    incomplete = ''
+      for (const msg of messages) {
+        // If we have an error, we want to retrieve the reason for the error
+        // which is usually a message in the event stream
+        if (error) {
+          handleError(opts, error, msg)
+          return true
+        }
 
-    const messages = data.split(/\r?\n\r?\n/).filter((l) => !!l && l !== ': OPENROUTER PROCESSING')
+        const { json, incomplete: skip } = preHandleData(opts, msg)
+        if (skip) {
+          incomplete = skip
+          continue
+        }
 
-    for (const msg of messages) {
-      // If we have an error, we want to retrieve the reason for the error
-      // which is usually a message in the event stream
-      if (error) {
-        handleError(opts, error, msg)
-        return
+        if (!json || !opts.onTick) continue
+        opts.onData?.(json)
+
+        const changed = getChoiceProp(json, meta, ['model', 'finish_reason', 'provider'])
+        if (changed.found) {
+          opts.onTick('', 'meta', meta)
+        }
+
+        const thought = getNextThoughts(json)
+        const token = getNextTokens(json) || json?.token || json?.response
+
+        if (thought) {
+          opts.onTick?.(thought, 'thought')
+          thoughts += thought
+        }
+
+        if (token) {
+          accum += token
+          opts.onTick?.(accum, 'partial')
+          continue
+        }
+
+        if (done) continue
+        if (changed.matches.finish_reason) {
+          opts?.onTick(joinThoughtTokens(accum, thoughts), 'done')
+          done = true
+          continue
+        }
+
+        const response = json.response
+        if (response) {
+          opts?.onTick(joinThoughtTokens(accum, thoughts), 'done')
+          done = true
+          continue
+        }
       }
 
-      const { json, incomplete: skip } = preHandleData(opts, msg)
-      if (skip) {
-        incomplete = skip
-        continue
-      }
-
-      if (!json || !opts.onTick) continue
-      opts.onData?.(json)
-
-      const changed = getChoiceProp(json, meta, ['model', 'finish_reason', 'provider'])
-      if (changed.found) {
-        opts.onTick('', 'meta', meta)
-      }
-
-      const thought = getNextThoughts(json)
-      const token = getNextTokens(json) || json?.token || json?.response
-
-      if (thought) {
-        opts.onTick?.(thought, 'thought')
-        thoughts += thought
-      }
-
-      if (token) {
-        accum += token
-        opts.onTick?.(accum, 'partial')
-        continue
-      }
-
-      if (done) continue
-      if (changed.matches.finish_reason) {
-        opts?.onTick(joinThoughtTokens(accum, thoughts), 'done')
-        done = true
-        continue
-      }
-
-      const response = json.response
-      if (response) {
-        opts?.onTick(joinThoughtTokens(accum, thoughts), 'done')
-        done = true
-        continue
-      }
-    }
+      return false
+    },
   })
 }
 
@@ -329,20 +448,6 @@ function getChoiceProp<T = any>(json: any, assign: any, props: string[]) {
 
 export function fetchSSE(opts: SSEOpts) {
   const { path, headers, body, signal } = opts
-  let resp = needle.post(api.toApiUrl(path), JSON.stringify(body), {
-    parse: false,
-    signal: signal?.signal,
-    open_timeout: 120_000,
-    read_timeout: 180_000,
-
-    headers: {
-      ...headers,
-      Accept: 'text/event-stream',
-      'Content-Type': 'application/json',
-    },
-  })
-
-  let request = (resp as any).request as any
 
   let error = ''
   let incomplete = ''
@@ -350,105 +455,116 @@ export function fetchSSE(opts: SSEOpts) {
   let thoughts = ''
   let done = false
 
-  handleNonData(
-    opts,
-    resp,
-    (err) => {
-      error = err
+  sseRequest({
+    url: api.toApiUrl(path),
+    body,
+    headers,
+    signal,
+    openTimeout: 120_000,
+    readTimeout: 180_000,
+    onStatus: (statusCode) => {
+      debug('sse')('code %s', statusCode)
+      if (statusCode > 201) {
+        error = `Streaming request failed with status code ${statusCode}`
+        return
+      }
+      opts.onTick?.(`${statusCode}`, 'headers')
     },
-    () => {
+    onEnd: () => {
       if (done) return
       done = true
       opts.onTick?.(joinThoughtTokens(accum, thoughts), 'done')
       opts.onDone?.()
-      request.destroy()
-    }
-  )
+    },
+    onAbort: () => {
+      if (done) return
+      done = true
+      opts.onTick?.(joinThoughtTokens(accum, thoughts), 'done')
+      opts.onDone?.()
+    },
+    onError: (err) => {
+      const message =
+        typeof err === 'string' ? err : `Streaming request failed: ${err?.message || err}`
+      opts.onError?.(message)
+      opts.onTick?.(message, 'error')
+    },
+    onData: (chunk) => {
+      const data = incomplete + chunk
+      incomplete = ''
 
-  resp.on('done', () => {
-    if (done) return
-    done = true
-    opts.onTick?.(joinThoughtTokens(accum, thoughts), 'done')
-    opts.onDone?.()
-    request.destroy()
-  })
+      const messages = data.split(/\r?\n\r?\n/).filter((l) => !!l && l !== ': OPENROUTER PROCESSING')
 
-  resp.on('data', (chunk: Buffer) => {
-    const data = incomplete + chunk.toString()
-    incomplete = ''
+      for (const msg of messages) {
+        // If we have an error, we want to retrieve the reason for the error
+        // which is usually a message in the event stream
+        if (error) {
+          handleError(opts, error, msg)
+          return true
+        }
 
-    const messages = data.split(/\r?\n\r?\n/).filter((l) => !!l && l !== ': OPENROUTER PROCESSING')
+        const { json, incomplete: skip } = preHandleData(opts, msg)
+        if (skip) {
+          incomplete = skip
+          continue
+        }
 
-    for (const msg of messages) {
-      // If we have an error, we want to retrieve the reason for the error
-      // which is usually a message in the event stream
-      if (error) {
-        handleError(opts, error, msg)
-        return
+        if (!json) return false
+
+        if (json.error && !json.type) {
+          opts.onTick?.(`Request failed: ` + json.error, 'error')
+        }
+
+        switch (json.type) {
+          case 'message-partial':
+          case 'inference-partial':
+            accum = json.partial
+            opts.onTick?.(json.partial, 'partial')
+            break
+
+          case 'message-error':
+          case 'inference-error':
+            opts.onTick?.(json.error, 'error')
+            return true
+
+          case 'message-warning':
+          case 'inference-warning':
+            opts.onTick?.(json.warning, 'warning')
+            break
+
+          case 'message-created':
+            opts.onTick?.(json.msg.msg, 'done')
+            break
+
+          case 'message-retry':
+            opts.onTick?.(json.message, 'done')
+            break
+
+          case 'chat-json':
+          case 'chat-query':
+          case 'inference':
+            done = true
+            opts.onTick?.(joinThoughtTokens(json.response || accum, thoughts), 'done')
+            opts.onDone?.()
+            return true
+
+          case 'chat-summary':
+            opts.onTick?.(json.summary, 'done')
+            break
+
+          case 'inference-thought':
+            opts.onTick?.(json.thoughts, 'thought')
+            thoughts += json.thoughts
+            break
+
+          case 'inference-meta':
+          case 'message-meta':
+            opts.onTick?.('', 'meta', json.meta)
+            break
+        }
       }
 
-      const { json, incomplete: skip } = preHandleData(opts, msg)
-      if (skip) {
-        incomplete = skip
-        continue
-      }
-
-      if (!json) return
-
-      if (json.error && !json.type) {
-        opts.onTick?.(`Request failed: ` + json.error, 'error')
-      }
-
-      switch (json.type) {
-        case 'message-partial':
-        case 'inference-partial':
-          accum = json.partial
-          opts.onTick?.(json.partial, 'partial')
-          break
-
-        case 'message-error':
-        case 'inference-error':
-          opts.onTick?.(json.error, 'error')
-          request.destroy()
-          break
-
-        case 'message-warning':
-        case 'inference-warning':
-          opts.onTick?.(json.warning, 'warning')
-          break
-
-        case 'message-created':
-          opts.onTick?.(json.msg.msg, 'done')
-          break
-
-        case 'message-retry':
-          opts.onTick?.(json.message, 'done')
-          break
-
-        case 'chat-json':
-        case 'chat-query':
-        case 'inference':
-          done = true
-          opts.onTick?.(joinThoughtTokens(json.response || accum, thoughts), 'done')
-          opts.onDone?.()
-          request.destroy()
-          break
-
-        case 'chat-summary':
-          opts.onTick?.(json.summary, 'done')
-          break
-
-        case 'inference-thought':
-          opts.onTick?.(json.thoughts, 'thought')
-          thoughts += json.thoughts
-          break
-
-        case 'inference-meta':
-        case 'message-meta':
-          opts.onTick?.('', 'meta', json.meta)
-          break
-      }
-    }
+      return false
+    },
   })
 }
 
@@ -475,44 +591,6 @@ function preHandleData(opts: SSEOpts, msg: string) {
   }
 
   return { event, json, incomplete: undefined }
-}
-
-function handleNonData(
-  opts: SSEOpts,
-  resp: NodeJS.ReadableStream,
-  onError: (error: string) => void,
-  onAbort: () => void
-) {
-  resp.on('header', (statusCode, headers) => {
-    debug('sse')('code %s', statusCode)
-    // const contentType = headers['content-type'] || ''
-    if (statusCode > 201) {
-      onError(`Streaming request failed with status code ${statusCode}`)
-      // We need to return, most callers resolve successfully if we make the headers called.
-      return
-    }
-    opts.onTick?.(`${statusCode}`, 'headers')
-  })
-
-  resp.on('err', (err) => {
-    let error = `Streaming request failed: ${err?.message || err}`
-
-    if (err?.name === 'AbortError' || err?.message?.startsWith('Aborted by signal')) {
-      onAbort()
-      return
-    }
-
-    onError(error)
-    opts.onError?.(error)
-    opts.onTick?.(error, 'error')
-  })
-
-  resp.on('timeout', (...args) => {
-    let error = 'Network request failed'
-    onError(error)
-    opts.onError?.(error)
-    opts.onTick?.(error, 'error')
-  })
 }
 
 function handleError(opts: SSEOpts, error: string, msg: string) {
