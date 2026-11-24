@@ -1,5 +1,5 @@
-import { AlertTriangle } from 'lucide-solid'
-import { LucideProps } from 'lucide-solid'
+import AlertTriangle from 'lucide-solid/icons/triangle-alert'
+import type { LucideProps } from 'lucide-solid'
 import { Component, JSX, createMemo } from 'solid-js'
 
 type AlertSchema = 'error'

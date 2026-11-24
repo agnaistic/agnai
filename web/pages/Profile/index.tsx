@@ -1,4 +1,7 @@
-import { AlertTriangle, Download, Save, X } from 'lucide-solid'
+import AlertTriangle from 'lucide-solid/icons/triangle-alert'
+import Download from 'lucide-solid/icons/download'
+import Save from 'lucide-solid/icons/save'
+import X from 'lucide-solid/icons/x'
 import {
   Component,
   Match,
@@ -92,7 +95,6 @@ export const ProfileModal: Component = () => {
 }
 
 const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => {
-  let formRef: HTMLFormElement
   let googleRef: any
 
   setComponentPageTitle('My profile')
@@ -233,7 +235,7 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
 
   return (
     <Page>
-      <form ref={formRef!} onSubmit={submit} aria-label="Edit profile">
+      <div aria-label="Edit profile">
         <div class="flex flex-col gap-4">
           <div class="flex flex-col gap-2">
             <div class="flex flex-row gap-2">
@@ -417,7 +419,7 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
             <div class="mt-4 flex w-full justify-end">{footer}</div>
           </Show>
         </div>
-      </form>
+      </div>
       <PasswordModal show={pass()} close={() => setPass(false)} />
       <DeleteAccountModal show={del()} close={() => setDel(false)} />
     </Page>
@@ -462,24 +464,22 @@ const PasswordModal: Component<{ show: boolean; close: () => void }> = (props) =
         </>
       }
     >
-      <div>
-        <form class="flex flex-col gap-2">
-          <div class="w-full justify-center">Update your password</div>
-          <TextInput
-            type="password"
-            required
-            placeholder="New Password"
-            value={store.newPassword}
-            onChange={(ev) => setStore('newPassword', ev.currentTarget.value)}
-          />
-          <TextInput
-            type="password"
-            required
-            placeholder="Confirm Password"
-            value={store.confirmPassword}
-            onChange={(ev) => setStore('confirmPassword', ev.currentTarget.value)}
-          />
-        </form>
+      <div class="flex flex-col gap-2">
+        <div class="w-full justify-center">Update your password</div>
+        <TextInput
+          type="password"
+          required
+          placeholder="New Password"
+          value={store.newPassword}
+          onChange={(ev) => setStore('newPassword', ev.currentTarget.value)}
+        />
+        <TextInput
+          type="password"
+          required
+          placeholder="Confirm Password"
+          value={store.confirmPassword}
+          onChange={(ev) => setStore('confirmPassword', ev.currentTarget.value)}
+        />
       </div>
     </RootModal>
   )

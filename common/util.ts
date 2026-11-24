@@ -742,7 +742,7 @@ export function hydrateTemplate(
 ) {
   const json = values || {}
   const map = new Map<string, string>()
-  const allAliases = { ...aliases, ...getSchemaAliases(def.schema) }
+  const allAliases = { ...aliases, ...getSchemaAliases(def.schema, opts) }
 
   for (const field of def.schema) {
     const parsed = parseVariableName(field.name, opts, allAliases)

@@ -16,7 +16,9 @@ import Button from './Button'
 import Modal, { RootModal } from './Modal'
 import { FormLabel } from './FormLabel'
 import { exportPreset, pageStore, presetStore, toastStore } from '../store'
-import { DownloadIcon, PencilIcon, PlusIcon } from 'lucide-solid'
+import DownloadIcon from 'lucide-solid/icons/download'
+import PencilIcon from 'lucide-solid/icons/pencil'
+import PlusIcon from 'lucide-solid/icons/plus'
 import { AppSchema } from '/common/types'
 import { createStore } from 'solid-js/store'
 import { getStore } from '../store/create'
@@ -241,7 +243,7 @@ const OptionList: Component<{
     <div class={`flex flex-col gap-2 p-2`}>
       <For each={props.options}>
         {(option) => (
-          <div
+          <button
             classList={{
               'bg-[var(--hl-800)]': props.selected === option.value,
               'bg-700': props.selected !== option.value,
@@ -251,7 +253,7 @@ const OptionList: Component<{
           >
             <span class="text-500 text-xs">{option.provider}</span>
             <div class="font-bold">{option.name}</div>
-          </div>
+          </button>
         )}
       </For>
     </div>

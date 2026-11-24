@@ -1,7 +1,7 @@
 import { Component, For, Setter, Show, createMemo, createSignal } from 'solid-js'
 import { AppSchema } from '/common/types'
 import { Pill } from '/web/shared/Card'
-import { X } from 'lucide-solid'
+import X from 'lucide-solid/icons/x'
 
 type Prob = { t: string; p: [Record<string, number>] }
 type Pair = { token: string; prob: number }

@@ -3,7 +3,7 @@ import { userStore } from '/web/store'
 import { Provider } from '/common/types/presets'
 import { getProviderConnection } from '/common/providers'
 import Button from '/web/shared/Button'
-import { Plus } from 'lucide-solid'
+import Plus from 'lucide-solid/icons/plus'
 import { ManageProvider } from '../Settings/Provider/Manage'
 
 export const ProviderList: Component = () => {

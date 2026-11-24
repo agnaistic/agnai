@@ -2,7 +2,9 @@ import { Component, Show, createEffect, createSignal, on, onMount } from 'solid-
 import { scenarioStore } from '../../store'
 import PageHeader from '../../shared/PageHeader'
 import Button from '../../shared/Button'
-import { Copy, Download, Trash } from 'lucide-solid'
+import Copy from 'lucide-solid/icons/copy'
+import Download from 'lucide-solid/icons/download'
+import Trash from 'lucide-solid/icons/trash'
 import { useNavigate, useParams } from '@solidjs/router'
 import TextInput from '../../shared/TextInput'
 import { deepCloneAndRemoveFields } from '../../shared/util'
@@ -29,7 +31,6 @@ const init: AppSchema.ScenarioBook = {
 }
 
 const CreateScenario: Component = () => {
-  let ref: any
   const params = useParams<{ editId: string }>()
   const nav = useNavigate()
   const scenarios = scenarioStore((x) => ({
@@ -107,7 +108,7 @@ const CreateScenario: Component = () => {
 
       <div class="text-lg font-bold">Scenario Details</div>
 
-      <form class="flex flex-col gap-4" ref={ref}>
+      <div class="flex flex-col gap-4">
         <TextInput
           required
           label="Name"
@@ -156,7 +157,7 @@ const CreateScenario: Component = () => {
           state={state}
           setter={(next) => setState('entries', next)}
         />
-      </form>
+      </div>
 
       <ConfirmModal
         show={!!showDelete()}

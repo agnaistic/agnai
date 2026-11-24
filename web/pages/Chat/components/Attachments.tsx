@@ -2,7 +2,7 @@ import { Component, createEffect, createMemo, createSignal, For, onCleanup, Show
 import { ChatContext } from '/web/store/context'
 import { AppSchema } from '/common/types'
 import { imageStore, msgStore, pageStore, toastStore } from '/web/store'
-import { CircleX } from 'lucide-solid'
+import CircleX from 'lucide-solid/icons/circle-x'
 import Modal from '/web/shared/Modal'
 import Button from '/web/shared/Button'
 import { round } from '/common/util'

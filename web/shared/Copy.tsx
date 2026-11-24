@@ -1,4 +1,5 @@
-import { ClipboardCheck, ClipboardCopy } from 'lucide-solid'
+import ClipboardCheck from 'lucide-solid/icons/clipboard-check'
+import ClipboardCopy from 'lucide-solid/icons/clipboard-copy'
 import { Component, createSignal, Match, Show, Switch } from 'solid-js'
 import { RelativeSpinner } from './Loading'
 

@@ -1,4 +1,4 @@
-import { Menu } from 'lucide-solid'
+import Menu from 'lucide-solid/icons/menu'
 import { Component, Show } from 'solid-js'
 import { A } from '@solidjs/router'
 import { chatStore, pageStore } from '../store'

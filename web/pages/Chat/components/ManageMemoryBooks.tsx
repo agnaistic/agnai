@@ -8,7 +8,9 @@ import Modal from '/web/shared/Modal'
 import Button from '/web/shared/Button'
 import EditMemoryForm, { EntrySort } from '../../Memory/EditMemory'
 import Select, { Option } from '/web/shared/Select'
-import { Pencil, PlusIcon, X } from 'lucide-solid'
+import Pencil from 'lucide-solid/icons/pencil'
+import PlusIcon from 'lucide-solid/icons/plus'
+import X from 'lucide-solid/icons/x'
 import { Pill } from '/web/shared/Card'
 
 export const ManageMemoryBooks: Component<{

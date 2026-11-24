@@ -11,8 +11,6 @@ import { Page } from '/web/Layout'
 import { createStore } from 'solid-js/store'
 
 const MetricsPage: Component = () => {
-  let refForm: any
-
   setComponentPageTitle('Metrics')
   const admin = adminStore((s) => ({ metrics: s.metrics }))
   const [refMsg, setRefMsg] = createSignal<any>()
@@ -76,7 +74,7 @@ const MetricsPage: Component = () => {
         <FormLabel fieldName="services" label="Services" helperText={admin.metrics?.each.length} />
 
         <Card>
-          <form ref={refForm} class="flex flex-col gap-1">
+          <div class="flex flex-col gap-1">
             <FormLabel label="Message All Users" />
             <TextInput
               ref={setRefMsg}
@@ -90,7 +88,7 @@ const MetricsPage: Component = () => {
               onChange={(ev) => setStore('userLevel', +ev.currentTarget.value)}
             />
             <Button onClick={() => setConfirm(true)}>Send</Button>
-          </form>
+          </div>
         </Card>
       </div>
 

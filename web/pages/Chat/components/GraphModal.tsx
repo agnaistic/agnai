@@ -13,7 +13,7 @@ import { chatStore, msgStore } from '/web/store'
 import type cytoscape from 'cytoscape'
 import { debug } from '/common/debug'
 import { Pill } from '/web/shared/Card'
-import { Split } from 'lucide-solid'
+import Split from 'lucide-solid/icons/split'
 
 const log = debug('graph')
 

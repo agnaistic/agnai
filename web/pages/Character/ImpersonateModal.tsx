@@ -5,7 +5,8 @@ import CharacterSelectList, { CharacterSelectItem } from '/web/shared/CharacterS
 import { AppSchema } from '/common/types'
 import Button from '/web/shared/Button'
 import PageHeader from '/web/shared/PageHeader'
-import { HeartPlus, X } from 'lucide-solid'
+import HeartPlus from 'lucide-solid/icons/heart-plus'
+import X from 'lucide-solid/icons/x'
 import { isChatPageMemo } from '/web/shared/hooks'
 import { useAppContext } from '/web/store/context'
 

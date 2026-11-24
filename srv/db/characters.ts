@@ -3,6 +3,7 @@ import { db } from './client'
 import { AppSchema } from '../../common/types/schema'
 import { now } from './util'
 import { Filter, UpdateFilter } from 'mongodb'
+import { StatusError } from '../api/wrap'
 
 export type CharacterUpdate = Partial<
   Pick<
@@ -128,6 +129,17 @@ export async function bulkUpdate(
   const result = await db('character').updateMany({ userId, _id: { $in: charIds } }, set)
 
   return result.matchedCount
+}
+
+export async function assertCharacterOwner(opts: { userId: string; characterId: string }) {
+  const char = await db('character').findOne(
+    { _id: opts.characterId, userId: opts.userId },
+    { projection: { _id: 1, userId: 1 } }
+  )
+
+  if (!char) {
+    throw new StatusError('Character not found', 403)
+  }
 }
 
 export async function partialUpdateCharacter(id: string, userId: string, char: CharacterUpdate) {

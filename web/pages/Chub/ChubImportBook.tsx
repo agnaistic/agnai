@@ -1,4 +1,5 @@
-import { Check, X } from 'lucide-solid'
+import Check from 'lucide-solid/icons/check'
+import X from 'lucide-solid/icons/x'
 import { Component, Show, createEffect, createSignal } from 'solid-js'
 import Button from '../../shared/Button'
 import Modal from '../../shared/Modal'
@@ -18,7 +19,6 @@ const ChubImportBookModal: Component<{
   entity: ChubEntity
   fullPath: string
 }> = (props) => {
-  let ref: any
   const [book, setBook] = createSignal<AppSchema.MemoryBook>(props.book)
   const [state, setState] = createStore<AppSchema.MemoryBook>(emptyBookWithEmptyEntry())
   const [entrySort, setEntrySort] = createSignal<EntrySort>('creationDate')
@@ -69,7 +69,7 @@ const ChubImportBookModal: Component<{
         </>
       }
     >
-      <form ref={ref}>
+      <div>
         <div class="mb-2 text-sm">
           Optionally modify all the aspects of the memory book other than the image.
         </div>
@@ -87,7 +87,7 @@ const ChubImportBookModal: Component<{
             />
           </div>
         </Show>
-      </form>
+      </div>
     </Modal>
   )
 }

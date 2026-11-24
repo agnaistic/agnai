@@ -1,5 +1,6 @@
 import { Component, createEffect, createSignal, on, Show } from 'solid-js'
-import { Upload, X } from 'lucide-solid'
+import Upload from 'lucide-solid/icons/upload'
+import X from 'lucide-solid/icons/x'
 import { AppSchema } from '../../../common/types/schema'
 import Button from '../../shared/Button'
 import FileInput, { FileInputResult, getFileAsString } from '../../shared/FileInput'

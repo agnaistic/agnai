@@ -51,12 +51,12 @@ export const TierCard: Component<{
       size="sm"
     >
       <div>
-        <div class="markdown text-sm" innerHTML={markdown.makeHtml(props.tier.description)} />
+        <div class="markdown text-sm" innerHTML={markdown.makeHtml(props.tier?.description)} />
       </div>
       <div>
         <div class="text-md flex flex-col items-center font-bold">
           {stripeCost()}
-          <Show when={props.tier.cost > 0 && !!props.tier?.patreon?.cost}>
+          <Show when={props.tier?.cost > 0 && !!props.tier?.patreon?.cost}>
             <div class="text-xs">or</div>
           </Show>
           {patreonCost()}

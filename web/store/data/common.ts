@@ -285,8 +285,8 @@ export function getActivePresets(chat?: AppSchema.Chat, user?: AppSchema.User) {
     throw new Error(msg)
   }
 
-  const { presets, templates } = getStore('presets').getState()
-  const preset = deepClone(getChatPreset(chat, user, presets))
+  const { presets: allPresets, templates } = getStore('presets').getState()
+  const preset = deepClone(getChatPreset(chat, user, allPresets))
 
   if (preset.promptTemplateId) {
     const template = templates.find((t) => t._id === preset.promptTemplateId)
@@ -297,15 +297,20 @@ export function getActivePresets(chat?: AppSchema.Chat, user?: AppSchema.User) {
     applySubscriptionAdjustment(preset)
   }
 
-  const json = user.jsonPreset ? presets.find((p) => p._id === user.jsonPreset) : undefined
-  const summary = user.summaryPreset ? presets.find((p) => p._id === user.summaryPreset) : undefined
-  const chargen = user.chargenPreset ? presets.find((p) => p._id === user.chargenPreset) : undefined
+  const json = user.jsonPreset ? allPresets.find((p) => p._id === user.jsonPreset) : undefined
+  const summary = user.summaryPreset
+    ? allPresets.find((p) => p._id === user.summaryPreset)
+    : undefined
+  const chargen = user.chargenPreset
+    ? allPresets.find((p) => p._id === user.chargenPreset)
+    : undefined
 
   if (json?.providerId) json.thirdPartyModel = json.providerModels?.[json.providerId]
   if (summary?.providerId) summary.thirdPartyModel = summary.providerModels?.[summary.providerId]
   if (chargen?.providerId) chargen.thirdPartyModel = chargen.providerModels?.[chargen.providerId]
 
-  return { current: preset, json, summary, chargen }
+  const presets = { current: preset, json, summary, chargen }
+  return presets
 }
 
 function applySubscriptionAdjustment(preset: Partial<AppSchema.UserGenPreset>) {

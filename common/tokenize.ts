@@ -68,7 +68,6 @@ export async function countTokens(text: string) {
 }
 
 export async function prepareTokenizer(encoder: string) {
-  debug('xformers')('preparing tokenizer: %s', encoder)
   ACTIVE_TOKENIZER = encoder
 
   if (encoders[encoder]) {

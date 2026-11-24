@@ -1,16 +1,14 @@
-import {
-  ImagePlus,
-  ImageUp,
-  Megaphone,
-  MessageCircle,
-  MoreHorizontal,
-  PlusCircle,
-  ScanFaceIcon,
-  Send,
-  StopCircle,
-  X,
-  Zap,
-} from 'lucide-solid'
+import ImagePlus from 'lucide-solid/icons/image-plus'
+import ImageUp from 'lucide-solid/icons/image-up'
+import Megaphone from 'lucide-solid/icons/megaphone'
+import MessageCircle from 'lucide-solid/icons/message-circle'
+import MoreHorizontal from 'lucide-solid/icons/ellipsis'
+import PlusCircle from 'lucide-solid/icons/circle-plus'
+import ScanFaceIcon from 'lucide-solid/icons/scan-face'
+import Send from 'lucide-solid/icons/send'
+import StopCircle from 'lucide-solid/icons/circle-stop'
+import X from 'lucide-solid/icons/x'
+import Zap from 'lucide-solid/icons/zap'
 import {
   Component,
   createEffect,

@@ -2,7 +2,7 @@ import { Component } from 'solid-js'
 import { VoiceSettingForm } from '../../../../../common/types/texttospeech-schema'
 import TextInput from '/web/shared/TextInput'
 import Button from '/web/shared/Button'
-import { RefreshCw } from 'lucide-solid'
+import RefreshCw from 'lucide-solid/icons/refresh-cw'
 import RangeInput from '/web/shared/RangeInput'
 
 export const NovelTtsSettings: Component<{

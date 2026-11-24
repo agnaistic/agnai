@@ -1,7 +1,11 @@
 import { Component, JSX, For, createSignal, Show, createMemo, createEffect, on } from 'solid-js'
 import { DropMenu } from './DropMenu'
 import Button from './Button'
-import { CheckSquare, ChevronDown, Square, X, XSquare } from 'lucide-solid'
+import CheckSquare from 'lucide-solid/icons/square-check-big'
+import ChevronDown from 'lucide-solid/icons/chevron-down'
+import Square from 'lucide-solid/icons/square'
+import X from 'lucide-solid/icons/x'
+import XSquare from 'lucide-solid/icons/square-x'
 import { FormLabel } from './FormLabel'
 import { tagStore } from '../store'
 import TextInput from './TextInput'
@@ -115,7 +119,7 @@ const TagSelect: Component<{
                 </Show>
                 <For each={filteredTags()}>
                   {(option) => (
-                    <div
+                    <button
                       class="bg-700 flex w-full cursor-pointer flex-row items-center justify-between gap-4 rounded-xl px-2 py-1"
                       onClick={() => toggle(option.tag)}
                     >
@@ -144,7 +148,7 @@ const TagSelect: Component<{
                           <span>({option.count})</span>
                         </span>
                       </div>
-                    </div>
+                    </button>
                   )}
                 </For>
               </div>

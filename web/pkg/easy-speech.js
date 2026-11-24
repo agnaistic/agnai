@@ -1136,4 +1136,7 @@ EasySpeech.reset = function () {
     handlers: {},
   })
 }
-module.exports = EasySpeech
+// Vendored copy of easy-speech. The upstream package ships CommonJS; this copy
+// is loaded directly as an ES module (see the `easy-speech` alias in
+// vite.config.mts and web/pkg/easy-speech.d.ts), so export it as ESM.
+export default EasySpeech

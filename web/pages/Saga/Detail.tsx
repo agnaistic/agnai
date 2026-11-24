@@ -21,16 +21,14 @@ import { formatResponse, sagaStore } from './state'
 import { markdown } from '/web/shared/markdown'
 import Modal from '/web/shared/Modal'
 import { GuidanceHelp } from './Help'
-import {
-  Cog,
-  HelpCircle,
-  LoaderCircle,
-  MoreHorizontal,
-  Pencil,
-  RefreshCw,
-  Sliders,
-  Trash,
-} from 'lucide-solid'
+import Cog from 'lucide-solid/icons/cog'
+import HelpCircle from 'lucide-solid/icons/circle-question-mark'
+import LoaderCircle from 'lucide-solid/icons/loader-circle'
+import MoreHorizontal from 'lucide-solid/icons/ellipsis'
+import Pencil from 'lucide-solid/icons/pencil'
+import RefreshCw from 'lucide-solid/icons/refresh-cw'
+import Sliders from 'lucide-solid/icons/sliders-vertical'
+import Trash from 'lucide-solid/icons/trash'
 import { useNavigate, useParams, useSearchParams } from '@solidjs/router'
 import { ImportTemplate } from './ImportModal'
 import Loading from '/web/shared/Loading'

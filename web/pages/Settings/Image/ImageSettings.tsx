@@ -6,7 +6,9 @@ import { IMAGE_SUMMARY_PROMPT } from '/common/image'
 import { SolidCard } from '/web/shared/Card'
 import Tabs from '/web/shared/Tabs'
 import Button, { ToggleButton } from '/web/shared/Button'
-import { Pencil, Save, X } from 'lucide-solid'
+import Pencil from 'lucide-solid/icons/pencil'
+import Save from 'lucide-solid/icons/save'
+import X from 'lucide-solid/icons/x'
 import Modal, { RootModal } from '/web/shared/Modal'
 import { isChatPageMemo } from '/web/shared/hooks'
 import { FormLabel } from '/web/shared/FormLabel'
@@ -85,7 +87,7 @@ export const ImageSettingsModal = () => {
           </>
         }
       >
-        <form class="flex flex-col gap-4">
+        <div class="flex flex-col gap-4">
           <Switch>
             <Match when={ctx.tab.current() === 'Shared'}>
               <SolidCard type="hl">
@@ -255,7 +257,7 @@ export const ImageSettingsModal = () => {
               Refer to the recommended settings when using Agnaistic image models
             </SolidCard>
           </Show>
-        </form>
+        </div>
       </RootModal>
 
       <Modal

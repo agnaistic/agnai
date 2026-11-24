@@ -1,9 +1,9 @@
-import { ImageProviderType } from 'common/types/image-schema'
+import { ImageProviderType } from '/common/types/image-schema'
 import { ImageContext } from './image-context'
-import { settingStore } from 'web/store'
-import { NOVEL_IMAGE_MODEL } from 'common/image'
+import { settingStore } from '/web/store'
+import { NOVEL_IMAGE_MODEL } from '/common/image'
 import { createResource } from 'solid-js'
-import { imageApi } from 'web/store/data/image'
+import { imageApi } from '/web/store/data/image'
 
 export function useModelList(ctx: ImageContext) {
   const res = createResource(ctx.current.provider, async (prv) => {

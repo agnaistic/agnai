@@ -1,20 +1,19 @@
 import { A, useParams } from '@solidjs/router'
-import { Component, Show, createMemo, createSignal, onMount } from 'solid-js'
+import { Component, Show, createEffect, createMemo, on, onMount } from 'solid-js'
 import { adminStore, settingStore, toastStore, userStore } from '/web/store'
 import PageHeader from '/web/shared/PageHeader'
 import TextInput from '/web/shared/TextInput'
 import { Toggle } from '/web/shared/Toggle'
 import { Card } from '/web/shared/Card'
-import { getStrictForm } from '/web/shared/util'
 import Button from '/web/shared/Button'
 import Select from '/web/shared/Select'
 import { TierCard } from '../Profile/TierCard'
 import { Page } from '/web/Layout'
+import { createStore } from 'solid-js/store'
 
 export { TiersPage as default }
 
 const TiersPage: Component = (props) => {
-  let form: any
   const params = useParams()
   const cfg = userStore((s) => ({ tiers: s.tiers }))
   const admin = adminStore((s) => ({
@@ -23,6 +22,32 @@ const TiersPage: Component = (props) => {
     patreonTiers: s.patreonTiers,
   }))
   const settings = settingStore((s) => ({ config: s.config, slots: s.slots }))
+
+  const [state, setState] = createStore({
+    _id: '',
+    name: '',
+    description: '',
+    level: 0,
+    productId: '',
+    enabled: true,
+    disableSlots: true,
+    apiAccess: true,
+    patreonTier: '',
+    guidanceAccess: false,
+    imagesAccess: true,
+  })
+
+  createEffect(
+    on(
+      () => params.id,
+      () => {
+        if (!params.id) return
+        const tier = cfg.tiers.find((t) => t._id === params.id)
+        if (!tier) return
+        setState({ ...tier, patreonTier: tier.patreon?.tierId || '' })
+      }
+    )
+  )
 
   const products = createMemo(() => {
     const list = admin.products.map((product) => {
@@ -37,15 +62,8 @@ const TiersPage: Component = (props) => {
     return [{ label: 'No payment required', value: '' }].concat(list)
   })
 
-  const [editing, setEditing] = createSignal(
-    params.id ? cfg.tiers.find((t) => t._id === params.id) : undefined
-  )
-  const [name, setName] = createSignal(editing()?.name || '')
-  const [desc, setDesc] = createSignal(editing()?.description || '')
-  const [productId, setProductId] = createSignal(editing()?.productId)
-
   const price = createMemo(() => {
-    const product = admin.products.find((p) => p.id === productId())
+    const product = admin.products.find((p) => p.id === state.productId)
     if (!product) return 0
 
     const price = admin.prices.find((pr) => pr.id === product.default_price)
@@ -66,54 +84,41 @@ const TiersPage: Component = (props) => {
   })
 
   const onSubmit = () => {
-    const data = getStrictForm(form, {
-      name: 'string',
-      description: 'string',
-      level: 'number',
-      productId: 'string',
-      enabled: 'boolean',
-      disableSlots: 'boolean?',
-      apiAccess: 'boolean',
-      patreonTier: 'string',
-      guidanceAccess: 'boolean',
-      imagesAccess: 'boolean',
-    })
-
-    const product = admin.products.find((p) => p.id === data.productId)
+    const product = admin.products.find((p) => p.id === state.productId)
     const price = admin.prices.find((p) => p.id === product?.default_price!)
-    const patreonTier = admin.patreonTiers.find((t) => t.id === data.patreonTier)
+    const patreonTier = admin.patreonTiers.find((t) => t.id === state.patreonTier)
     const patreon = patreonTier
       ? { tierId: patreonTier.id, cost: patreonTier.attributes.amount_cents }
       : (null as any as undefined)
 
     if (!product) {
-      if (data.productId) {
-        toastStore.error(`Cannot submit: Product "${data.productId}" not found`)
+      if (state.productId) {
+        toastStore.error(`Cannot submit: Product "${state.productId}" not found`)
         return
       }
     }
 
     const priceId = product ? (product.default_price as string) : ''
 
-    if (!product?.default_price && data.productId) {
-      toastStore.error(`Cannot submit: Product "${data.productId}" does not have a price`)
+    if (!product?.default_price && state.productId) {
+      toastStore.error(`Cannot submit: Product "${state.productId}" does not have a price`)
       return
     }
 
-    if (!price && data.productId) {
+    if (!price && state.productId) {
       toastStore.error(`Cannot submit: Price "${product?.default_price}" not found`)
       return
     }
 
-    const id = editing()?._id
+    const id = state._id
 
     const tier = {
-      ...data,
-      name: data.name,
-      description: data.description,
-      level: data.level,
-      productId: data.productId,
-      enabled: data.enabled,
+      ...state,
+      name: state.name,
+      description: state.description,
+      level: state.level,
+      productId: state.productId,
+      enabled: state.enabled,
       cost: price ? price.unit_amount! : 0,
       patreon,
       priceId,
@@ -122,7 +127,9 @@ const TiersPage: Component = (props) => {
     if (id) {
       adminStore.updateTier(id, tier)
     } else {
-      adminStore.createTier(tier, (tier) => setEditing(tier))
+      adminStore.createTier(tier, (tier) =>
+        setState({ ...tier, patreonTier: tier.patreon?.tierId || '' })
+      )
     }
   }
 
@@ -140,62 +147,66 @@ const TiersPage: Component = (props) => {
       </A>
 
       <Card>
-        <form ref={form} class="flex flex-col gap-2">
-          <TextInput fieldName="id" label="ID" disabled value={editing()?._id} />
+        <div class="flex flex-col gap-2">
+          <TextInput fieldName="id" label="ID" disabled value={state._id} />
 
           <TextInput
             fieldName="name"
             label="Name"
-            value={editing()?.name}
-            onChange={(ev) => setName(ev.currentTarget.value)}
+            value={state.name}
+            onChange={(ev) => setState('name', ev.currentTarget.value)}
           />
 
           <TextInput
             fieldName="description"
             label="Description"
             helperText="This is be rendered using the markdown renderer. HTML is also supported here."
-            value={editing()?.description}
+            value={state.description}
             isMultiline
-            onChange={(ev) => setDesc(ev.currentTarget.value)}
+            onChange={(ev) => setState('description', ev.currentTarget.value)}
           />
 
           <Toggle
             fieldName="apiAccess"
             label="API Access Capable"
             helperText="If enabled, this tier can use API access if the server allows it"
-            value={editing()?.apiAccess ?? false}
+            value={state.apiAccess ?? false}
+            onChange={(ev) => setState('apiAccess', ev)}
           />
 
           <Toggle
             fieldName="guidanceAccess"
             label="Guidance (V2) Access Capable"
             helperText="If enabled, this tier can use GuidanceV2 if the server/preset allows it"
-            value={editing()?.guidanceAccess ?? false}
+            value={state.guidanceAccess ?? false}
             classList={{ hidden: !settings.config.adapters.includes('agnaistic') }}
+            onChange={(ev) => setState('guidanceAccess', ev)}
           />
 
           <Toggle
             fieldName="imagesAccess"
             label="Image Generation Access"
             helperText="If enabled, this tier can use Agnaistic Image Generation"
-            value={editing()?.imagesAccess ?? false}
+            value={state.imagesAccess ?? false}
             classList={{ hidden: !settings.config.adapters.includes('agnaistic') }}
+            onChange={(ev) => setState('imagesAccess', ev)}
           />
 
           <Select
             fieldName="patreonTier"
             label="Patreon Tier"
             helperText="If Patreon is linked, the minimum tier is required"
-            value={editing()?.patreon?.tierId}
+            value={state.patreonTier}
             items={patreonTiers()}
+            onChange={(ev) => setState('patreonTier', ev.value)}
           />
 
           <div class="text-lg font-bold">Preview</div>
 
           <TierCard
             tier={{
-              name: name(),
-              description: desc(),
+              name: state.name,
+              description: state.description,
               cost: price(),
               disableSlots: false,
               apiAccess: false,
@@ -209,17 +220,18 @@ const TiersPage: Component = (props) => {
             fieldName="productId"
             label="Stripe Product"
             items={products()}
-            value={editing()?.productId}
-            onChange={(ev) => setProductId(ev.value)}
+            value={state.productId}
+            onChange={(ev) => setState('productId', ev.value)}
           />
 
-          <TextInput type="number" fieldName="level" label="Level" value={editing()?.level ?? -1} />
+          <TextInput type="number" fieldName="level" label="Level" value={state.level ?? -1} />
 
           <Toggle
             fieldName="enabled"
             label="Enabled"
             helperText="If disabled, this tier will not be available to users for selection."
-            value={editing()?.enabled}
+            value={state.enabled}
+            onChange={(ev) => setState('enabled', ev)}
           />
 
           <Show when={!!settings.slots.publisherId}>
@@ -227,14 +239,15 @@ const TiersPage: Component = (props) => {
               fieldName="disableSlots"
               label="Disable Slots"
               helperText="This tier will prevent slots from rendering"
-              value={editing()?.disableSlots}
+              value={state.disableSlots}
+              onChange={(ev) => setState('disableSlots', ev)}
             />
           </Show>
 
           <div class="flex w-full justify-end">
             <Button onClick={onSubmit}>Save</Button>
           </div>
-        </form>
+        </div>
       </Card>
     </Page>
   )

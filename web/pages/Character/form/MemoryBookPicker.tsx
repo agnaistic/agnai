@@ -1,4 +1,4 @@
-import { Save } from 'lucide-solid'
+import Save from 'lucide-solid/icons/save'
 import { Component, createSignal, createMemo, Show, createEffect, on } from 'solid-js'
 import EditMemoryForm, { EntrySort } from '../../Memory/EditMemory'
 import { BUNDLED_CHARACTER_BOOK_ID, emptyBook, emptyBookWithEmptyEntry } from '/common/memory'

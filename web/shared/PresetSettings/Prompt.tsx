@@ -13,7 +13,7 @@ import { FormLabel } from '../FormLabel'
 import { PresetTabProps } from '/web/store/preset-context'
 import Accordian from '../Accordian'
 import { HelpModal } from '../Modal'
-import { HelpCircle } from 'lucide-solid'
+import HelpCircle from 'lucide-solid/icons/circle-question-mark'
 
 export const PromptSettings: Component<PresetTabProps> = (props) => {
   const character = chatStore((s) => ({ char: s.details[s.lastChatId]?.char }))

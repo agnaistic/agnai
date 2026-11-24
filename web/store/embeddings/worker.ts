@@ -18,7 +18,8 @@ const encoder = getEncoding('cl100k_base')
 const log = (...args: any[]) => console.log('[worker]', ...args)
 const DEVICE = undefined
 
-// Absolutely awful workaround due to Parcel.js being extremely sucky
+// Indirect `import()` so the bundler leaves the CDN URL alone (and tsc does not
+// try to resolve it as a module).
 const dynamicImport = new Function('a', 'return import(a);')
 
 type Vector = { data: number[] }

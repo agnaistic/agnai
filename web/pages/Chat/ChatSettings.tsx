@@ -29,7 +29,11 @@ import { Toggle } from '/web/shared/Toggle'
 import TagInput from '/web/shared/TagInput'
 import { usePane } from '/web/shared/hooks'
 import Divider from '/web/shared/Divider'
-import { Check, Minus, Sparkles, Wand, X } from 'lucide-solid'
+import Check from 'lucide-solid/icons/check'
+import Minus from 'lucide-solid/icons/minus'
+import Sparkles from 'lucide-solid/icons/sparkles'
+import Wand from 'lucide-solid/icons/wand'
+import X from 'lucide-solid/icons/x'
 import { createStore } from 'solid-js/store'
 import FileInput, { FileInputResult } from '/web/shared/FileInput'
 import { StreamCallback } from '/web/store/data/messages'
@@ -289,7 +293,7 @@ const ChatSettings: Component<{
   onMount(() => props.footer(Footer))
 
   return (
-    <form class="flex flex-col gap-3">
+    <div class="flex flex-col gap-3">
       <Show when={user.user?.admin}>
         <Card class="text-xs">{state.active?.chat?._id}</Card>
       </Show>
@@ -564,7 +568,7 @@ const ChatSettings: Component<{
           <CharacterDefaultVisibility chat={state.active.chat} participants={lists()} />
         </Show>
       </div>
-    </form>
+    </div>
   )
 }
 

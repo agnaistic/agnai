@@ -1,7 +1,8 @@
 import { Component, For, Show, createMemo, createSignal } from 'solid-js'
 import { AppSchema } from '../../common/types/schema'
 import { CharacterAvatar } from './AvatarIcon'
-import { Star, Users } from 'lucide-solid'
+import Star from 'lucide-solid/icons/star'
+import Users from 'lucide-solid/icons/users'
 import TextInput from './TextInput'
 import { chatStore } from '../store'
 import { toMap } from './util'
@@ -90,7 +91,7 @@ const CharacterSelectList: Component<{
             </div>
           </Show>
           <Show when={props.emptyLabel}>
-            <div
+            <button
               class="bg-700 flex w-full cursor-pointer flex-row items-center justify-between gap-4 rounded-xl px-2 py-1"
               onClick={() => onChange(undefined)}
             >
@@ -102,7 +103,7 @@ const CharacterSelectList: Component<{
                   <div class="font-bold">{props.emptyLabel}</div>
                 </div>
               </div>
-            </div>
+            </button>
           </Show>
           <Show when={current()?.list?.length}>
             <For each={current()?.list}>
@@ -130,7 +131,7 @@ export const CharacterSelectItem: Component<{
 }> = (props) => {
   return (
     <div class="flex w-full max-w-full gap-2">
-      <div
+      <button
         class="bg-700 flex flex-1 cursor-pointer flex-row items-center justify-between gap-4 overflow-auto rounded-xl px-2 py-1"
         onClick={() => props.onClick(props.char)}
       >
@@ -151,7 +152,7 @@ export const CharacterSelectItem: Component<{
             </Show>
           </div>
         </div>
-      </div>
+      </button>
       <Show when={props.adornment}>
         <div class="flex w-fit min-w-fit items-center">
           {props.adornment!({ char: props.char })}

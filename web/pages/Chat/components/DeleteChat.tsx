@@ -1,4 +1,5 @@
-import { Trash, X } from 'lucide-solid'
+import Trash from 'lucide-solid/icons/trash'
+import X from 'lucide-solid/icons/x'
 import { Component } from 'solid-js'
 import { AppSchema } from '../../../../common/types/schema'
 import Button from '../../../shared/Button'

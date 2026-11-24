@@ -1,5 +1,6 @@
 import { Component, createEffect, createMemo, createSignal, on, onMount } from 'solid-js'
-import { AlertTriangle, Save } from 'lucide-solid'
+import AlertTriangle from 'lucide-solid/icons/triangle-alert'
+import Save from 'lucide-solid/icons/save'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
 import { setComponentPageTitle } from '../../shared/util'
@@ -141,38 +142,37 @@ const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
           </div>
         </Show>
       </div>
-      <form autocomplete="off">
-        <div class="flex flex-col gap-4">
-          <div class={currentTab() === 'ai' ? tabClass : 'hidden'}>
-            <AISettings state={store} setter={setStore} />
-          </div>
 
-          <div class={currentTab() === 'ui' ? tabClass : 'hidden'}>
-            <UISettings />
-          </div>
-
-          <div class={currentTab() === 'voice' ? tabClass : 'hidden'}>
-            <VoiceSettings state={store} setter={setStore} />
-          </div>
-
-          <div class={currentTab() === 'subscription' ? tabClass : 'hidden'}>
-            <SubscriptionPage />
-          </div>
-
-          <div class={currentTab() === 'guest' ? tabClass : 'hidden'}>
-            <div class="mb-4 mt-8 flex w-full flex-col items-center justify-center">
-              <div>This cannot be undone!</div>
-              <Button schema="red" onClick={userStore.clearGuestState}>
-                <AlertTriangle /> Delete Guest State <AlertTriangle />
-              </Button>
-            </div>
-          </div>
+      <div class="flex flex-col gap-4">
+        <div class={currentTab() === 'ai' ? tabClass : 'hidden'}>
+          <AISettings state={store} setter={setStore} />
         </div>
 
-        <Show when={!props.footer}>
-          <div class="flex justify-end gap-2 pt-4">{footer}</div>
-        </Show>
-      </form>
+        <div class={currentTab() === 'ui' ? tabClass : 'hidden'}>
+          <UISettings />
+        </div>
+
+        <div class={currentTab() === 'voice' ? tabClass : 'hidden'}>
+          <VoiceSettings state={store} setter={setStore} />
+        </div>
+
+        <div class={currentTab() === 'subscription' ? tabClass : 'hidden'}>
+          <SubscriptionPage />
+        </div>
+
+        <div class={currentTab() === 'guest' ? tabClass : 'hidden'}>
+          <div class="mb-4 mt-8 flex w-full flex-col items-center justify-center">
+            <div>This cannot be undone!</div>
+            <Button schema="red" onClick={userStore.clearGuestState}>
+              <AlertTriangle /> Delete Guest State <AlertTriangle />
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <Show when={!props.footer}>
+        <div class="flex justify-end gap-2 pt-4">{footer}</div>
+      </Show>
     </>
   )
 }

@@ -1,4 +1,5 @@
-import { Save, X } from 'lucide-solid'
+import Save from 'lucide-solid/icons/save'
+import X from 'lucide-solid/icons/x'
 import { Component, createEffect, createMemo, createSignal, JSX, on, onMount, Show } from 'solid-js'
 import { defaultPresets, isDefaultPreset } from '../../../common/default-preset'
 import { AppSchema } from '../../../common/types/schema'
@@ -26,7 +27,6 @@ export const ModeGenSettings: Component<{
   close?: () => void
   footer?: (children: JSX.Element) => void
 }> = (props) => {
-  let ref: any
   const pane = usePane()
   const state = presetStore(({ presets }) => ({
     presets,
@@ -163,7 +163,7 @@ export const ModeGenSettings: Component<{
 
   return (
     <div class="text-sm">
-      <form ref={ref} class="flex flex-col gap-4">
+      <div class="flex flex-col gap-4">
         <PresetSelect
           options={presetOptions()}
           selected={selected()}
@@ -211,7 +211,7 @@ export const ModeGenSettings: Component<{
           hideTabs={props.hideTabs}
           noSave={false}
         />
-      </form>
+      </div>
     </div>
   )
 }

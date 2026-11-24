@@ -1,7 +1,7 @@
 import { Component } from 'solid-js'
 import { CharEditor } from '../editor'
 import Tooltip from '/web/shared/Tooltip'
-import { WandSparkles } from 'lucide-solid'
+import WandSparkles from 'lucide-solid/icons/wand-sparkles'
 import Button from '/web/shared/Button'
 import { toastStore } from '/web/store/toasts'
 

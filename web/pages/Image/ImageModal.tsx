@@ -15,16 +15,14 @@ import { getAssetUrl, getJsonSchema } from '../../shared/util'
 import Button from '/web/shared/Button'
 import { createKeyHook, useDraft, useImageCache } from '/web/shared/hooks'
 import TextInput from '/web/shared/TextInput'
-import {
-  ArrowLeft,
-  ArrowRight,
-  Download,
-  SettingsIcon,
-  SlidersVertical,
-  SquareSparkles,
-  Trash,
-  WandSparkles,
-} from 'lucide-solid'
+import ArrowLeft from 'lucide-solid/icons/arrow-left'
+import ArrowRight from 'lucide-solid/icons/arrow-right'
+import Download from 'lucide-solid/icons/download'
+import SettingsIcon from 'lucide-solid/icons/settings'
+import SlidersVertical from 'lucide-solid/icons/sliders-vertical'
+import SquareSparkles from 'lucide-solid/icons/square-sparkles'
+import Trash from 'lucide-solid/icons/trash'
+import WandSparkles from 'lucide-solid/icons/wand-sparkles'
 import { cleanPrompt, hydrateTemplate } from '/common/util'
 import { RelativeSpinner } from '/web/shared/Loading'
 import { createCaptionInferenceSignal, imageApi } from '/web/store/data/image'

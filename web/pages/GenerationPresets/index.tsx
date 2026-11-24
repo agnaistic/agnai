@@ -1,5 +1,8 @@
 import { A, useNavigate, useParams, useSearchParams } from '@solidjs/router'
-import { Edit, Plus, Save, X } from 'lucide-solid'
+import Edit from 'lucide-solid/icons/square-pen'
+import Plus from 'lucide-solid/icons/plus'
+import Save from 'lucide-solid/icons/save'
+import X from 'lucide-solid/icons/x'
 import { Component, createSignal, onMount, Show } from 'solid-js'
 import { defaultPresets, isDefaultPreset, presetDefaults } from '../../../common/default-preset'
 import { AppSchema } from '../../../common/types/schema'
@@ -138,7 +141,7 @@ export const GenerationPresetsPage: Component = () => {
           </TitleCard>
         </Show>
         <div class="flex flex-col gap-4 p-2">
-          <form onSubmit={onSave} class="flex flex-col gap-4">
+          <div class="flex flex-col gap-4">
             <div class="flex gap-4">
               <Show when={presets.presets.length > 1}>
                 <Button onClick={() => setSelecting(true)}>Load Preset</Button>
@@ -175,7 +178,7 @@ export const GenerationPresetsPage: Component = () => {
                 </Button>
               </div>
             </Show>
-          </form>
+          </div>
         </div>
       </div>
       <EditPreset show={selecting()} close={() => setSelecting(false)} select={onEdit} />
@@ -231,16 +234,14 @@ const EditPreset: Component<{
         </>
       }
     >
-      <form>
-        <Select
-          label="Preset"
-          helperText="Select a preset to start editing. If you are currently editing a preset, it won't be in the list."
-          items={state.presets
-            .filter((pre) => pre._id !== params.id)
-            .map((pre) => ({ label: pre.name, value: pre._id }))}
-          onChange={(ev) => setId(ev.value)}
-        />
-      </form>
+      <Select
+        label="Preset"
+        helperText="Select a preset to start editing. If you are currently editing a preset, it won't be in the list."
+        items={state.presets
+          .filter((pre) => pre._id !== params.id)
+          .map((pre) => ({ label: pre.name, value: pre._id }))}
+        onChange={(ev) => setId(ev.value)}
+      />
     </Modal>
   )
 }

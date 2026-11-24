@@ -2,7 +2,10 @@ import { Component, For, Show, createEffect, createMemo, createSignal, on, onMou
 import PageHeader from '/web/shared/PageHeader'
 import Button from '/web/shared/Button'
 import { presetStore } from '/web/store/presets'
-import { Copy, Plus, Save, Trash } from 'lucide-solid'
+import Copy from 'lucide-solid/icons/copy'
+import Plus from 'lucide-solid/icons/plus'
+import Save from 'lucide-solid/icons/save'
+import Trash from 'lucide-solid/icons/trash'
 import Divider from '/web/shared/Divider'
 import { templates } from '../../../common/presets/templates'
 import { RootModal } from '/web/shared/Modal'
@@ -165,7 +168,7 @@ const TemplateModal: Component<{
       close={props.close}
       footer={Footer}
     >
-      <form class="flex flex-col gap-4 text-sm">
+      <div class="flex flex-col gap-4 text-sm">
         <TextInput
           placeholder="Name"
           label="Name"
@@ -179,7 +182,7 @@ const TemplateModal: Component<{
           minHeight={100}
           showHelp
         />
-      </form>
+      </div>
     </RootModal>
   )
 }

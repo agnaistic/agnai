@@ -1,17 +1,15 @@
-import {
-  Book,
-  Download,
-  Palette,
-  Settings,
-  User,
-  Sliders,
-  Trash,
-  Users,
-  Camera,
-  VenetianMask,
-  AlertTriangle,
-  Map,
-} from 'lucide-solid'
+import Book from 'lucide-solid/icons/book'
+import Download from 'lucide-solid/icons/download'
+import Palette from 'lucide-solid/icons/palette'
+import Settings from 'lucide-solid/icons/settings'
+import User from 'lucide-solid/icons/user'
+import Sliders from 'lucide-solid/icons/sliders-vertical'
+import Trash from 'lucide-solid/icons/trash'
+import Users from 'lucide-solid/icons/users'
+import Camera from 'lucide-solid/icons/camera'
+import VenetianMask from 'lucide-solid/icons/venetian-mask'
+import AlertTriangle from 'lucide-solid/icons/triangle-alert'
+import Map from 'lucide-solid/icons/map'
 import { Component, Show, createMemo, JSX } from 'solid-js'
 import Button, { ButtonSchema } from '../../shared/Button'
 import { Toggle } from '../../shared/Toggle'

@@ -1,4 +1,4 @@
-import { X } from 'lucide-solid'
+import X from 'lucide-solid/icons/x'
 import { Component, JSX, Show } from 'solid-js'
 import Button from '../Button'
 import './side-drawer.css'

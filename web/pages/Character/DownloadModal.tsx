@@ -3,7 +3,8 @@ import { AppSchema } from '/common/types/schema'
 import Select from '/web/shared/Select'
 import Modal from '/web/shared/Modal'
 import Button from '/web/shared/Button'
-import { Save, X } from 'lucide-solid'
+import Save from 'lucide-solid/icons/save'
+import X from 'lucide-solid/icons/x'
 import { exportCharacter } from '/common/characters'
 import { charsApi } from '/web/store/data/chars'
 import { toastStore } from '/web/store'
@@ -22,7 +23,6 @@ export const DownloadModal: Component<{
   charId: string
   char?: AppSchema.Character
 }> = (props) => {
-  let ref: any
   const [char, setChar] = createSignal<AppSchema.Character | undefined>(props.char)
 
   createEffect(async () => {
@@ -122,7 +122,7 @@ export const DownloadModal: Component<{
         </>
       }
     >
-      <form ref={ref} class="flex flex-col gap-4">
+      <div class="flex flex-col gap-4">
         <div class="flex flex-col gap-2">
           <Select
             label="Output Format"
@@ -139,7 +139,7 @@ export const DownloadModal: Component<{
             onChange={(item) => setFileType(item.value as CharacterFileType)}
           />
         </div>
-      </form>
+      </div>
     </Modal>
   )
 }

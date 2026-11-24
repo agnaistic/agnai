@@ -1,15 +1,13 @@
-import {
-  ArchiveRestore,
-  ArrowBigLeft,
-  Crown,
-  Eye,
-  EyeOff,
-  HatGlasses,
-  Mail,
-  Plus,
-  Speech,
-  Trash,
-} from 'lucide-solid'
+import ArchiveRestore from 'lucide-solid/icons/archive-arrow-up'
+import ArrowBigLeft from 'lucide-solid/icons/arrow-big-left'
+import Crown from 'lucide-solid/icons/crown'
+import Eye from 'lucide-solid/icons/eye'
+import EyeOff from 'lucide-solid/icons/eye-off'
+import HatGlasses from 'lucide-solid/icons/hat-glasses'
+import Mail from 'lucide-solid/icons/mail'
+import Plus from 'lucide-solid/icons/plus'
+import Speech from 'lucide-solid/icons/speech'
+import Trash from 'lucide-solid/icons/trash'
 import { Component, createMemo, createSignal, For, Match, onMount, Show, Switch } from 'solid-js'
 import { AppSchema } from '../../../common/types/schema'
 import AvatarIcon, { CharacterAvatar } from '../../shared/AvatarIcon'

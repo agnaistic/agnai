@@ -1,4 +1,6 @@
-import { Check, FullscreenIcon, X } from 'lucide-solid'
+import Check from 'lucide-solid/icons/check'
+import FullscreenIcon from 'lucide-solid/icons/fullscreen'
+import X from 'lucide-solid/icons/x'
 import { Component, Show, JSX, createMemo, Switch, Match, createSignal } from 'solid-js'
 import Button from './Button'
 import './modal.css'

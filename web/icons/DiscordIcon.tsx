@@ -1,7 +1,7 @@
 import { Component } from 'solid-js'
 import AppIcon, { IconProps } from './AppIcon'
-import svgLight from 'bundle-text:../asset/DiscordLight.svg'
-import svgDark from 'bundle-text:../asset/DiscordDark.svg'
+import svgLight from '../asset/DiscordLight.svg?raw'
+import svgDark from '../asset/DiscordDark.svg?raw'
 
 export const DiscordLightIcon: Component<IconProps> = (props) => (
   <AppIcon {...props} svg={svgLight} />

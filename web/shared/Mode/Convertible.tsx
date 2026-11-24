@@ -1,6 +1,6 @@
 import './convertible.scss'
 import { Component, JSX, Switch } from 'solid-js'
-import { X } from 'lucide-solid'
+import X from 'lucide-solid/icons/x'
 import { useBgStyle, usePane } from '../hooks'
 import Modal from '../Modal'
 import { Match } from 'solid-js'

@@ -1,6 +1,9 @@
 import { Component, For, Match, Show, Switch, createEffect, on, onMount } from 'solid-js'
 import PageHeader from '/web/shared/PageHeader'
-import { Eye, EyeOff, Plus, Save } from 'lucide-solid'
+import Eye from 'lucide-solid/icons/eye'
+import EyeOff from 'lucide-solid/icons/eye-off'
+import Plus from 'lucide-solid/icons/plus'
+import Save from 'lucide-solid/icons/save'
 import Button from '/web/shared/Button'
 import TextInput, { ButtonInput } from '/web/shared/TextInput'
 import { useNavigate, useParams } from '@solidjs/router'
@@ -170,7 +173,7 @@ const Announcement: Component<{}> = (props) => {
     <Page>
       <PageHeader title="Announcement" />
 
-      <form class="flex flex-col gap-2">
+      <div class="flex flex-col gap-2">
         <TextInput fieldName="id" disabled value={params.id} label="ID" />
 
         <TextInput
@@ -241,7 +244,7 @@ const Announcement: Component<{}> = (props) => {
             innerHTML={markdown.makeHtml(state.content)}
           ></div>
         </div>
-      </form>
+      </div>
     </Page>
   )
 }

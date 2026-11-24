@@ -6,7 +6,8 @@ import { AppSchema } from '/common/types'
 import { jsonToCharacter } from '../Character/port'
 import { ChubEntity } from '/web/store/chub'
 import { Pill } from '/web/shared/Card'
-import { Download, Star } from 'lucide-solid'
+import Download from 'lucide-solid/icons/download'
+import Star from 'lucide-solid/icons/star'
 
 export const ChubItem: Component<{
   entity: ChubEntity

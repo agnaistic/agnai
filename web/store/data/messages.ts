@@ -17,7 +17,7 @@ import { getScenarioEventType } from '/common/scenario'
 import { getStore } from '../create'
 import { getDeletionChanges, toQuickGraph } from '/common/chat'
 import { chatsApi } from './chats'
-import { debug } from 'common/debug'
+import { debug } from '/common/debug'
 
 export const msgsApi = {
   createMessage,

@@ -1,4 +1,5 @@
-import { ChevronLeft, ChevronRight } from 'lucide-solid'
+import ChevronLeft from 'lucide-solid/icons/chevron-left'
+import ChevronRight from 'lucide-solid/icons/chevron-right'
 import { Component, Show } from 'solid-js'
 import Button from '/web/shared/Button'
 import { msgStore } from '/web/store'

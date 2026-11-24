@@ -1,4 +1,5 @@
-import { Import, X } from 'lucide-solid'
+import Import from 'lucide-solid/icons/import'
+import X from 'lucide-solid/icons/x'
 import { Component, For, Show, createSignal, onMount } from 'solid-js'
 import FileInput, { FileInputResult } from '../../shared/FileInput'
 import Modal from '../../shared/Modal'

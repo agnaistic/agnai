@@ -9,7 +9,12 @@ import {
   quickCreateChat,
 } from '../../store'
 import PageHeader from '../../shared/PageHeader'
-import { Edit, Import, Plus, Trash, SortAsc, SortDesc } from 'lucide-solid'
+import Edit from 'lucide-solid/icons/square-pen'
+import Import from 'lucide-solid/icons/import'
+import Plus from 'lucide-solid/icons/plus'
+import Trash from 'lucide-solid/icons/trash'
+import SortAsc from 'lucide-solid/icons/arrow-up-narrow-wide'
+import SortDesc from 'lucide-solid/icons/arrow-down-wide-narrow'
 import ImportChatModal from './ImportChat'
 import { setComponentPageTitle, toDuration } from '../../shared/util'
 import { ConfirmModal } from '../../shared/Modal'
@@ -292,6 +297,14 @@ const Chats: Component<{
     chatStore.deleteChat(showDelete(), () => setDelete(''))
   }
 
+  const chatName = (chat: ChatLine) => {
+    if (chat.characters.length === 1) {
+      return `Chat with ${chat.characters[0].name}`
+    }
+
+    return `Chat with ${chat.characters[0].name} and ${chat.characters.length - 1} others`
+  }
+
   return (
     <div class="flex flex-col gap-2">
       <For each={groups()}>
@@ -310,6 +323,7 @@ const Chats: Component<{
                     <A
                       class="flex w-10/12 cursor-pointer gap-2 sm:w-11/12"
                       href={`/chat/${chat._id}`}
+                      aria-label={chatName(chat)}
                     >
                       <div class="ml-4 flex items-center">
                         <div class="relative flex-shrink-0">
@@ -360,9 +374,13 @@ const Chats: Component<{
                         </div>
                       </div>
                     </A>
-                    <div class="flex items-center px-2" onClick={() => setDelete(chat._id)}>
+                    <button
+                      aria-label="Delete Chat"
+                      class="flex items-center px-2"
+                      onClick={() => setDelete(chat._id)}
+                    >
                       <Trash size={20} class="icon-button" />
-                    </div>
+                    </button>
                   </div>
                 )}
               </For>

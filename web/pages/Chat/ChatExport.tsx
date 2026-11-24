@@ -1,4 +1,4 @@
-import { Download } from 'lucide-solid'
+import Download from 'lucide-solid/icons/download'
 import { Component, createMemo } from 'solid-js'
 import Button from '../../shared/Button'
 import Modal from '../../shared/Modal'

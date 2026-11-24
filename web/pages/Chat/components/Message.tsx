@@ -1,28 +1,26 @@
 import './Message.css'
 import Purify from 'dompurify'
-import {
-  Check,
-  DownloadCloud,
-  Info,
-  PauseCircle,
-  Pencil,
-  RefreshCw,
-  Repeat1,
-  Terminal,
-  Trash,
-  Delete,
-  X,
-  Zap,
-  Split,
-  MoreHorizontal,
-  ImagePlus,
-  Eye,
-  EyeOff,
-  BracesIcon,
-  ImageUpIcon,
-  ScanFaceIcon,
-  LucideProps,
-} from 'lucide-solid'
+import Check from 'lucide-solid/icons/check'
+import DownloadCloud from 'lucide-solid/icons/cloud-download'
+import Info from 'lucide-solid/icons/info'
+import PauseCircle from 'lucide-solid/icons/circle-pause'
+import Pencil from 'lucide-solid/icons/pencil'
+import RefreshCw from 'lucide-solid/icons/refresh-cw'
+import Repeat1 from 'lucide-solid/icons/repeat-1'
+import Terminal from 'lucide-solid/icons/terminal'
+import Trash from 'lucide-solid/icons/trash'
+import Delete from 'lucide-solid/icons/delete'
+import X from 'lucide-solid/icons/x'
+import Zap from 'lucide-solid/icons/zap'
+import Split from 'lucide-solid/icons/split'
+import MoreHorizontal from 'lucide-solid/icons/ellipsis'
+import ImagePlus from 'lucide-solid/icons/image-plus'
+import Eye from 'lucide-solid/icons/eye'
+import EyeOff from 'lucide-solid/icons/eye-off'
+import BracesIcon from 'lucide-solid/icons/braces'
+import ImageUpIcon from 'lucide-solid/icons/image-up'
+import ScanFaceIcon from 'lucide-solid/icons/scan-face'
+import type { LucideProps } from 'lucide-solid'
 import {
   Accessor,
   Component,
@@ -201,9 +199,10 @@ const Message: Component<MessageProps> = (props) => {
       })
 
       const json = getJsonUpdate(ctx, autoDefs?.schema, {
-        ...message.json.values,
         response: props.content,
+        ...message.json.values,
       })
+
       display = json?.json.response || display
     }
 
@@ -538,12 +537,20 @@ const Message: Component<MessageProps> = (props) => {
 
                 <Match when={edit()}>
                   <div class="cancel-edit-btn mr-4 flex items-center gap-4 text-sm">
-                    <div class="icon-button text-red-500" onClick={cancelEdit}>
+                    <button
+                      class="icon-button text-red-500"
+                      aria-label="Edit: Cancel Message"
+                      onClick={cancelEdit}
+                    >
                       <X size={22} />
-                    </div>
-                    <div class="confirm-edit-btn icon-button text-green-500" onClick={saveEdit}>
+                    </button>
+                    <button
+                      class="confirm-edit-btn icon-button text-green-500"
+                      aria-label="Edit: Save Message"
+                      onClick={saveEdit}
+                    >
                       <Check size={22} />
-                    </div>
+                    </button>
                   </div>
                 </Match>
 
@@ -907,7 +914,7 @@ const MessageOptions: Component<{
         show: !!props.preset?.current?.json || !!props.preset?.json?.json,
         class: '',
         icon: BracesIcon,
-        onClick: () => responseStore.chatQuery({ messageId: props.msg._id, question: '' }),
+        onClick: () => responseStore.chatJson({ messageId: props.msg._id }),
         outer: props.ui.msgOptsInline['gen-json'],
         disabled: !props.preset?.current?.json && !props.preset?.json?.json,
       },
@@ -961,7 +968,7 @@ const MessageOptions: Component<{
         }}
       </For>
 
-      <div
+      <button
         class="flex items-center"
         classList={{ 'tour-message-opts': props.index === 0 }}
         onClick={() => props.showMore[1](true)}
@@ -971,7 +978,7 @@ const MessageOptions: Component<{
         }}
       >
         <MoreHorizontal class="icon-button" />
-      </div>
+      </button>
 
       <Show when={showInner()}>
         <DropMenu
@@ -1382,6 +1389,7 @@ function getMessageContent(
 
 function getJsonUpdate(ctx: ChatContext, def: AppSchema.Character['json'], json: any) {
   if (!def) return
+
   const hydration = hydrateTemplate(def, json, {
     char: ctx.char!,
     replyAs: ctx.char,

@@ -1,4 +1,5 @@
-import { Plus, X } from 'lucide-solid'
+import Plus from 'lucide-solid/icons/plus'
+import X from 'lucide-solid/icons/x'
 import { Component, createEffect, createMemo, createSignal, Index, on } from 'solid-js'
 import { AppSchema } from '../../../common/types/schema'
 import Accordian from '../../shared/Accordian'

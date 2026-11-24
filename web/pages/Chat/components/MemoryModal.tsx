@@ -1,4 +1,5 @@
-import { Edit, Save } from 'lucide-solid'
+import Edit from 'lucide-solid/icons/square-pen'
+import Save from 'lucide-solid/icons/save'
 import { Component, createEffect, createMemo, createSignal, JSX, on, Show } from 'solid-js'
 import { AppSchema } from '../../../../common/types/schema'
 import Button from '../../../shared/Button'

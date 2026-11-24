@@ -18,7 +18,9 @@ import { AppSchema } from '/common/types'
 import { CharacterAvatar } from '/web/shared/AvatarIcon'
 import Button from '/web/shared/Button'
 import { Card, Pill } from '/web/shared/Card'
-import { Check, Minus, X } from 'lucide-solid'
+import Check from 'lucide-solid/icons/check'
+import Minus from 'lucide-solid/icons/minus'
+import X from 'lucide-solid/icons/x'
 import { isMessageInvisible } from '/common/prompt'
 
 export const MessageVisibility: Component<{ ctx: ChatContext; messageId: string }> = (props) => {
