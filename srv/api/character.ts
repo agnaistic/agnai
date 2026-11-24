@@ -159,6 +159,7 @@ const getCharacters = handle(async ({ userId }) => {
 const editPartCharacter = handle(async ({ body, params, userId }) => {
   const id = params.id
   assertStrict({ type: characterPost }, body)
+  await store.characters.assertCharacterOwner({ characterId: id, userId })
 
   const update: CharacterUpdate = body
 

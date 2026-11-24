@@ -199,8 +199,10 @@ const Message: Component<MessageProps> = (props) => {
       })
 
       const json = getJsonUpdate(ctx, autoDefs?.schema, {
+        response: props.content,
         ...message.json.values,
       })
+
       display = json?.json.response || display
     }
 
@@ -912,7 +914,7 @@ const MessageOptions: Component<{
         show: !!props.preset?.current?.json || !!props.preset?.json?.json,
         class: '',
         icon: BracesIcon,
-        onClick: () => responseStore.chatQuery({ messageId: props.msg._id, question: '' }),
+        onClick: () => responseStore.chatJson({ messageId: props.msg._id }),
         outer: props.ui.msgOptsInline['gen-json'],
         disabled: !props.preset?.current?.json && !props.preset?.json?.json,
       },

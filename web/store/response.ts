@@ -358,7 +358,7 @@ export const responseStore = createStore<ResponseState>(
       }
     },
 
-    async *chatJson({ waiting }, message: string, schema: JsonField[], onTick: TickHandler) {
+    async *chatJson({ waiting }, opts: { messageId: string; schema?: JsonField[] }) {
       if (waiting) return
 
       const { activeChatId } = getStore('messages').getState()
@@ -369,7 +369,13 @@ export const responseStore = createStore<ResponseState>(
 
       const signal = new AbortController()
       const res = await botGen
-        .streamResponse({ signal, kind: 'chat-query', text: message, schema, onTick })
+        .streamResponse({
+          signal,
+          kind: 'chat-query',
+          text: 'Details from the above conversation',
+          schema: opts.schema,
+          messageId: opts.messageId,
+        })
         .catch((err) => ({ error: err.message, result: undefined }))
 
       if (res.error) {
