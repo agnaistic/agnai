@@ -142,6 +142,8 @@ async function streamResponse(opts: StreamOpts) {
   }
 
   const lazy = lazyPromise()
+  /** Holds the post-stream message-creation promise so we don't clear `waiting` before the final message exists */
+  const postStream: { promise?: Promise<void> } = {}
 
   await handlePreStreamResponse(opts, req)
 
@@ -222,7 +224,7 @@ async function streamResponse(opts: StreamOpts) {
     },
     async (response, state, json) => {
       await handleStreamTick(
-        { opts, req, lazy, meta, active, sanitize, jsonCall: !!jsonSchema },
+        { opts, req, lazy, meta, active, sanitize, jsonCall: !!jsonSchema, postStream },
         { response, state, json }
       )
     }
@@ -252,6 +254,9 @@ async function streamResponse(opts: StreamOpts) {
     )
   }
 
+  /** Ensure the final message has been created before the pending/partial bubble is removed */
+  await postStream.promise
+
   waiting(undefined)
   return lazy.promise
 }
@@ -265,10 +270,11 @@ async function handleStreamTick(
     active: { chat: AppSchema.Chat }
     sanitize: (text: string) => string
     jsonCall?: boolean
+    postStream: { promise?: Promise<void> }
   },
   tick: { state: InferenceState; response: string; json?: JsonOutput }
 ) {
-  const { opts, req, active, sanitize, meta } = input
+  const { opts, req, active, sanitize, meta, postStream } = input
 
   let prefix = input.req.request.continuing?.msg || ''
   if (prefix) {
@@ -344,7 +350,7 @@ async function handleStreamTick(
         console.log(inline(tick.json))
       }
 
-      await handlePostStreamResponse({
+      postStream.promise = handlePostStreamResponse({
         opts,
         req,
         response: trimmed,
@@ -352,6 +358,7 @@ async function handleStreamTick(
         json: tick.json,
         jsonCall: input.jsonCall,
       })
+      await postStream.promise
 
       break
     }
