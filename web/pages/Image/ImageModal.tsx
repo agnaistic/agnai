@@ -485,8 +485,7 @@ const PromptSettings: Component<{
             placeholder="Caption Hint: What to focus on when generating the caption?"
             class="!text-sm"
             isMultiline
-            maxRows={2}
-            textarea={{ rows: 2 }}
+            maxRows={3}
             onChange={(ev) =>
               promptStore.imageHint({
                 chatId: msgs.message.msg.chatId,

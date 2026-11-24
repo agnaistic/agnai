@@ -13,14 +13,15 @@ export const GlobalFileInput: Component = () => {
   })
 
   const onChange = async (list: FileList | null) => {
-    getStore('page').closeAttach()
     if (!list?.length) {
       state.attach?.callback([])
+      getStore('page').closeAttach()
       return
     }
 
     const files = await Promise.all(Array.from(list).map(getFileAsDataURL))
     state.attach?.callback(files)
+    getStore('page').closeAttach()
   }
 
   const onCancel = (ev: any) => {
@@ -28,8 +29,12 @@ export const GlobalFileInput: Component = () => {
     getStore('page').closeAttach()
   }
 
-  onMount(() => document.addEventListener('cancel', onCancel))
-  onCleanup(() => document.removeEventListener('cancel', onCancel))
+  onMount(() => {
+    document.addEventListener('cancel', onCancel)
+  })
+  onCleanup(() => {
+    document.removeEventListener('cancel', onCancel)
+  })
 
   return (
     <>
