@@ -3,7 +3,7 @@ import { db } from './client'
 import { AppSchema } from '../../common/types/schema'
 import { now } from './util'
 import { Filter, UpdateFilter } from 'mongodb'
-import { StatusError } from 'srv/api/wrap'
+import { StatusError } from '../api/wrap'
 
 export type CharacterUpdate = Partial<
   Pick<
