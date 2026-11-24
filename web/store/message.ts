@@ -687,10 +687,17 @@ async function onMessageReceived(body: {
   if (isUserMsg) {
     getStore('responses').setState({ speaking: speech?.speaking })
   } else {
+    const { waiting } = getStore('responses').getState()
+    /**
+     * This message is the result of the currently pending generation.
+     * Clear `waiting` too so the partial/pending bubble is replaced by the real message in one update.
+     */
+    const isPendingResponse = waiting?.messageId === msg._id
     getStore('responses').setState({
       speaking: speech?.speaking,
       partial: undefined,
       retrying: undefined,
+      ...(isPendingResponse ? { waiting: undefined } : {}),
     })
   }
 
