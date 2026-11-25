@@ -52,9 +52,9 @@ jobs:
         env:
           INJECT_SCRIPT: ${{ secrets.INJECT_SCRIPT }}
         run: |
+          node .github/inject.js
           pnpm run build:prod
           cp dist/index.html dist/original.html
-          node .github/inject.js
 
       - name: Update Backend
         run: |
