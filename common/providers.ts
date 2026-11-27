@@ -124,6 +124,11 @@ export const KNOWN_PROVIDERS: Record<string, ProviderDefinition> = {
     url: `https://api.spicyapi.ai/v1`,
     formats: [{ type: 'format', value: 'openai-chatv2' }],
   },
+  synap402: {
+    name: 'Synap402',
+    url: 'https://synap402.com/v1',
+    formats: [{ type: 'format', value: 'openai-chatv2' }],
+  },
 }
 
 export const KNOWN_SELF_HOST: Record<string, ProviderDefinition> = {
